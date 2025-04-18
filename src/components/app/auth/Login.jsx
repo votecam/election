@@ -15,6 +15,40 @@ const Login = () => {
     '/images/people(12).jpg'
   ];
 
+  // Define animation styles
+  const animationStyles = `
+    @keyframes fadeIn {
+      0% { opacity: 0; }
+      100% { opacity: 1; }
+    }
+    @keyframes slideUp {
+      0% { opacity: 0; transform: translateY(20px); }
+      100% { opacity: 1; transform: translateY(0); }
+    }
+    @keyframes fadeInSlow {
+      0% { opacity: 0; }
+      30% { opacity: 0; }
+      100% { opacity: 1; }
+    }
+    @keyframes fadeInItem {
+      0% { opacity: 0; transform: translateX(-10px); }
+      100% { opacity: 1; transform: translateX(0); }
+    }
+    .animate-fadeIn {
+      animation: fadeIn 0.8s ease-in-out forwards;
+    }
+    .animate-slideUp {
+      animation: slideUp 1s ease-out forwards;
+    }
+    .animate-fadeInSlow {
+      animation: fadeInSlow 1.5s ease-in-out forwards;
+    }
+    .animate-fadeInItem {
+      opacity: 0;
+      animation: fadeInItem 0.6s ease-out forwards;
+    }
+  `;
+
   // Image carousel effect with improved transition
   useEffect(() => {
     const interval = setInterval(() => {
@@ -22,6 +56,15 @@ const Login = () => {
     }, 6000);
     
     return () => clearInterval(interval);
+  }, []);
+
+  // Add a function to handle image preloading
+  useEffect(() => {
+    // Preload all images to ensure smooth transitions
+    images.forEach(src => {
+      const img = new Image();
+      img.src = src;
+    });
   }, []);
 
   const { email, password } = formData;
@@ -45,6 +88,7 @@ const Login = () => {
 
   return (
     <div className="h-screen flex flex-row-reverse overflow-hidden">
+      <style jsx>{animationStyles}</style>
       {/* Right Column - Image Carousel (larger) */}
       <div className="hidden lg:block lg:w-3/5 bg-slate-900">
         <div className="h-full relative overflow-hidden">
@@ -54,92 +98,157 @@ const Login = () => {
           {images.map((img, index) => (
             <div 
               key={index}
-              className={`absolute inset-0 w-full h-full transition-all duration-1000 ease-in-out ${
+              className={`absolute inset-0 w-full h-full transition-all duration-1500 transform-gpu ${
                 index === currentImageIndex 
-                  ? 'opacity-100 z-10' 
-                  : 'opacity-0 z-0'
+                  ? 'opacity-100 z-10 scale-100 blur-0' 
+                  : index === (currentImageIndex + 1) % images.length 
+                    ? 'opacity-0 z-0 scale-110 blur-sm rotate-1' 
+                    : 'opacity-0 z-0 scale-110 blur-sm -rotate-1'
               }`}
+              style={{
+                transitionTimingFunction: 'cubic-bezier(0.4, 0, 0.2, 1)'
+              }}
             >
               <img 
                 src={img} 
                 alt={`People voting ${index + 1}`} 
                 className="absolute inset-0 w-full h-full object-cover"
               />
-              {/* Improved gradient overlay */}
-              <div className="absolute inset-0" style={{
-                background: 'linear-gradient(to bottom, rgba(15,23,42,0.95) 0%, rgba(15,23,42,0.85) 30%, rgba(16,67,70,0.7) 70%, rgba(5,102,95,0.6) 100%)'
-              }}></div>
+              {/* Improved gradient overlay with animation */}
+              <div 
+                className="absolute inset-0" 
+                style={{
+                  background: 'linear-gradient(to bottom, rgba(0,0,0,0.95) 0%, rgba(0,0,0,0.92) 20%, rgba(0,0,0,0.9) 40%, rgba(0,0,0,0.88) 60%, rgba(0,0,0,0.85) 80%, rgba(0,0,0,0.82) 100%)',
+                  animation: index === currentImageIndex ? 'gradientPulse 6s ease-in-out infinite' : 'none'
+                }}
+              >
+                <style jsx>{`
+                  @keyframes gradientPulse {
+                    0%, 100% { opacity: 0.95; }
+                    50% { opacity: 1; }
+                  }
+                `}</style>
+              </div>
+              
+              {/* Floating particles effect for active slide */}
+              {index === currentImageIndex && (
+                <div className="absolute inset-0 overflow-hidden">
+                  {[...Array(20)].map((_, i) => (
+                    <div 
+                      key={i}
+                      className="absolute rounded-full bg-emerald-400/20 z-10"
+                      style={{
+                        width: `${Math.random() * 8 + 4}px`,
+                        height: `${Math.random() * 8 + 4}px`,
+                        left: `${Math.random() * 100}%`,
+                        top: `${Math.random() * 100}%`,
+                        animation: `float${i % 3 + 1} ${Math.random() * 15 + 10}s linear infinite`
+                      }}
+                    ></div>
+                  ))}
+                  <style jsx>{`
+                    @keyframes float1 {
+                      0% { transform: translateY(0) translateX(0); opacity: 0; }
+                      10% { opacity: 0.6; }
+                      90% { opacity: 0.6; }
+                      100% { transform: translateY(-100px) translateX(20px); opacity: 0; }
+                    }
+                    @keyframes float2 {
+                      0% { transform: translateY(0) translateX(0); opacity: 0; }
+                      10% { opacity: 0.4; }
+                      90% { opacity: 0.4; }
+                      100% { transform: translateY(-70px) translateX(-30px); opacity: 0; }
+                    }
+                    @keyframes float3 {
+                      0% { transform: translateY(0) translateX(0); opacity: 0; }
+                      10% { opacity: 0.3; }
+                      90% { opacity: 0.3; }
+                      100% { transform: translateY(-50px) translateX(50px); opacity: 0; }
+                    }
+                  `}</style>
+                </div>
+              )}
             </div>
           ))}
           
           <div className="absolute inset-0 flex flex-col justify-between p-12 z-20">
             <div className="space-y-4">
-              <div className="flex items-center space-x-3">
-                <div className="w-10 h-0.5 bg-emerald-400"></div>
-                <span className="text-emerald-300 text-base font-medium tracking-wider">ADMINISTRATOR ACCESS</span>
+              <div className="flex items-center space-x-3 mb-2">
+                <div className="w-12 h-0.5" style={{ backgroundColor: "#00694B" }}></div>
+                <span className="text-white text-xl font-semibold tracking-wider animate-fadeIn">VOTECAM ADMINISTRATOR PORTAL</span>
               </div>
-              <h1 className="text-white text-5xl font-bold leading-tight">
-                Election <span className="text-emerald-300">Information System</span>
+              <h1 className="text-white text-6xl font-black leading-tight mb-4 animate-slideUp">
+                Election <span style={{ color: "#BF3533" }} className="font-black">Information System</span>
               </h1>
-              <p className="text-white/90 max-w-md leading-relaxed text-lg">
-                Centralized management portal for election data, voter information, and administrative oversight.
+              <p className="text-white/95 leading-relaxed text-2xl mt-6 font-medium animate-fadeInSlow">
+                Your trusted resource for accurate election information, helping citizens <br /> stay informed about voting processes, candidates, and polling locations <br /> to enhance civic participation.
               </p>
               
-              <div className="pt-4 grid grid-cols-2 gap-5 max-w-md">
-                <div className="flex items-start space-x-2">
-                  <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-emerald-400 mt-0.5 flex-shrink-0" viewBox="0 0 20 20" fill="currentColor">
+              <div className="pt-6 grid grid-cols-2 gap-x-8 gap-y-5 max-w-md mt-20">
+                <div className="flex items-start space-x-3 animate-fadeInItem" style={{ animationDelay: '0.1s' }}>
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8 mt-0.5 flex-shrink-0" style={{ color: "white" }} viewBox="0 0 20 20" fill="currentColor">
                     <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
                   </svg>
-                  <span className="text-white/90 text-lg">Election Guide</span>
+                  <span className="text-white font-medium text-2xl">Voter Guides</span>
                 </div>
-                <div className="flex items-start space-x-2">
-                  <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-emerald-400 mt-0.5 flex-shrink-0" viewBox="0 0 20 20" fill="currentColor">
+                <div className="flex items-start space-x-3 animate-fadeInItem" style={{ animationDelay: '0.2s' }}>
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8 mt-0.5 flex-shrink-0" style={{ color: "white" }} viewBox="0 0 20 20" fill="currentColor">
                     <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
                   </svg>
-                  <span className="text-white/90 text-lg">Candidate Management</span>
+                  <span className="text-white font-medium text-2xl">Candidate Profiles</span>
                 </div>
-                <div className="flex items-start space-x-2">
-                  <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-emerald-400 mt-0.5 flex-shrink-0" viewBox="0 0 20 20" fill="currentColor">
+                <div className="flex items-start space-x-3 animate-fadeInItem" style={{ animationDelay: '0.3s' }}>
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8 mt-0.5 flex-shrink-0" style={{ color: "white" }} viewBox="0 0 20 20" fill="currentColor">
                     <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
                   </svg>
-                  <span className="text-white/90 text-lg">Analytics</span>
+                  <span className="text-white font-medium text-2xl">Polling Locations</span>
                 </div>
-                <div className="flex items-start space-x-2">
-                  <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-emerald-400 mt-0.5 flex-shrink-0" viewBox="0 0 20 20" fill="currentColor">
+                <div className="flex items-start space-x-3 animate-fadeInItem" style={{ animationDelay: '0.4s' }}>
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8 mt-0.5 flex-shrink-0" style={{ color: "white" }} viewBox="0 0 20 20" fill="currentColor">
                     <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
                   </svg>
-                  <span className="text-white/90 text-lg">Polling Centers</span>
+                  <span className="text-white font-medium text-2xl">Key Dates</span>
                 </div>
-                <div className="flex items-start space-x-2">
-                  <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-emerald-400 mt-0.5 flex-shrink-0" viewBox="0 0 20 20" fill="currentColor">
+                <div className="flex items-start space-x-3 animate-fadeInItem" style={{ animationDelay: '0.5s' }}>
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8 mt-0.5 flex-shrink-0" style={{ color: "white" }} viewBox="0 0 20 20" fill="currentColor">
                     <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
                   </svg>
-                  <span className="text-white/90 text-lg">Feedback Management</span>
+                  <span className="text-white font-medium text-2xl">Civic Education</span>
                 </div>
+                <div className="flex items-start space-x-3 animate-fadeInItem" style={{ animationDelay: '0.6s' }}>
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8 mt-0.5 flex-shrink-0" style={{ color: "white" }} viewBox="0 0 20 20" fill="currentColor">
+                    <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                  </svg>
+                  <span className="text-white font-medium text-2xl">Citizen Feedback</span>
+                </div>
+              </div>
+              
+              <div className="space-y-5">
+               
+                
+                {/* Modern indicators styled like the image */}
+                
               </div>
             </div>
             
-            <div className="space-y-8">
-              {/* Modern circular indicators with animated fill */}
-              <div className="flex space-x-3">
-                {images.map((_, index) => (
-                  <button
-                    key={index}
-                    onClick={() => setCurrentImageIndex(index)}
-                    className="focus:outline-none"
-                    aria-label={`Go to slide ${index + 1}`}
-                  >
-                    <div className="relative w-3 h-3">
-                      <div className={`absolute inset-0 rounded-full transition-colors duration-300 ${
-                        index === currentImageIndex ? 'bg-emerald-400' : 'bg-white/30 hover:bg-white/50'
-                      }`}></div>
-                      {index === currentImageIndex && (
-                        <div className="absolute -inset-1 rounded-full border-2 border-emerald-400/50 animate-ping"></div>
-                      )}
-                    </div>
-                  </button>
-                ))}
-              </div>
+            {/* Move indicators to bottom of overlay */}
+            <div className="flex space-x-4">
+              {images.map((_, index) => (
+                <button
+                  key={index}
+                  onClick={() => setCurrentImageIndex(index)}
+                  className="focus:outline-none"
+                  aria-label={`Go to slide ${index + 1}`}
+                >
+                  <div className={`h-1.5 rounded-full transition-colors duration-300 ${
+                    index === 1 ? 'w-10' : 'w-4'
+                  } ${
+                    index === currentImageIndex 
+                      ? 'bg-white'
+                      : 'bg-white/30 hover:bg-white/50'
+                  }`} style={index === currentImageIndex && index === 1 ? { backgroundColor: "#00694B" } : {}}></div>
+                </button>
+              ))}
             </div>
           </div>
         </div>
@@ -181,34 +290,40 @@ const Login = () => {
 
         <div className="w-full max-w-md z-10">
           <div className="flex flex-col items-center mb-8">
-            <div className="w-16 h-16 bg-gradient-to-br from-emerald-700 to-teal-800 rounded-full flex items-center justify-center mb-3 shadow-lg">
-              <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 11c0 3.517-1.009 6.799-2.753 9.571m-3.44-2.04l.054-.09A13.916 13.916 0 008 11a4 4 0 118 0c0 1.017-.07 2.019-.203 3m-2.118 6.844A21.88 21.88 0 0015.171 17m3.839 1.132c.645-2.266.99-4.659.99-7.132A8 8 0 008 4.07M3 15.364c.64-1.319 1-2.8 1-4.364 0-1.457.39-2.823 1.07-4" />
-              </svg>
-            </div>
-            <h2 className="text-2xl font-bold text-gray-800">Administrator Portal</h2>
-            <p className="text-gray-600 mt-1">Please authenticate to access the system</p>
+            <img 
+              src="/images/logo(3).png" 
+              alt="Election Information System Logo" 
+              className="w-28 h-28 object-contain mb-1"
+            />
+            <h2 className="text-3xl font-black text-gray-800">Login to your account</h2>
+            <p className="text-gray-700 mt-1 text-lg font-medium">Please authenticate to access the system</p>
           </div>
           
           <form onSubmit={handleSubmit} className="space-y-5">
             <div>
-              <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-1">
+              <label htmlFor="email" className="block text-base font-semibold text-gray-700 mb-1">
                 Email Address
               </label>
               <div className="relative">
                 <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                  <svg className="h-5 w-5 text-gray-500" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
-                    <path d="M2.003 5.884L10 9.882l7.997-3.998A2 2 0 0016 4H4a2 2 0 00-1.997 1.884z" />
-                    <path d="M18 8.118l-8 4-8-4V14a2 2 0 002 2h12a2 2 0 002-2V8.118z" />
+                  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="h-6 w-6 text-gray-600">
+                    <path d="M2.24283 6.85435L11.4895 1.3086C11.8062 1.11865 12.2019 1.11872 12.5185 1.30878L21.7573 6.85433C21.9079 6.9447 22 7.10743 22 7.28303V20C22 20.5523 21.5523 21 21 21H3C2.44772 21 2 20.5523 2 20V7.28315C2 7.10748 2.09218 6.94471 2.24283 6.85435ZM4 8.13261V19H20V8.13214L12.0037 3.33237L4 8.13261ZM12.0597 13.6983L17.3556 9.23532L18.6444 10.7647L12.074 16.3017L5.36401 10.7717L6.63599 9.2283L12.0597 13.6983Z"></path>
                   </svg>
                 </div>
+                {/* Vertical separator line */}
+                <div className="absolute inset-y-2 left-12 w-px bg-gray-300"></div>
                 <input
                   type="email"
                   id="email"
                   name="email"
                   value={email}
                   onChange={handleChange}
-                  className="pl-10 w-full px-4 py-3 border border-gray-300 rounded-none focus:outline-none focus:ring-2 focus:ring-emerald-600 focus:border-emerald-600 transition-shadow duration-300 text-base"
+                  className="pl-16 w-full px-4 py-3 border border-gray-300 rounded-none focus:outline-none focus:ring-1 focus:border-emerald-600 transition-shadow duration-300 text-lg font-medium bg-white"
+                  style={{ 
+                    "--tw-ring-color": "#00694B",
+                    "--tw-border-opacity": 1,
+                    "--tw-border-color": "rgba(0, 105, 75, var(--tw-border-opacity))"
+                  }}
                   placeholder="your@agency.gov"
                   required
                 />
@@ -216,22 +331,29 @@ const Login = () => {
             </div>
             
             <div>
-              <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-1">
+              <label htmlFor="password" className="block text-base font-semibold text-gray-700 mb-1">
                 Password
               </label>
               <div className="relative">
                 <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                  <svg className="h-5 w-5 text-gray-500" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
-                    <path fillRule="evenodd" d="M5 9V7a5 5 0 0110 0v2a2 2 0 012 2v5a2 2 0 01-2 2H5a2 2 0 01-2-2v-5a2 2 0 012-2zm8-2v2H7V7a3 3 0 016 0z" clipRule="evenodd" />
+                  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="h-6 w-6 text-gray-600">
+                    <path d="M18 8H20C20.5523 8 21 8.44772 21 9V21C21 21.5523 20.5523 22 20 22H4C3.44772 22 3 21.5523 3 21V9C3 8.44772 3.44772 8 4 8H6V7C6 3.68629 8.68629 1 12 1C15.3137 1 18 3.68629 18 7V8ZM5 10V20H19V10H5ZM11 14H13V16H11V14ZM7 14H9V16H7V14ZM15 14H17V16H15V14ZM16 8V7C16 4.79086 14.2091 3 12 3C9.79086 3 8 4.79086 8 7V8H16Z"></path>
                   </svg>
                 </div>
+                {/* Vertical separator line */}
+                <div className="absolute inset-y-2 left-12 w-px bg-gray-300"></div>
                 <input
                   type={showPassword ? "text" : "password"}
                   id="password"
                   name="password"
                   value={password}
                   onChange={handleChange}
-                  className="pl-10 w-full px-4 py-3 border border-gray-300 rounded-none focus:outline-none focus:ring-2 focus:ring-emerald-600 focus:border-emerald-600 transition-shadow duration-300 text-base"
+                  className="pl-16 w-full px-4 py-3 border border-gray-300 rounded-none focus:outline-none focus:ring-1 focus:border-emerald-600 transition-shadow duration-300 text-lg font-medium bg-white"
+                  style={{ 
+                    "--tw-ring-color": "#00694B",
+                    "--tw-border-opacity": 1,
+                    "--tw-border-color": "rgba(0, 105, 75, var(--tw-border-opacity))"
+                  }}
                   placeholder="••••••••"
                   required
                 />
@@ -241,14 +363,12 @@ const Login = () => {
                   onClick={togglePasswordVisibility}
                 >
                   {showPassword ? (
-                    <svg className="h-5 w-5 text-gray-500 hover:text-gray-700" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
-                      <path fillRule="evenodd" d="M3.707 2.293a1 1 0 00-1.414 1.414l14 14a1 1 0 001.414-1.414l-1.473-1.473A10.014 10.014 0 0019.542 10C18.268 5.943 14.478 3 10 3a9.958 9.958 0 00-4.512 1.074l-1.78-1.781zm4.261 4.26l1.514 1.515a2.003 2.003 0 012.45 2.45l1.514 1.514a4 4 0 00-5.478-5.478z" clipRule="evenodd" />
-                      <path d="M12.454 16.697L9.75 13.992a4 4 0 01-3.742-3.741L2.335 6.578A9.98 9.98 0 00.458 10c1.274 4.057 5.065 7 9.542 7 .847 0 1.669-.105 2.454-.303z" />
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="h-6 w-6 text-gray-600 hover:text-gray-800">
+                      <path d="M12 2C17.5228 2 22 6.47715 22 12C22 17.5228 17.5228 22 12 22C6.47715 22 2 17.5228 2 12C2 6.47715 6.47715 2 12 2ZM12 4C7.58172 4 4 7.58172 4 12C4 16.4183 7.58172 20 12 20C16.4183 20 20 16.4183 20 12C20 7.58172 16.4183 4 12 4ZM7 13H17C17.5523 13 18 12.5523 18 12C18 11.4477 17.5523 11 17 11H7C6.44772 11 6 11.4477 6 12C6 12.5523 6.44772 13 7 13Z"></path>
                     </svg>
                   ) : (
-                    <svg className="h-5 w-5 text-gray-500 hover:text-gray-700" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
-                      <path d="M10 12a2 2 0 100-4 2 2 0 000 4z" />
-                      <path fillRule="evenodd" d="M.458 10C1.732 5.943 5.522 3 10 3s8.268 2.943 9.542 7c-1.274 4.057-5.064 7-9.542 7S1.732 14.057.458 10zM14 10a4 4 0 11-8 0 4 4 0 018 0z" clipRule="evenodd" />
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="h-6 w-6 text-gray-600 hover:text-gray-800">
+                      <path d="M9.34268 18.7819L7.41083 18.2642L8.1983 15.3254C7.00919 14.8874 5.91661 14.2498 4.96116 13.4534L2.80783 15.6067L1.39362 14.1925L3.54695 12.0392C2.35581 10.6103 1.52014 8.87466 1.17578 6.96818L3.14386 6.61035C3.90289 10.8126 7.57931 14.0001 12.0002 14.0001C16.4211 14.0001 20.0976 10.8126 20.8566 6.61035L22.8247 6.96818C22.4803 8.87466 21.6446 10.6103 20.4535 12.0392L22.6068 14.1925L21.1926 15.6067L19.0393 13.4534C18.0838 14.2498 16.9912 14.8874 15.8021 15.3254L16.5896 18.2642L14.6578 18.7819L13.87 15.8418C13.2623 15.9459 12.6376 16.0001 12.0002 16.0001C11.3629 16.0001 10.7381 15.9459 10.1305 15.8418L9.34268 18.7819Z"></path>
                     </svg>
                   )}
                 </button>
@@ -261,15 +381,21 @@ const Login = () => {
                   id="remember-me"
                   name="remember-me"
                   type="checkbox"
-                  className="h-5 w-5 text-gray-500 border-gray-300 rounded focus:ring-gray-400"
+                  className="h-5 w-5 border-gray-300 rounded focus:ring-emerald-500"
+                  style={{ 
+                    "--tw-ring-color": "#00694B",
+                    color: "#00694B" 
+                  }}
                 />
-                <label htmlFor="remember-me" className="ml-2 block text-base text-gray-700">
+                <label htmlFor="remember-me" className="ml-2 block text-lg text-gray-700 font-medium">
                   Remember me
                 </label>
               </div>
               
               <div className="text-base">
-                <a href="#" className="text-emerald-700 hover:text-emerald-900 font-medium">
+                <a href="#" 
+                  className="hover:text-emerald-900 font-semibold text-lg"
+                  style={{ color: "#00694B" }}>
                   Forgot password?
                 </a>
               </div>
@@ -278,7 +404,11 @@ const Login = () => {
             <div>
               <button
                 type="submit"
-                className="w-full py-3 px-4 bg-gradient-to-r from-emerald-700 to-emerald-800 hover:from-emerald-800 hover:to-emerald-900 text-white font-medium rounded-none focus:outline-none focus:ring-2 focus:ring-emerald-600 focus:ring-offset-2 transition-all duration-300 text-lg"
+                className="w-full py-4 px-5 text-white font-semibold rounded-none focus:outline-none focus:ring-2 focus:ring-offset-2 transition-all duration-300 text-xl"
+                style={{ 
+                  background: "linear-gradient(to right, #00694B, #005941)", 
+                  "--tw-ring-color": "#00694B" 
+                }}
               >
                 Sign In
               </button>
@@ -286,16 +416,18 @@ const Login = () => {
           </form>
           
           <div className="mt-6 text-center">
-            <p className="text-base text-gray-600">
+            <p className="text-lg text-gray-600 font-medium">
               Need an account?{' '}
-              <a href="#" className="text-emerald-700 hover:text-emerald-900 font-medium">
+              <a href="#" 
+                className="hover:text-emerald-900 font-semibold"
+                style={{ color: "#00694B" }}>
                 Contact your administrator
               </a>
             </p>
           </div>
           
           <div className="mt-8 border-t border-gray-200 pt-4">
-            <p className="text-xxl text-center text-gray-500">
+            <p className="text-lg text-center text-gray-600 font-medium">
               © 2025 All rights reserved. Official Electoral Information System.
             </p>
           </div>
