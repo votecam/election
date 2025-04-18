@@ -56,7 +56,7 @@ const EmailConfirmation = () => {
         </div>
 
         <div className="w-full max-w-md z-10">
-          <div className="text-center py-10">
+          <div className="text-center py-16">
             <div className="flex flex-col items-center mb-8">
               <img 
                 src="/images/logo(2).png" 
