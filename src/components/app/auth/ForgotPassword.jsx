@@ -1,8 +1,10 @@
 import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import AuthInfo from './AuthInfo';
 
 const ForgotPassword = () => {
   const [email, setEmail] = useState('');
+  const navigate = useNavigate();
 
   const handleChange = (e) => {
     setEmail(e.target.value);
@@ -12,12 +14,12 @@ const ForgotPassword = () => {
     e.preventDefault();
     console.log('Password reset submitted for:', email);
     // Redirect to the EmailConfirmation page
-    window.location.href = '/EmailConfirmation';
+    navigate('/EmailConfirmation');
   };
 
   const handleBackToLogin = (e) => {
     e.preventDefault();
-    window.location.href = '/login';
+    navigate('/login');
   };
 
   return (

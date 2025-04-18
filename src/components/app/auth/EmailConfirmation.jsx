@@ -1,8 +1,10 @@
 import React, { useEffect, useRef } from 'react';
+import { useNavigate } from 'react-router-dom';
 import AuthInfo from './AuthInfo';
 
 const EmailConfirmation = () => {
   const lottieContainerRef = useRef(null);
+  const navigate = useNavigate();
 
   const handleResend = () => {
     console.log('Resending password reset email');
@@ -11,7 +13,7 @@ const EmailConfirmation = () => {
 
   const handleBackToLogin = (e) => {
     e.preventDefault();
-    window.location.href = '/login';
+    navigate('/login');
   };
 
   return (

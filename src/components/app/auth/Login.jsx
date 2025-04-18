@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import AuthInfo from './AuthInfo';
 
 const Login = () => {
@@ -8,6 +9,7 @@ const Login = () => {
   });
   
   const [showPassword, setShowPassword] = useState(false);
+  const navigate = useNavigate();
 
   const { email, password } = formData;
 
@@ -26,6 +28,11 @@ const Login = () => {
     e.preventDefault();
     console.log('Login submitted:', formData);
     // Add authentication logic here
+  };
+  
+  const handleForgotPassword = (e) => {
+    e.preventDefault();
+    navigate('/ForgotPassword');
   };
 
   return (
@@ -174,10 +181,7 @@ const Login = () => {
               
               <div className="text-base">
                 <a href="#" 
-                  onClick={(e) => {
-                    e.preventDefault();
-                    window.location.href = '/ForgotPassword';
-                  }}
+                  onClick={handleForgotPassword}
                   className="hover:text-emerald-900 font-semibold text-lg"
                   style={{ color: "#00694B" }}>
                   Forgot password?
