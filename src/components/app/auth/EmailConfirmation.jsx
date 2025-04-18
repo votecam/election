@@ -74,7 +74,7 @@ const EmailConfirmation = () => {
             
             <h2 className="text-3xl font-black text-gray-800 mb-4">Check Your Email</h2>
             <p className="text-lg text-gray-700 mb-6 font-medium max-w-md mx-auto">
-              We've sent a password reset link to <strong>immaxstrendy@gmail.com</strong>. 
+              We've sent a password reset link to <strong>immaxstrendy1@gmail.com</strong>. 
               Please check your inbox and follow the instructions.
             </p>
             
