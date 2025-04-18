@@ -162,25 +162,20 @@ const Login = () => {
             />
           </div>
           
-          {/* Light Gray SVG Background Pattern - Right Side */}
-          <div className="absolute top-0 right-0 bottom-0 w-24" style={{ pointerEvents: 'none' }}>
-            <svg width="100%" height="100%" xmlns="http://www.w3.org/2000/svg">
-              <defs>
-                <pattern id="grid-pattern" x="0" y="0" width="8" height="8" patternUnits="userSpaceOnUse">
-                  <circle cx="4" cy="4" r="0.5" fill="#888888" opacity="0.1" />
-                </pattern>
+          {/* Circular SVG Background Pattern */}
+          <div className="absolute top-0 -right-[30rem] h-full w-[40rem] flex items-center opacity-40" style={{ pointerEvents: 'none' }}>
+            <div className="relative w-[40rem] h-[40rem]">
+              <svg width="100%" height="100%" viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
+                <defs>
+                  <pattern id="dots-pattern-small" x="0" y="0" width="10" height="10" patternUnits="userSpaceOnUse">
+                    <circle cx="5" cy="5" r="1" fill="#345554" opacity="0.15" />
+                  </pattern>
+                </defs>
                 
-                <pattern id="dots-pattern" x="0" y="0" width="20" height="20" patternUnits="userSpaceOnUse">
-                  <circle cx="10" cy="10" r="1" fill="#666666" opacity="0.07" />
-                </pattern>
-              </defs>
-              
-              {/* Grid pattern */}
-              <rect x="0" y="0" width="100%" height="100%" fill="url(#grid-pattern)" />
-              
-              {/* Larger dots pattern */}
-              <rect x="0" y="0" width="100%" height="100%" fill="url(#dots-pattern)" />
-            </svg>
+                {/* Only small dot pattern in circle */}
+                <circle cx="100" cy="100" r="100" fill="url(#dots-pattern-small)" />
+              </svg>
+            </div>
           </div>
         </div>
 
@@ -213,7 +208,7 @@ const Login = () => {
                   name="email"
                   value={email}
                   onChange={handleChange}
-                  className="pl-10 w-full px-4 py-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-emerald-600 focus:border-emerald-600 shadow-md hover:shadow-lg transition-shadow duration-300 text-base"
+                  className="pl-10 w-full px-4 py-3 border border-gray-300 rounded-none focus:outline-none focus:ring-2 focus:ring-emerald-600 focus:border-emerald-600 transition-shadow duration-300 text-base"
                   placeholder="your@agency.gov"
                   required
                 />
@@ -236,7 +231,7 @@ const Login = () => {
                   name="password"
                   value={password}
                   onChange={handleChange}
-                  className="pl-10 w-full px-4 py-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-emerald-600 focus:border-emerald-600 shadow-md hover:shadow-lg transition-shadow duration-300 text-base"
+                  className="pl-10 w-full px-4 py-3 border border-gray-300 rounded-none focus:outline-none focus:ring-2 focus:ring-emerald-600 focus:border-emerald-600 transition-shadow duration-300 text-base"
                   placeholder="••••••••"
                   required
                 />
@@ -283,7 +278,7 @@ const Login = () => {
             <div>
               <button
                 type="submit"
-                className="w-full py-3 px-4 bg-gradient-to-r from-emerald-700 to-emerald-800 hover:from-emerald-800 hover:to-emerald-900 text-white font-medium rounded-md focus:outline-none focus:ring-2 focus:ring-emerald-600 focus:ring-offset-2 transition-all duration-300 shadow-md hover:shadow-lg text-lg"
+                className="w-full py-3 px-4 bg-gradient-to-r from-emerald-700 to-emerald-800 hover:from-emerald-800 hover:to-emerald-900 text-white font-medium rounded-none focus:outline-none focus:ring-2 focus:ring-emerald-600 focus:ring-offset-2 transition-all duration-300 text-lg"
               >
                 Sign In
               </button>
