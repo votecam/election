@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="32px" height="32px" viewBox="0 0 32 32" version="1.1" xmlns="http://www.w3.org/2000/svg">
+  <title>Election App</title>
+  <g stroke="none" stroke-width="1" fill="none" fill-rule="evenodd">
+    <rect fill="#646CFF" x="0" y="0" width="32" height="32" rx="8"></rect>
+    <path d="M16,26 C21.5228475,26 26,21.5228475 26,16 C26,10.4771525 21.5228475,6 16,6 C10.4771525,6 6,10.4771525 6,16 C6,21.5228475 10.4771525,26 16,26 Z M16,24 C20.418278,24 24,20.418278 24,16 C24,11.581722 20.418278,8 16,8 C11.581722,8 8,11.581722 8,16 C8,20.418278 11.581722,24 16,24 Z" fill="#FFFFFF" fill-rule="nonzero"></path>
+    <path d="M13,12 L19,12 C19.5522847,12 20,12.4477153 20,13 L20,19 C20,19.5522847 19.5522847,20 19,20 L13,20 C12.4477153,20 12,19.5522847 12,19 L12,13 C12,12.4477153 12.4477153,12 13,12 Z" fill="#FFFFFF"></path>
+  </g>
+</svg> 
