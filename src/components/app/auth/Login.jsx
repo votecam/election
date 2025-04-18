@@ -163,7 +163,7 @@ const Login = () => {
           </div>
           
           {/* Light Gray SVG Background Pattern - Right Side */}
-          <div className="absolute top-0 right-0 bottom-0 w-16" style={{ pointerEvents: 'none' }}>
+          <div className="absolute top-0 right-0 bottom-0 w-24" style={{ pointerEvents: 'none' }}>
             <svg width="100%" height="100%" xmlns="http://www.w3.org/2000/svg">
               <defs>
                 <pattern id="grid-pattern" x="0" y="0" width="8" height="8" patternUnits="userSpaceOnUse">
@@ -180,9 +180,6 @@ const Login = () => {
               
               {/* Larger dots pattern */}
               <rect x="0" y="0" width="100%" height="100%" fill="url(#dots-pattern)" />
-              
-              {/* Vertical accent line */}
-              <line x1="25%" y1="0" x2="25%" y2="100%" stroke="#dedede" strokeWidth="0.5" />
             </svg>
           </div>
         </div>
