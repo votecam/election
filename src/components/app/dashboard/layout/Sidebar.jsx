@@ -250,33 +250,7 @@ const Sidebar = ({ isOpen, toggleSidebar }) => {
                   <span className="ml-3 font-medium text-xl whitespace-nowrap">Dashboard</span>
                 </Link>
               </li>
-              
-              {/* Analytics */}
-              <li>
-                <Link 
-                  to="/app/analytics"
-                  className={`flex items-center px-3 py-3 transition-all duration-200 group focus-visible-only ${
-                    isActive('/analytics') 
-                      ? 'bg-white text-gray-800 font-medium shadow-sm' 
-                      : 'text-white hover:bg-white/10'
-                  } rounded-lg focus:outline-none`}
-                  aria-current={isActive('/analytics') ? 'page' : undefined}
-                >
-                  <div className={`flex items-center justify-center w-9 h-9 ${isActive('/analytics') ? 'text-gray-800' : 'text-white group-hover:text-white'}`}>
-                    <svg 
-                      xmlns="http://www.w3.org/2000/svg" 
-                      width="24" 
-                      height="24" 
-                      viewBox="0 0 24 24" 
-                      className="fill-current"
-                      aria-hidden="true"
-                    >
-                      <path d="M21 21H4a1 1 0 0 1-1-1v-8a1 1 0 0 1 1-1h17a1 1 0 0 1 1 1v8a1 1 0 0 1-1 1zm0-18H4a1 1 0 0 0-1 1v4a1 1 0 0 0 1 1h17a1 1 0 0 0 1-1V4a1 1 0 0 0-1-1zm-6 8h-7a1 1 0 0 0-1 1v6a1 1 0 0 0 1 1h7a1 1 0 0 0 1-1v-6a1 1 0 0 0-1-1z"></path>
-                    </svg>
-                  </div>
-                  <span className="ml-3 font-medium text-xl whitespace-nowrap">Analytics</span>
-                </Link>
-              </li>
+             
               
               {/* Centre Management */}
               <li>
@@ -526,6 +500,34 @@ const Sidebar = ({ isOpen, toggleSidebar }) => {
                     </ul>
                   )}
                 </div>
+              </li>
+
+               
+              {/* Analytics */}
+              <li>
+                <Link 
+                  to="/app/analytics"
+                  className={`flex items-center px-3 py-3 transition-all duration-200 group focus-visible-only ${
+                    isActive('/analytics') 
+                      ? 'bg-white text-gray-800 font-medium shadow-sm' 
+                      : 'text-white hover:bg-white/10'
+                  } rounded-lg focus:outline-none`}
+                  aria-current={isActive('/analytics') ? 'page' : undefined}
+                >
+                  <div className={`flex items-center justify-center w-9 h-9 ${isActive('/analytics') ? 'text-gray-800' : 'text-white group-hover:text-white'}`}>
+                    <svg 
+                      xmlns="http://www.w3.org/2000/svg" 
+                      width="24" 
+                      height="24" 
+                      viewBox="0 0 24 24" 
+                      className="fill-current"
+                      aria-hidden="true"
+                    >
+                      <path d="M21 21H4a1 1 0 0 1-1-1v-8a1 1 0 0 1 1-1h17a1 1 0 0 1 1 1v8a1 1 0 0 1-1 1zm0-18H4a1 1 0 0 0-1 1v4a1 1 0 0 0 1 1h17a1 1 0 0 0 1-1V4a1 1 0 0 0-1-1zm-6 8h-7a1 1 0 0 0-1 1v6a1 1 0 0 0 1 1h7a1 1 0 0 0 1-1v-6a1 1 0 0 0-1-1z"></path>
+                    </svg>
+                  </div>
+                  <span className="ml-3 font-medium text-xl whitespace-nowrap">Analytics</span>
+                </Link>
               </li>
               
               {/* Feedback */}
