@@ -27,7 +27,15 @@ const Login = () => {
   const handleSubmit = (e) => {
     e.preventDefault();
     console.log('Login submitted:', formData);
-    // Add authentication logic here
+    
+    // Simple validation and login simulation
+    if (email && password) {
+      // Store authentication status in localStorage
+      localStorage.setItem('isAuthenticated', 'true');
+      
+      // Redirect to the app dashboard
+      navigate('/app');
+    }
   };
   
   const handleForgotPassword = (e) => {
@@ -61,15 +69,15 @@ const Login = () => {
           <div className="absolute top-0 -right-[30rem] h-full w-[40rem] flex items-center opacity-40" style={{ pointerEvents: 'none' }}>
             <div className="relative w-[40rem] h-[40rem]">
               <svg width="100%" height="100%" viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
-                <defs>
+              <defs>
                   <pattern id="dots-pattern-small" x="0" y="0" width="10" height="10" patternUnits="userSpaceOnUse">
                     <circle cx="5" cy="5" r="1" fill="#345554" opacity="0.15" />
-                  </pattern>
-                </defs>
+                </pattern>
+              </defs>
                 
                 {/* Only small dot pattern in circle */}
                 <circle cx="100" cy="100" r="100" fill="url(#dots-pattern-small)" />
-              </svg>
+            </svg>
             </div>
           </div>
         </div>

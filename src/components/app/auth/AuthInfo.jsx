@@ -4,9 +4,9 @@ const AuthSidebar = ({ title }) => {
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
   
   const images = [
-    '/images/people(15).jpg',
-    '/images/people(8).jpg',
-    '/images/people(12).jpg'
+    '/images/people(15).png',
+    '/images/people(8).png',
+    '/images/people(12).png'
   ];
 
   // Define animation styles
