@@ -118,7 +118,7 @@ const Login = () => {
                     "--tw-border-opacity": 1,
                     "--tw-border-color": "rgba(0, 105, 75, var(--tw-border-opacity))"
                   }}
-                  placeholder="your@agency.gov"
+                  placeholder="Enter your email address"
                   required
                 />
               </div>
@@ -148,7 +148,7 @@ const Login = () => {
                     "--tw-border-opacity": 1,
                     "--tw-border-color": "rgba(0, 105, 75, var(--tw-border-opacity))"
                   }}
-                  placeholder="••••••••"
+                  placeholder="Enter your password"
                   required
                 />
                 <button
