@@ -91,14 +91,14 @@ const AuthSidebar = ({ title }) => {
             <div 
               className="absolute inset-0" 
               style={{
-                background: 'linear-gradient(to bottom, rgba(0,0,0,0.95) 0%, rgba(0,0,0,0.92) 20%, rgba(0,0,0,0.9) 40%, rgba(0,0,0,0.88) 60%, rgba(0,0,0,0.85) 80%, rgba(0,0,0,0.82) 100%)',
+                background: 'linear-gradient(to bottom, rgba(0,0,0,0.85) 0%, rgba(0,0,0,0.82) 20%, rgba(0,0,0,0.8) 40%, rgba(0,0,0,0.78) 60%, rgba(0,0,0,0.75) 80%, rgba(0,0,0,0.72) 100%)',
                 animation: index === currentImageIndex ? 'gradientPulse 6s ease-in-out infinite' : 'none'
               }}
             >
               <style jsx>{`
                 @keyframes gradientPulse {
-                  0%, 100% { opacity: 0.95; }
-                  50% { opacity: 1; }
+                  0%, 100% { opacity: 0.85; }
+                  50% { opacity: 0.9; }
                 }
               `}</style>
             </div>
