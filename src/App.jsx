@@ -8,6 +8,7 @@ import RegisterCentre from './components/app/centres/RegisterCentre'
 import UploadCentre from './components/app/centres/UploadCentre'
 import ManageCentre from './components/app/centres/ManageCentre'
 import Analytics from './components/app/analytics/Analytics'
+import Feedback from './components/app/feedback/Feedback'
 
 function App() {
   return (
@@ -35,6 +36,9 @@ function App() {
               <Route path="upload" element={<UploadCentre />} />
               <Route path="manage-polling" element={<ManageCentre />} />
             </Route>
+            
+            {/* Feedback Route */}
+            <Route path="feedback" element={<Feedback />} />
             
             <Route path="*" element={<Navigate to="/app" replace />} />
           </Route>

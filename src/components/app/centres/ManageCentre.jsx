@@ -146,30 +146,30 @@ const ManageCentre = () => {
       </nav>
       
       <div className="mb-6">
-        <h1 className="text-2xl font-bold text-gray-900">Manage Polling Centres</h1>
-        <p className="text-base text-gray-600 mt-1">View and manage polling centres across all regions</p>
+        <h1 className="text-3xl font-bold text-gray-900">Manage Polling Centres</h1>
         <div className="w-32 h-1 bg-emerald-600 rounded-sm mt-2"></div>
+        <p className="text-base text-gray-600 mt-1">View and manage polling centres across all regions</p>
       </div>
       
       {/* Search and filters */}
       <div className="flex flex-col md:flex-row justify-between gap-4 mb-6">
         <div className="w-full md:w-1/2 relative">
-          <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+              <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
             <svg className="h-5 w-5 text-gray-500" viewBox="0 0 20 20" fill="currentColor">
-              <path fillRule="evenodd" d="M8 4a4 4 0 100 8 4 4 0 000-8zM2 8a6 6 0 1110.89 3.476l4.817 4.817a1 1 0 01-1.414 1.414l-4.816-4.816A6 6 0 012 8z" clipRule="evenodd" />
-            </svg>
-          </div>
-          <input
-            type="text"
-            name="search"
-            id="search"
+                  <path fillRule="evenodd" d="M8 4a4 4 0 100 8 4 4 0 000-8zM2 8a6 6 0 1110.89 3.476l4.817 4.817a1 1 0 01-1.414 1.414l-4.816-4.816A6 6 0 012 8z" clipRule="evenodd" />
+                </svg>
+              </div>
+              <input
+                type="text"
+                name="search"
+                id="search"
             className="block w-full pl-10 py-3 text-base border border-gray-300 rounded-md focus:outline-none focus:ring-emerald-500 focus:border-emerald-500"
             placeholder="Search centres by name, code or region"
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-          />
-        </div>
-        
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+              />
+          </div>
+          
         <div className="flex items-center justify-end space-x-4">
           <div className="relative" ref={dropdownRef}>
             <button
@@ -248,9 +248,9 @@ const ManageCentre = () => {
       
       {/* Data table */}
       <div className="overflow-hidden border border-gray-200 rounded-lg">
-        <table className="min-w-full divide-y divide-gray-200">
-          <thead className="bg-gray-50">
-            <tr>
+          <table className="min-w-full divide-y divide-gray-200">
+            <thead className="bg-gray-50">
+              <tr>
               <th scope="col" className="px-6 py-4 text-left text-base font-medium text-gray-700">#</th>
               <th scope="col" className="px-6 py-4 text-left text-base font-medium text-gray-700">Centre Name</th>
               <th scope="col" className="px-6 py-4 text-left text-base font-medium text-gray-700">Code</th>
@@ -258,80 +258,80 @@ const ManageCentre = () => {
               <th scope="col" className="px-6 py-4 text-center text-base font-medium text-gray-700">Stations</th>
               <th scope="col" className="px-6 py-4 text-center text-base font-medium text-gray-700">Status</th>
               <th scope="col" className="px-6 py-4 text-right text-base font-medium text-gray-700">Actions</th>
-            </tr>
-          </thead>
+              </tr>
+            </thead>
           <tbody className="bg-white divide-y divide-gray-100">
-            {filteredCentres.length > 0 ? (
+              {filteredCentres.length > 0 ? (
               filteredCentres.map((centre, index) => (
                 <tr key={centre.id} className="hover:bg-gray-50 transition-colors">
                   <td className="px-6 py-5 whitespace-nowrap text-base text-gray-500">{index + 1}</td>
                   <td className="px-6 py-5">
                     <div className="text-base font-medium text-gray-900">{centre.name}</div>
                     <div className="text-base text-gray-500 mt-1">{centre.location}</div>
-                  </td>
+                    </td>
                   <td className="px-6 py-5 whitespace-nowrap text-base text-gray-700">{centre.code}</td>
                   <td className="px-6 py-5">
                     <div className="text-base text-gray-900">{centre.region}</div>
                     <div className="text-base text-gray-500 mt-1">{centre.division}</div>
-                  </td>
+                    </td>
                   <td className="px-6 py-5 whitespace-nowrap text-center">
                     <span className="text-base font-medium text-gray-900">{centre.stations}</span>
-                  </td>
+                    </td>
                   <td className="px-6 py-5 whitespace-nowrap text-center">
-                    {getStatusBadge(centre.status)}
-                  </td>
+                      {getStatusBadge(centre.status)}
+                    </td>
                   <td className="px-6 py-5 whitespace-nowrap text-right">
-                    <div className="flex justify-end space-x-3">
-                      <button
+                      <div className="flex justify-end space-x-3">
+                        <button
                         type="button"
                         className="inline-flex items-center px-3 py-1.5 bg-white border border-gray-300 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-50 focus:outline-none"
-                        onClick={() => {/* View details */}}
-                      >
+                          onClick={() => {/* View details */}}
+                        >
                         <svg className="h-4 w-4 mr-1.5 text-gray-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
                         </svg>
-                        View
-                      </button>
-                      <button
+                          View
+                        </button>
+                        <button
                         type="button"
                         className="inline-flex items-center px-3 py-1.5 bg-white border border-gray-300 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-50 focus:outline-none"
-                        onClick={() => {/* Edit centre */}}
-                      >
+                          onClick={() => {/* Edit centre */}}
+                        >
                         <svg className="h-4 w-4 mr-1.5 text-gray-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
                         </svg>
-                        Edit
-                      </button>
-                      {centre.status === 'active' ? (
-                        <button
+                          Edit
+                        </button>
+                        {centre.status === 'active' ? (
+                          <button
                           type="button"
                           className="inline-flex items-center px-3 py-1.5 bg-red-600 border border-transparent rounded-md text-sm font-medium text-white hover:bg-red-700 focus:outline-none"
-                          onClick={() => handleStatusChange(centre.id, 'inactive')}
-                        >
+                            onClick={() => handleStatusChange(centre.id, 'inactive')}
+                          >
                           <svg className="h-4 w-4 mr-1.5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636" />
                           </svg>
-                          Deactivate
-                        </button>
-                      ) : (
-                        <button
+                            Deactivate
+                          </button>
+                        ) : (
+                          <button
                           type="button"
                           className="inline-flex items-center px-3 py-1.5 bg-emerald-600 border border-transparent rounded-md text-sm font-medium text-white hover:bg-emerald-700 focus:outline-none"
-                          onClick={() => handleStatusChange(centre.id, 'active')}
-                        >
+                            onClick={() => handleStatusChange(centre.id, 'active')}
+                          >
                           <svg className="h-4 w-4 mr-1.5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
                           </svg>
-                          Activate
-                        </button>
-                      )}
-                    </div>
-                  </td>
-                </tr>
-              ))
-            ) : (
-              <tr>
+                            Activate
+                          </button>
+                        )}
+                      </div>
+                    </td>
+                  </tr>
+                ))
+              ) : (
+                <tr>
                 <td colSpan="7" className="px-6 py-10 text-center">
                   <div className="flex flex-col items-center justify-center">
                     <svg className="w-12 h-12 text-gray-400 mb-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -340,11 +340,11 @@ const ManageCentre = () => {
                     <p className="text-lg font-medium text-gray-500">No centres found</p>
                     <p className="text-base text-gray-400 mt-1">Try adjusting your search or filter criteria</p>
                   </div>
-                </td>
-              </tr>
-            )}
-          </tbody>
-        </table>
+                  </td>
+                </tr>
+              )}
+            </tbody>
+          </table>
         
         {/* Pagination */}
         <div className="bg-gray-50 px-6 py-4 flex items-center justify-between border-t border-gray-200">
@@ -381,4 +381,4 @@ const ManageCentre = () => {
   );
 };
 
-export default ManageCentre;
+export default ManageCentre; 

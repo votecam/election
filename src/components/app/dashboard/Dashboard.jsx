@@ -16,9 +16,10 @@ const Dashboard = () => {
                 <span className="text-gray-500">Overview</span>
               </div>
             </div>
-      <header className="mt-8">
+      <header className="mt-8 relative">
         <h1 className="text-4xl font-bold text-gray-800">Welcome Admin</h1>
-        <p className="text-lg text-gray-600 mt-2">Election  Information System</p>
+        <div className="h-1 w-32 bg-emerald-500 rounded mt-2"></div>
+        <p className="text-lg text-gray-600 mb-4 mt-2">Election  Information System</p>
       </header>
       
       {/* Stats Cards */}

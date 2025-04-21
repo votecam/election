@@ -134,10 +134,10 @@ const RegisterCentre = () => {
       
       <header className="mb-6">
         <h1 className="text-3xl font-bold text-gray-800">Register Polling Centre</h1>
+        <div className="w-32 h-1 bg-emerald-600 rounded-sm mt-2"></div>
         <div className="flex items-center mt-2">
           <p className="text-gray-600 text-lg">Add a new polling centre to the electoral information system</p>
         </div>
-        <div className="w-32 h-1 bg-emerald-600 rounded-sm mt-2"></div>
       </header>
       
       {submitSuccess && (
@@ -333,7 +333,7 @@ const RegisterCentre = () => {
                     </div>
                   </div>
                 )}
-              </div>
+            </div>
           </div>
           
             {/* Division - Custom Dropdown */}
@@ -410,7 +410,7 @@ const RegisterCentre = () => {
                     </div>
                   </div>
                 )}
-              </div>
+            </div>
           </div>
           
           {/* Subdivision */}

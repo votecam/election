@@ -56,8 +56,8 @@ const UploadCentre = () => {
       <div className="flex flex-col md:flex-row md:justify-between md:items-center mb-6 gap-4">
         <header>
           <h1 className="text-3xl font-bold text-gray-800">Upload Polling Centres</h1>
-          <p className="text-gray-600 text-lg">Upload multiple polling centres with a CSV file</p>
           <div className="w-32 h-1 bg-emerald-600 rounded-sm mt-2"></div>
+          <p className="text-gray-600 text-lg">Upload multiple polling centres with a CSV file</p>
         </header>
         
         <a 

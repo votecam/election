@@ -33,10 +33,20 @@ const Sidebar = ({ isOpen, toggleSidebar }) => {
              location.pathname === '/app/dashboard';
     }
     
+    // Special case for analytics
+    if (path === '/analytics' || path === '/app/analytics') {
+      return location.pathname === '/app/analytics';
+    }
+    
+    // Special case for feedback
+    if (path === '/feedback' || path === '/app/feedback') {
+      return location.pathname === '/app/feedback';
+    }
+    
     // For exact path matching
     if (path.startsWith('/app/')) {
       // Exact match for all specific paths
-    return location.pathname === path;
+      return location.pathname === path;
     }
     
     // Fallback - should not be reached with proper routes
@@ -230,7 +240,7 @@ const Sidebar = ({ isOpen, toggleSidebar }) => {
                   to="/app/dashboard"
                   className={`flex items-center px-3 py-3 transition-all duration-200 group focus-visible-only ${
                     isActive('/dashboard') 
-                      ? 'bg-white text-gray-800 font-medium shadow-sm' 
+                      ? 'bg-white/80 text-gray-800 font-medium shadow-sm' 
                       : 'text-white hover:bg-white/10'
                   } rounded-lg focus:outline-none`}
                   aria-current={isActive('/dashboard') ? 'page' : undefined}
@@ -311,7 +321,7 @@ const Sidebar = ({ isOpen, toggleSidebar }) => {
                           to="/app/centres/register"
                           className={`flex items-center px-3 py-2.5 focus-visible-only ${
                             isActive('/app/centres/register') 
-                              ? 'bg-white text-gray-800 font-medium' 
+                              ? 'bg-white/80 text-gray-800 font-medium' 
                               : 'text-white hover:bg-white/10'
                           } transition-colors duration-200 rounded-lg focus:outline-none`}
                           aria-current={isActive('/app/centres/register') ? 'page' : undefined}
@@ -337,7 +347,7 @@ const Sidebar = ({ isOpen, toggleSidebar }) => {
                           to="/app/centres/upload"
                           className={`flex items-center px-3 py-2.5 focus-visible-only ${
                             isActive('/app/centres/upload') 
-                              ? 'bg-white text-gray-800 font-medium' 
+                              ? 'bg-white/80 text-gray-800 font-medium' 
                               : 'text-white hover:bg-white/10'
                           } transition-colors duration-200 rounded-lg focus:outline-none`}
                           aria-current={isActive('/app/centres/upload') ? 'page' : undefined}
@@ -363,7 +373,7 @@ const Sidebar = ({ isOpen, toggleSidebar }) => {
                           to="/app/centres/manage-polling"
                           className={`flex items-center px-3 py-2.5 focus-visible-only ${
                             isActive('/app/centres/manage-polling') 
-                              ? 'bg-white text-gray-800 font-medium' 
+                              ? 'bg-white/80 text-gray-800 font-medium' 
                               : 'text-white hover:bg-white/10'
                           } transition-colors duration-200 rounded-lg focus:outline-none`}
                           aria-current={isActive('/app/centres/manage-polling') ? 'page' : undefined}
@@ -509,7 +519,7 @@ const Sidebar = ({ isOpen, toggleSidebar }) => {
                   to="/app/analytics"
                   className={`flex items-center px-3 py-3 transition-all duration-200 group focus-visible-only ${
                     isActive('/analytics') 
-                      ? 'bg-white text-gray-800 font-medium shadow-sm' 
+                      ? 'bg-white/80 text-gray-800 font-medium shadow-sm' 
                       : 'text-white hover:bg-white/10'
                   } rounded-lg focus:outline-none`}
                   aria-current={isActive('/analytics') ? 'page' : undefined}
@@ -535,30 +545,25 @@ const Sidebar = ({ isOpen, toggleSidebar }) => {
                 <Link 
                   to="/app/feedback"
                   className={`flex items-center px-3 py-3 transition-all duration-200 group focus-visible-only ${
-                    isActive('/app/feedback') 
-                      ? 'bg-white text-gray-800 font-medium shadow-sm' 
+                    isActive('/feedback') 
+                      ? 'bg-white/80 text-gray-800 font-medium shadow-sm' 
                       : 'text-white hover:bg-white/10'
                   } rounded-lg focus:outline-none`}
-                  aria-current={isActive('/app/feedback') ? 'page' : undefined}
+                  aria-current={isActive('/feedback') ? 'page' : undefined}
                 >
-                  <div className={`flex items-center justify-center w-9 h-9 ${isActive('/app/feedback') ? 'text-gray-800' : 'text-white group-hover:text-white'}`}>
+                  <div className={`flex items-center justify-center w-9 h-9 ${isActive('/feedback') ? 'text-gray-800' : 'text-white group-hover:text-white'}`}>
                     <svg 
                       xmlns="http://www.w3.org/2000/svg" 
-                      className="h-7 w-7" 
-                      fill="none" 
+                      width="24" 
+                      height="24" 
                       viewBox="0 0 24 24" 
-                      stroke="currentColor"
+                      className="fill-current"
                       aria-hidden="true"
                     >
-                      <path 
-                        strokeLinecap="round" 
-                        strokeLinejoin="round" 
-                        strokeWidth={2} 
-                        d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z" 
-                      />
+                      <path d="M20 2H4c-1.1 0-1.99.9-1.99 2L2 22l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zm-7 12h-2v-2h2v2zm0-4h-2V6h2v4z"/>
                     </svg>
                   </div>
-                  <span className="ml-3 font-medium text-xl">Feedback</span>
+                  <span className="ml-3 font-medium text-xl whitespace-nowrap">Feedback</span>
                 </Link>
               </li>
               
