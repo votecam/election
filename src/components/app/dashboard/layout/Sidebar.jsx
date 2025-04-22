@@ -43,6 +43,12 @@ const Sidebar = ({ isOpen, toggleSidebar }) => {
       return location.pathname === '/app/feedback';
     }
     
+    // Special case for guides upload as default
+    if (path === '/app/guides/upload') {
+      return location.pathname === '/app/guides/upload' || 
+             location.pathname === '/app/guides';
+    }
+    
     // For exact path matching
     if (path.startsWith('/app/')) {
       // Exact match for all specific paths
@@ -78,8 +84,8 @@ const Sidebar = ({ isOpen, toggleSidebar }) => {
     }
     
     if (parentPath === '/app/guides') {
-      return isActive('/app/guides/all') || 
-             isActive('/app/guides/upload');
+      return isActive('/app/guides/upload') ||
+             isActive('/app/guides/manage');
     }
     
     return false;
@@ -339,7 +345,7 @@ const Sidebar = ({ isOpen, toggleSidebar }) => {
                             <path d="M12 8v8" />
                             <path d="M8 12h8" />
                           </svg>
-                          <span className="text-lg">Register  Polling Centre</span>
+                          <span className="text-lg">Register Centre</span>
                         </Link>
                       </li>
                       <li>
@@ -365,7 +371,7 @@ const Sidebar = ({ isOpen, toggleSidebar }) => {
                             <polyline points="17 8 12 3 7 8" />
                             <line x1="12" x2="12" y1="3" y2="15" />
                           </svg>
-                          <span className="text-lg">Upload  Polling Centre</span>
+                          <span className="text-lg">Upload Centre</span>
                         </Link>
                       </li>
                       <li>
@@ -390,7 +396,7 @@ const Sidebar = ({ isOpen, toggleSidebar }) => {
                             <path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z" />
                             <path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z" />
                           </svg>
-                          <span className="text-lg">Manage Polling Centre</span>
+                          <span className="text-lg">Manage Centre</span>
                         </Link>
                       </li>
                     </ul>
@@ -405,7 +411,7 @@ const Sidebar = ({ isOpen, toggleSidebar }) => {
                     onClick={() => toggleMenu('candidates')}
                     className={`w-full flex items-center justify-between px-3 py-3 transition-all duration-200 group focus-visible-only ${
                       isMenuActive('/app/candidates') 
-                        ? 'bg-white text-gray-800 font-medium shadow-sm' 
+                        ? 'bg-white/80 text-gray-800 font-medium shadow-sm' 
                         : 'text-white hover:bg-white/10'
                     } rounded-lg focus:outline-none`}
                     aria-expanded={expandedMenus.candidates}
@@ -457,7 +463,7 @@ const Sidebar = ({ isOpen, toggleSidebar }) => {
                           to="/app/candidates/register"
                           className={`flex items-center px-3 py-2.5 focus-visible-only ${
                             isActive('/app/candidates/register') 
-                              ? 'bg-white text-gray-800 font-medium' 
+                              ? 'bg-white/80 text-gray-800 font-medium' 
                               : 'text-white hover:bg-white/10'
                           } transition-colors duration-200 rounded-lg focus:outline-none`}
                           aria-current={isActive('/app/candidates/register') ? 'page' : undefined}
@@ -485,7 +491,7 @@ const Sidebar = ({ isOpen, toggleSidebar }) => {
                           to="/app/candidates/manage"
                           className={`flex items-center px-3 py-2.5 focus-visible-only ${
                             isActive('/app/candidates/manage') 
-                              ? 'bg-white text-gray-800 font-medium' 
+                              ? 'bg-white/80 text-gray-800 font-medium' 
                               : 'text-white hover:bg-white/10'
                           } transition-colors duration-200 rounded-lg focus:outline-none`}
                           aria-current={isActive('/app/candidates/manage') ? 'page' : undefined}
@@ -512,61 +518,7 @@ const Sidebar = ({ isOpen, toggleSidebar }) => {
                 </div>
               </li>
 
-               
-              {/* Analytics */}
-              <li>
-                <Link 
-                  to="/app/analytics"
-                  className={`flex items-center px-3 py-3 transition-all duration-200 group focus-visible-only ${
-                    isActive('/analytics') 
-                      ? 'bg-white/80 text-gray-800 font-medium shadow-sm' 
-                      : 'text-white hover:bg-white/10'
-                  } rounded-lg focus:outline-none`}
-                  aria-current={isActive('/analytics') ? 'page' : undefined}
-                >
-                  <div className={`flex items-center justify-center w-9 h-9 ${isActive('/analytics') ? 'text-gray-800' : 'text-white group-hover:text-white'}`}>
-                    <svg 
-                      xmlns="http://www.w3.org/2000/svg" 
-                      width="24" 
-                      height="24" 
-                      viewBox="0 0 24 24" 
-                      className="fill-current"
-                      aria-hidden="true"
-                    >
-                      <path d="M21 21H4a1 1 0 0 1-1-1v-8a1 1 0 0 1 1-1h17a1 1 0 0 1 1 1v8a1 1 0 0 1-1 1zm0-18H4a1 1 0 0 0-1 1v4a1 1 0 0 0 1 1h17a1 1 0 0 0 1-1V4a1 1 0 0 0-1-1zm-6 8h-7a1 1 0 0 0-1 1v6a1 1 0 0 0 1 1h7a1 1 0 0 0 1-1v-6a1 1 0 0 0-1-1z"></path>
-                    </svg>
-                  </div>
-                  <span className="ml-3 font-medium text-xl whitespace-nowrap">Analytics</span>
-                </Link>
-              </li>
-              
-              {/* Feedback */}
-              <li>
-                <Link 
-                  to="/app/feedback"
-                  className={`flex items-center px-3 py-3 transition-all duration-200 group focus-visible-only ${
-                    isActive('/feedback') 
-                      ? 'bg-white/80 text-gray-800 font-medium shadow-sm' 
-                      : 'text-white hover:bg-white/10'
-                  } rounded-lg focus:outline-none`}
-                  aria-current={isActive('/feedback') ? 'page' : undefined}
-                >
-                  <div className={`flex items-center justify-center w-9 h-9 ${isActive('/feedback') ? 'text-gray-800' : 'text-white group-hover:text-white'}`}>
-                    <svg 
-                      xmlns="http://www.w3.org/2000/svg" 
-                      width="24" 
-                      height="24" 
-                      viewBox="0 0 24 24" 
-                      className="fill-current"
-                      aria-hidden="true"
-                    >
-                      <path d="M20 2H4c-1.1 0-1.99.9-1.99 2L2 22l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zm-7 12h-2v-2h2v2zm0-4h-2V6h2v4z"/>
-                    </svg>
-                  </div>
-                  <span className="ml-3 font-medium text-xl whitespace-nowrap">Feedback</span>
-                </Link>
-              </li>
-              
+     
               {/* Guide Management */}
               <li>
                 <div className="space-y-1">
@@ -623,34 +575,10 @@ const Sidebar = ({ isOpen, toggleSidebar }) => {
                     <ul id="guides-menu" className="mt-1 pl-10 space-y-1">
                       <li>
                         <Link 
-                          to="/app/guides/all"
-                          className={`flex items-center px-3 py-2.5 focus-visible-only ${
-                            isActive('/app/guides/all') 
-                              ? 'bg-white text-gray-800 font-medium' 
-                              : 'text-white hover:bg-white/10'
-                          } transition-colors duration-200 rounded-lg focus:outline-none`}
-                          aria-current={isActive('/app/guides/all') ? 'page' : undefined}
-                        >
-                          <svg 
-                            className="h-5 w-5 mr-2"
-                            viewBox="0 0 24 24"
-                            fill="none"
-                            stroke="currentColor"
-                            strokeWidth="2"
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                          >
-                            <path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H20v20H6.5a2.5 2.5 0 0 1 0-5H20" />
-                          </svg>
-                          <span className="text-lg">All Guides</span>
-                        </Link>
-                      </li>
-                      <li>
-                        <Link 
                           to="/app/guides/upload"
                           className={`flex items-center px-3 py-2.5 focus-visible-only ${
                             isActive('/app/guides/upload') 
-                              ? 'bg-white text-gray-800 font-medium' 
+                              ? 'bg-white/80 text-gray-800 font-medium' 
                               : 'text-white hover:bg-white/10'
                           } transition-colors duration-200 rounded-lg focus:outline-none`}
                           aria-current={isActive('/app/guides/upload') ? 'page' : undefined}
@@ -671,10 +599,88 @@ const Sidebar = ({ isOpen, toggleSidebar }) => {
                           <span className="text-lg">Upload Guide</span>
                         </Link>
                       </li>
+                      <li>
+                        <Link 
+                          to="/app/guides/manage"
+                          className={`flex items-center px-3 py-2.5 focus-visible-only ${
+                            isActive('/app/guides/manage') 
+                              ? 'bg-white/80 text-gray-800 font-medium' 
+                              : 'text-white hover:bg-white/10'
+                          } transition-colors duration-200 rounded-lg focus:outline-none`}
+                          aria-current={isActive('/app/guides/manage') ? 'page' : undefined}
+                        >
+                          <svg 
+                            className="h-5 w-5 mr-2"
+                            viewBox="0 0 24 24"
+                            fill="none"
+                            stroke="currentColor"
+                            strokeWidth="2"
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                          >
+                            <path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z" />
+                            <path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z" />
+                          </svg>
+                          <span className="text-lg">Manage Guides</span>
+                        </Link>
+                      </li>
                     </ul>
                   )}
                 </div>
               </li>
+               
+              {/* Analytics */}
+              <li>
+                <Link 
+                  to="/app/analytics"
+                  className={`flex items-center px-3 py-3 transition-all duration-200 group focus-visible-only ${
+                    isActive('/analytics') 
+                      ? 'bg-white/80 text-gray-800 font-medium shadow-sm' 
+                      : 'text-white hover:bg-white/10'
+                  } rounded-lg focus:outline-none`}
+                  aria-current={isActive('/analytics') ? 'page' : undefined}
+                >
+                  <div className={`flex items-center justify-center w-9 h-9 ${isActive('/analytics') ? 'text-gray-800' : 'text-white group-hover:text-white'}`}>
+                    <svg 
+                      xmlns="http://www.w3.org/2000/svg" 
+                      viewBox="0 0 24 24" 
+                      fill="currentColor"
+                      className="w-7 h-7"
+                    >
+                      <path d="M9 2.4578V4.58152C6.06817 5.76829 4 8.64262 4 12C4 16.4183 7.58172 20 12 20C15.3574 20 18.2317 17.9318 19.4185 15H21.5422C20.2679 19.0571 16.4776 22 12 22C6.47715 22 2 17.5228 2 12C2 7.52236 4.94289 3.73207 9 2.4578ZM12 2C17.5228 2 22 6.47715 22 12C22 12.3375 21.9833 12.6711 21.9506 13H11V2.04938C11.3289 2.01672 11.6625 2 12 2ZM13 4.06189V11H19.9381C19.4869 7.38128 16.6187 4.51314 13 4.06189Z"></path>
+                    </svg>
+                  </div>
+                  <span className="ml-3 font-medium text-xl whitespace-nowrap">Analytics</span>
+                </Link>
+              </li>
+              
+              {/* Feedback */}
+              <li>
+                <Link 
+                  to="/app/feedback"
+                  className={`flex items-center px-3 py-3 transition-all duration-200 group focus-visible-only ${
+                    isActive('/feedback') 
+                      ? 'bg-white/80 text-gray-800 font-medium shadow-sm' 
+                      : 'text-white hover:bg-white/10'
+                  } rounded-lg focus:outline-none`}
+                  aria-current={isActive('/feedback') ? 'page' : undefined}
+                >
+                  <div className={`flex items-center justify-center w-9 h-9 ${isActive('/feedback') ? 'text-gray-800' : 'text-white group-hover:text-white'}`}>
+                    <svg 
+                      xmlns="http://www.w3.org/2000/svg" 
+                      width="24" 
+                      height="24" 
+                      viewBox="0 0 24 24" 
+                      className="fill-current"
+                      aria-hidden="true"
+                    >
+                      <path d="M20 2H4c-1.1 0-1.99.9-1.99 2L2 22l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zm-7 12h-2v-2h2v2zm0-4h-2V6h2v4z"/>
+                    </svg>
+                  </div>
+                  <span className="ml-3 font-medium text-xl whitespace-nowrap">Feedback</span>
+                </Link>
+              </li>
+         
             </ul>
           </nav>
           
@@ -682,7 +688,7 @@ const Sidebar = ({ isOpen, toggleSidebar }) => {
           <div className="mt-auto p-4 border-t border-white/20">
             <div className="flex items-center">
               <div className="flex-shrink-0">
-                <div className="w-10 h-10 rounded-full bg-white/20 flex items-center justify-center text-white font-bold text-lg">
+                <div className="w-10 h-8 rounded-full bg-white/20 flex items-center justify-center text-white font-bold text-lg">
                   A
                 </div>
               </div>

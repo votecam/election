@@ -95,7 +95,7 @@ const RegisterCentre = () => {
         division: '',
         subdivision: '',
         location: '',
-        gpsCoordinates: '',
+  
         pollingStations: '',
         capacity: '',
         accessibilityFeatures: [],
@@ -111,30 +111,9 @@ const RegisterCentre = () => {
 
   return (
     <div className="w-full">
-      {/* Breadcrumbs */}
-      <nav className="mb-5 text-base" aria-label="Breadcrumb">
-        <ol className="flex items-center space-x-2">
-          <li>
-            <a href="#" className="text-gray-500 hover:text-gray-700">Dashboard</a>
-          </li>
-          <li className="flex items-center">
-            <svg className="h-5 w-5 text-gray-400 mx-1" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
-              <path fillRule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clipRule="evenodd" />
-            </svg>
-            <a href="#" className="text-gray-500 hover:text-gray-700">Centre Management</a>
-          </li>
-          <li className="flex items-center">
-            <svg className="h-5 w-5 text-gray-400 mx-1" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
-              <path fillRule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clipRule="evenodd" />
-            </svg>
-            <span className="text-emerald-600 font-medium">Register Centre</span>
-          </li>
-        </ol>
-      </nav>
-      
       <header className="mb-6">
-        <h1 className="text-3xl font-bold text-gray-800">Register Polling Centre</h1>
-        <div className="w-32 h-1 bg-emerald-600 rounded-sm mt-2"></div>
+        <h1 className="text-3xl font-bold text-gray-800">Register Centres</h1>
+        <div className="w-32 h-0.5 bg-emerald-600 rounded-sm mt-2"></div>
         <div className="flex items-center mt-2">
           <p className="text-gray-600 text-lg">Add a new polling centre to the electoral information system</p>
         </div>
@@ -442,68 +421,9 @@ const RegisterCentre = () => {
               />
             </div>
           </div>
+       
           
-          {/* GPS Coordinates */}
-          <div>
-            <label htmlFor="gpsCoordinates" className="block text-base font-semibold text-gray-700 mb-1">
-              GPS Coordinates
-            </label>
-            <div className="relative">
-              <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="h-6 w-6 text-gray-600">
-                  <path d="M12 20.8995L16.9497 15.9497C19.6834 13.2161 19.6834 8.78392 16.9497 6.05025C14.2161 3.31658 9.78392 3.31658 7.05025 6.05025C4.31658 8.78392 4.31658 13.2161 7.05025 15.9497L12 20.8995ZM12 23.7279L5.63604 17.364C2.12132 13.8492 2.12132 8.15076 5.63604 4.63604C9.15076 1.12132 14.8492 1.12132 18.364 4.63604C21.8787 8.15076 21.8787 13.8492 18.364 17.364L12 23.7279ZM12 13C13.1046 13 14 12.1046 14 11C14 9.89543 13.1046 9 12 9C10.8954 9 10 9.89543 10 11C10 12.1046 10.8954 13 12 13ZM12 15C9.79086 15 8 13.2091 8 11C8 8.79086 9.79086 7 12 7C14.2091 7 16 8.79086 16 11C16 13.2091 14.2091 15 12 15Z"></path>
-                </svg>
-              </div>
-              {/* Vertical separator line */}
-              <div className="absolute inset-y-2 left-12 w-px bg-gray-300"></div>
-              <input
-                type="text"
-                name="gpsCoordinates"
-                id="gpsCoordinates"
-                className="pl-16 w-full px-4 py-3 border border-gray-300 rounded-none focus:outline-none focus:ring-1 focus:border-emerald-600 transition-shadow duration-300 text-base font-medium bg-white"
-                style={{ 
-                  "--tw-ring-color": "#00694B",
-                  "--tw-border-opacity": 1,
-                  "--tw-border-color": "rgba(0, 105, 75, var(--tw-border-opacity))"
-                }}
-                placeholder="E.g. 6.1350° N, 1.2085° E"
-                value={formData.gpsCoordinates}
-                onChange={handleChange}
-              />
-            </div>
-          </div>
-          
-          {/* Number of Polling Stations */}
-          <div>
-            <label htmlFor="pollingStations" className="block text-base font-semibold text-gray-700 mb-1">
-              Number of Polling Stations
-            </label>
-            <div className="relative">
-              <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="h-6 w-6 text-gray-600">
-                  <path fillRule="evenodd" d="M2 12C2 6.48 6.48 2 12 2s10 4.48 10 10-4.48 10-10 10S2 17.52 2 12zm5 1h10v-2H7v2z" clipRule="evenodd" />
-                </svg>
-              </div>
-              {/* Vertical separator line */}
-              <div className="absolute inset-y-2 left-12 w-px bg-gray-300"></div>
-              <input
-                type="number"
-                name="pollingStations"
-                id="pollingStations"
-                required
-                min="1"
-                className="pl-16 w-full px-4 py-3 border border-gray-300 rounded-none focus:outline-none focus:ring-1 focus:border-emerald-600 transition-shadow duration-300 text-base font-medium bg-white"
-                style={{ 
-                  "--tw-ring-color": "#00694B",
-                  "--tw-border-opacity": 1,
-                  "--tw-border-color": "rgba(0, 105, 75, var(--tw-border-opacity))"
-                }}
-                placeholder="E.g. 5"
-                value={formData.pollingStations}
-                onChange={handleChange}
-              />
-            </div>
-          </div>
+         
           
           {/* Capacity */}
             <div className="md:col-span-2">

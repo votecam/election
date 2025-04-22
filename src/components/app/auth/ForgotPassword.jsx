@@ -14,7 +14,7 @@ const ForgotPassword = () => {
     e.preventDefault();
     console.log('Password reset submitted for:', email);
     // Redirect to the EmailConfirmation page
-    navigate('/EmailConfirmation');
+    navigate('/EnterOtp');
   };
 
   const handleBackToLogin = (e) => {

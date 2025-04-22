@@ -185,51 +185,54 @@ const Feedback = () => {
     });
 
   return (
-    <div className="p-6 w-full max-w-full">
+    <div className="w-full">
       {/* Header with emerald underline */}
-      <header className="mb-8 relative">
-        <div className="flex flex-wrap justify-between items-center">
-          <div>
-            <h1 className="text-3xl font-bold text-gray-800">User Feedback</h1>
-            <div className="h-1 w-24 bg-emerald-500 rounded mt-2"></div>
-            <p className="text-gray-600 mt-3">Manage and respond to user feedback about the application</p>
-          </div>
-        </div>
+      <header className="mb-6">
+        <h1 className="text-3xl font-bold text-gray-800">User Feedback</h1>
+        <div className="w-32 h-0.5 bg-emerald-600 rounded-sm mt-2"></div>
+        <p className="text-gray-600 text-lg mt-1">Manage and respond to user feedback about the application</p>
       </header>
       
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
         {/* Feedback List */}
         <div className="lg:col-span-2">
-          <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
+          <div className="bg-white rounded-md border border-gray-200 overflow-hidden">
             <div className="px-6 py-4 bg-gray-50 border-b border-gray-200 flex justify-between items-center flex-wrap gap-4">
-              <h2 className="text-2xl font-semibold text-gray-800">User Feedback List</h2>
+              <h2 className="text-xl font-semibold text-gray-800">User Feedback List</h2>
               
               {/* Search and filter controls */}
               <div className="flex flex-wrap gap-3 items-center">
                 {/* Search input */}
                 <div className="relative">
+                  <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                    <svg className="h-5 w-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                    </svg>
+                  </div>
                   <input
                     type="text"
                     placeholder="Search feedback..."
                     value={searchTerm}
                     onChange={(e) => setSearchTerm(e.target.value)}
-                    className="pl-8 py-2 pr-3 border border-gray-300 rounded-md text-base focus:ring-emerald-500 focus:border-emerald-500"
+                    className="pl-10 py-2 pr-3 border border-gray-300 rounded-none text-base focus:outline-none focus:ring-1 focus:border-emerald-600 transition-shadow duration-300"
+                    style={{ 
+                      "--tw-ring-color": "#00694B",
+                      "--tw-border-opacity": 1,
+                      "--tw-border-color": "rgba(0, 105, 75, var(--tw-border-opacity))"
+                    }}
                   />
-                  <svg 
-                    className="absolute left-2.5 top-2.5 h-4 w-4 text-gray-400" 
-                    xmlns="http://www.w3.org/2000/svg" 
-                    viewBox="0 0 20 20" 
-                    fill="currentColor"
-                  >
-                    <path fillRule="evenodd" d="M8 4a4 4 0 100 8 4 4 0 000-8zM2 8a6 6 0 1110.89 3.476l4.817 4.817a1 1 0 01-1.414 1.414l-4.816-4.816A6 6 0 012 8z" clipRule="evenodd" />
-                  </svg>
                 </div>
                 
                 {/* Type filter */}
                 <select
                   value={filterType}
                   onChange={(e) => setFilterType(e.target.value)}
-                  className="py-2 px-3 border border-gray-300 bg-white rounded-md text-base focus:outline-none focus:ring-emerald-500 focus:border-emerald-500"
+                  className="py-2 px-3 border border-gray-300 bg-white rounded-none text-base focus:outline-none focus:ring-1 focus:border-emerald-600 transition-shadow duration-300"
+                  style={{ 
+                    "--tw-ring-color": "#00694B",
+                    "--tw-border-opacity": 1,
+                    "--tw-border-color": "rgba(0, 105, 75, var(--tw-border-opacity))"
+                  }}
                 >
                   <option value="all">All Types</option>
                   <option value="issue">Issues</option>
@@ -241,7 +244,12 @@ const Feedback = () => {
                 <select
                   value={sortOption}
                   onChange={(e) => setSortOption(e.target.value)}
-                  className="py-2 px-3 border border-gray-300 bg-white rounded-md text-base focus:outline-none focus:ring-emerald-500 focus:border-emerald-500"
+                  className="py-2 px-3 border border-gray-300 bg-white rounded-none text-base focus:outline-none focus:ring-1 focus:border-emerald-600 transition-shadow duration-300"
+                  style={{ 
+                    "--tw-ring-color": "#00694B",
+                    "--tw-border-opacity": 1,
+                    "--tw-border-color": "rgba(0, 105, 75, var(--tw-border-opacity))"
+                  }}
                 >
                   <option value="date">Newest First</option>
                   <option value="dateAsc">Oldest First</option>
@@ -261,14 +269,14 @@ const Feedback = () => {
                           <span className="font-medium text-gray-900 text-lg">{feedback.user}</span>
                           <div className="flex items-center gap-2 mt-1">
                             {renderStars(feedback.rating)}
-                            <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-sm font-medium ${getBadgeStyle(feedback.type)}`}>
+                            <span className={`inline-flex items-center px-2.5 py-0.5 rounded-none text-sm font-medium ${getBadgeStyle(feedback.type)}`}>
                               {feedback.type.charAt(0).toUpperCase() + feedback.type.slice(1)}
                             </span>
                           </div>
                         </div>
                         <div className="flex flex-col items-end">
                           <span className="text-base text-gray-500 whitespace-nowrap">{feedback.date}</span>
-                          <span className={`mt-1 inline-flex items-center px-2.5 py-0.5 rounded-full text-sm font-medium ${getBadgeStyle(feedback.status)}`}>
+                          <span className={`mt-1 inline-flex items-center px-2.5 py-0.5 rounded-none text-sm font-medium ${getBadgeStyle(feedback.status)}`}>
                             {feedback.status.charAt(0).toUpperCase() + feedback.status.slice(1).replace(/-/g, ' ')}
                           </span>
                         </div>
@@ -277,10 +285,13 @@ const Feedback = () => {
                       <p className="text-gray-700 mb-3 text-base">{feedback.content}</p>
                       
                       <div className="flex justify-end space-x-2 mt-2">
-                        <button className="px-3 py-1.5 text-sm font-medium text-emerald-700 bg-emerald-50 rounded-md hover:bg-emerald-100 transition-colors">
+                        <button 
+                          className="px-3 py-1.5 text-sm font-medium text-white rounded-none shadow-sm transition-all duration-300"
+                          style={{ background: "linear-gradient(to right, #00694B, #005941)" }}
+                        >
                           Reply
                         </button>
-                        <button className="px-3 py-1.5 text-sm font-medium text-gray-700 bg-gray-100 rounded-md hover:bg-gray-200 transition-colors">
+                        <button className="px-3 py-1.5 text-sm font-medium text-gray-700 bg-gray-100 rounded-none hover:bg-gray-200 transition-colors">
                           Update Status
                         </button>
                       </div>
@@ -290,8 +301,20 @@ const Feedback = () => {
               </div>
             ) : (
               <div className="p-8 text-center">
-                <svg className="mx-auto h-12 w-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z" />
+                <svg 
+                  className="mx-auto h-14 w-14 text-emerald-600"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                  strokeWidth="1"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                >
+                  <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+                  <polyline points="14 2 14 8 20 8" />
+                  <line x1="16" y1="13" x2="8" y2="13" />
+                  <line x1="16" y1="17" x2="8" y2="17" />
+                  <line x1="10" y1="9" x2="8" y2="9" />
                 </svg>
                 <p className="mt-4 text-gray-500 text-lg">No feedback matching your filters</p>
                 <p className="text-base text-gray-400 mt-1">Try adjusting your search criteria</p>
@@ -308,22 +331,22 @@ const Feedback = () => {
         
         {/* Submit Feedback Form in the side panel */}
         <div className="lg:col-span-1">
-          <div className="bg-white rounded-lg border border-gray-200 overflow-hidden sticky top-6">
+          <div className="bg-white rounded-md border border-gray-200 overflow-hidden sticky top-6">
             <div className="px-6 py-4 bg-gray-50 border-b border-gray-200">
-              <h2 className="text-2xl font-semibold text-gray-800">Add New Feedback</h2>
+              <h2 className="text-xl font-semibold text-gray-800">Add New Feedback</h2>
             </div>
             
             <div className="p-6">
               {submitSuccess && (
-                <div className="mb-6 p-4 rounded-md bg-emerald-50 border border-emerald-200">
+                <div className="mb-6 p-4 rounded-none bg-emerald-50 border-l-4 border-emerald-500">
                   <div className="flex">
                     <div className="flex-shrink-0">
-                      <svg className="h-5 w-5 text-emerald-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                      <svg className="h-5 w-5 text-emerald-500" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
                         <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
                       </svg>
                     </div>
                     <div className="ml-3">
-                      <p className="text-sm font-medium text-emerald-800">
+                      <p className="text-base font-medium text-emerald-800">
                         Feedback added successfully
                       </p>
                     </div>
@@ -333,30 +356,54 @@ const Feedback = () => {
               
               <form onSubmit={handleSubmit}>
                 <div className="mb-4">
-                  <label htmlFor="user-name" className="block text-base font-medium text-gray-700 mb-1">
-                    User Name
+                  <label htmlFor="user-name" className="block text-base font-semibold text-gray-700 mb-1">
+                    User Name <span className="text-red-600">*</span>
                   </label>
-                  <input
-                    id="user-name"
-                    name="user-name"
-                    type="text"
-                    className="block w-full rounded-md border-gray-300 focus:border-emerald-500 focus:ring-emerald-500 text-base"
-                    placeholder="Enter user name"
-                    value={userName}
-                    onChange={(e) => setUserName(e.target.value)}
-                    required
-                  />
+                  <div className="relative">
+                    <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                      <svg className="h-5 w-5 text-gray-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                      </svg>
+                    </div>
+                    <div className="absolute inset-y-2 left-12 w-px bg-gray-300"></div>
+                    <input
+                      id="user-name"
+                      name="user-name"
+                      type="text"
+                      className="pl-16 w-full px-4 py-3 border border-gray-300 rounded-none focus:outline-none focus:ring-1 focus:border-emerald-600 transition-shadow duration-300 text-base font-medium bg-white"
+                      style={{ 
+                        "--tw-ring-color": "#00694B",
+                        "--tw-border-opacity": 1,
+                        "--tw-border-color": "rgba(0, 105, 75, var(--tw-border-opacity))"
+                      }}
+                      placeholder="Enter user name"
+                      value={userName}
+                      onChange={(e) => setUserName(e.target.value)}
+                      required
+                    />
+                  </div>
                 </div>
                 
                 <div className="mb-4">
-                  <label htmlFor="feedback-type" className="block text-base font-medium text-gray-700 mb-1">
+                  <label htmlFor="feedback-type" className="block text-base font-semibold text-gray-700 mb-1">
                     Feedback Type
                   </label>
                   <div className="relative">
+                    <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                      <svg className="h-5 w-5 text-gray-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 8h10M7 12h4m1 8l-4-4H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-3l-4 4z" />
+                      </svg>
+                    </div>
+                    <div className="absolute inset-y-2 left-12 w-px bg-gray-300"></div>
                     <select
                       id="feedback-type"
                       name="feedback-type"
-                      className="block w-full rounded-md border-gray-300 pr-10 focus:border-emerald-500 focus:ring-emerald-500 text-base appearance-none"
+                      className="pl-16 w-full px-4 py-3 border border-gray-300 rounded-none focus:outline-none focus:ring-1 focus:border-emerald-600 transition-shadow duration-300 text-base font-medium bg-white"
+                      style={{ 
+                        "--tw-ring-color": "#00694B",
+                        "--tw-border-opacity": 1,
+                        "--tw-border-color": "rgba(0, 105, 75, var(--tw-border-opacity))"
+                      }}
                       value={feedbackType}
                       onChange={(e) => setFeedbackType(e.target.value)}
                     >
@@ -364,16 +411,11 @@ const Feedback = () => {
                       <option value="issue">Issue Report</option>
                       <option value="compliment">Compliment</option>
                     </select>
-                    <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-emerald-600">
-                      <svg className="h-5 w-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
-                        <path fillRule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clipRule="evenodd" />
-                      </svg>
-                    </div>
                   </div>
                 </div>
                 
                 <div className="mb-4">
-                  <label htmlFor="rating" className="block text-base font-medium text-gray-700 mb-1">
+                  <label htmlFor="rating" className="block text-base font-semibold text-gray-700 mb-1">
                     Rating
                   </label>
                   <div className="flex items-center space-x-1">
@@ -397,40 +439,47 @@ const Feedback = () => {
                   </div>
                 </div>
                 
-                <div className="mb-4">
-                  <label htmlFor="feedback-text" className="block text-base font-medium text-gray-700 mb-1">
-                    Feedback Message
+                <div className="mb-5">
+                  <label htmlFor="feedback-text" className="block text-base font-semibold text-gray-700 mb-1">
+                    Feedback Message <span className="text-red-600">*</span>
                   </label>
-                  <textarea
-                    id="feedback-text"
-                    name="feedback-text"
-                    rows={4}
-                    className="block w-full rounded-md border-gray-300 focus:border-emerald-500 focus:ring-emerald-500 text-base"
-                    placeholder="Enter feedback details"
-                    value={feedbackText}
-                    onChange={(e) => setFeedbackText(e.target.value)}
-                    required
-                  />
+                  <div className="relative">
+                    <textarea
+                      id="feedback-text"
+                      name="feedback-text"
+                      rows={4}
+                      className="w-full px-4 py-3 border border-gray-300 rounded-none focus:outline-none focus:ring-1 focus:border-emerald-600 transition-shadow duration-300 text-base font-medium bg-white"
+                      style={{ 
+                        "--tw-ring-color": "#00694B",
+                        "--tw-border-opacity": 1,
+                        "--tw-border-color": "rgba(0, 105, 75, var(--tw-border-opacity))"
+                      }}
+                      placeholder="Enter feedback details"
+                      value={feedbackText}
+                      onChange={(e) => setFeedbackText(e.target.value)}
+                      required
+                    />
+                  </div>
                 </div>
                 
-                <div className="flex justify-end">
+                <div className="pt-2">
                   <button
                     type="submit"
-                    className={`inline-flex justify-center py-2.5 px-5 rounded-md text-base font-medium text-white transition-all ${
-                      isSubmitting || !feedbackText.trim() || !userName.trim()
-                        ? 'bg-emerald-400 cursor-not-allowed' 
-                        : 'bg-gradient-to-r from-emerald-500 to-emerald-600 hover:from-emerald-600 hover:to-emerald-700 shadow-sm'
-                    } focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-emerald-500`}
+                    className="w-full py-3 px-5 text-white font-semibold rounded-none shadow-sm text-base focus:outline-none focus:ring-1 focus:ring-offset-1 transition-all duration-300"
+                    style={{ 
+                      background: "linear-gradient(to right, #00694B, #005941)",
+                      "--tw-ring-color": "#00694B" 
+                    }}
                     disabled={isSubmitting || !feedbackText.trim() || !userName.trim()}
                   >
                     {isSubmitting ? (
-                      <>
-                        <svg className="animate-spin -ml-1 mr-2 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                      <div className="flex items-center justify-center">
+                        <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
                           <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
                           <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                         </svg>
                         Submitting...
-                      </>
+                      </div>
                     ) : (
                       'Add Feedback'
                     )}

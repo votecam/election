@@ -1,11 +1,13 @@
 import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link, useLocation } from 'react-router-dom';
 
 const Navbar = ({ toggleSidebar, sidebarOpen }) => {
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const [notificationsOpen, setNotificationsOpen] = useState(false);
   const [languageOpen, setLanguageOpen] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
+  const location = useLocation();
+  const [currentPath, setCurrentPath] = useState(location.pathname);
   const navigate = useNavigate();
 
   // Check if screen is mobile on resize
@@ -43,6 +45,94 @@ const Navbar = ({ toggleSidebar, sidebarOpen }) => {
       document.removeEventListener('mousedown', handleClickOutside);
     };
   }, [dropdownOpen, notificationsOpen, languageOpen]);
+
+  // Generate breadcrumbs based on current path
+  const getBreadcrumbs = () => {
+    const path = currentPath;
+    const parts = path.split('/').filter(part => part);
+    
+    // Default breadcrumbs setup
+    const breadcrumbs = [{ name: 'Dashboard', path: '/app/dashboard', current: parts.length === 2 && parts[1] === 'dashboard' }];
+    
+    if (parts.length > 1) {
+      // Skip 'app' in the path
+      const relevantParts = parts.slice(1);
+      
+      // Special cases for better naming and hierarchical structure
+      if (relevantParts[0] === 'candidates') {
+        breadcrumbs.push({ name: 'Candidate Management', path: '/app/candidates', current: relevantParts.length === 1 });
+        
+        if (relevantParts.length > 1) {
+          const action = relevantParts[1];
+          if (action === 'register') {
+            breadcrumbs.push({ name: 'Register Candidate', path: '/app/candidates/register', current: true });
+          } else if (action === 'manage') {
+            breadcrumbs.push({ name: 'Manage Candidates', path: '/app/candidates/manage', current: true });
+          } else {
+            // Format other actions
+            const formattedAction = action.charAt(0).toUpperCase() + action.slice(1).replace(/-/g, ' ');
+            breadcrumbs.push({ 
+              name: `${formattedAction} Candidate`, 
+              path: `/app/candidates/${action}`, 
+              current: true 
+            });
+          }
+        }
+      } 
+      else if (relevantParts[0] === 'centres' || relevantParts[0] === 'centers') {
+        breadcrumbs.push({ name: 'Centre Management', path: '/app/centres', current: relevantParts.length === 1 });
+        
+        if (relevantParts.length > 1) {
+          const action = relevantParts[1];
+          if (action === 'register') {
+            breadcrumbs.push({ name: 'Register Centre', path: '/app/centres/register', current: true });
+          } else if (action === 'manage') {
+            breadcrumbs.push({ name: 'Manage Centres', path: '/app/centres/manage', current: true });
+          } else if (action === 'upload') {
+            breadcrumbs.push({ name: 'Upload Centre', path: '/app/centres/upload', current: true });
+          } else {
+            // Format other actions
+            const formattedAction = action.charAt(0).toUpperCase() + action.slice(1).replace(/-/g, ' ');
+            breadcrumbs.push({ 
+              name: `${formattedAction} Centre`, 
+              path: `/app/centres/${action}`, 
+              current: true 
+            });
+          }
+        }
+      }
+      else if (relevantParts[0] === 'analytics') {
+        breadcrumbs.push({ name: 'Analytics', path: '/app/analytics', current: true });
+      }
+      else if (relevantParts[0] === 'settings') {
+        breadcrumbs.push({ name: 'Settings', path: '/app/settings', current: true });
+      }
+      else if (relevantParts[0] !== 'dashboard') {
+        // For any other routes not specifically handled
+        relevantParts.forEach((part, index) => {
+          // Format the part to be title case
+          const formattedName = part.charAt(0).toUpperCase() + part.slice(1).replace(/-/g, ' ');
+          
+          // Build the path progressively
+          const currentPath = '/app/' + relevantParts.slice(0, index + 1).join('/');
+          
+          // Add to breadcrumbs
+          breadcrumbs.push({
+            name: formattedName,
+            path: currentPath,
+            current: index === relevantParts.length - 1
+          });
+        });
+      }
+    }
+    
+    return breadcrumbs;
+  };
+  
+  // Update breadcrumbs when path changes
+  useEffect(() => {
+    setCurrentPath(location.pathname);
+  }, [location]);
 
   const languages = [
     { code: 'en', name: 'English', flag: '/images/flags/us.svg' },
@@ -193,8 +283,28 @@ const Navbar = ({ toggleSidebar, sidebarOpen }) => {
                 />
               </svg>
             </button>
-            
-           
+          </div>
+          
+          {/* Center - Breadcrumbs - Hidden on mobile */}
+          <div className="hidden md:block flex-1 mx-4">
+            <nav className="text-base" aria-label="Breadcrumb">
+              <ol className="flex items-center space-x-2">
+                {getBreadcrumbs().map((breadcrumb, index) => (
+                  <li key={breadcrumb.path} className={index > 0 ? "flex items-center" : ""}>
+                    {index > 0 && (
+                      <svg className="h-5 w-5 text-gray-400 mx-1" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+                        <path fillRule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clipRule="evenodd" />
+                      </svg>
+                    )}
+                    {breadcrumb.current ? (
+                      <span className="text-emerald-600 font-medium">{breadcrumb.name}</span>
+                    ) : (
+                      <Link to={breadcrumb.path} className="text-gray-500 hover:text-gray-700">{breadcrumb.name}</Link>
+                    )}
+                  </li>
+                ))}
+              </ol>
+            </nav>
           </div>
 
           {/* Right Side - Actions */}
@@ -264,7 +374,7 @@ const Navbar = ({ toggleSidebar, sidebarOpen }) => {
                   <path strokeLinecap="round" strokeLinejoin="round" d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z" />
                 </svg>
                 {newNotificationsCount > 0 && (
-                  <span className="absolute top-0 right-0 block h-5 w-5 rounded-full bg-red-500 text-white text-xs font-medium flex items-center justify-center transform -translate-y-1/4 translate-x-1/4">
+                  <span className="absolute top-0 right-0 block h-5 w-5 rounded-full bg-red-500 text-white text-xs font-medium flex items-center justify-center transform -translate-y-1/4 translate-x-1/4 mb-6 mt-2">
                     {newNotificationsCount}
                   </span>
                 )}
@@ -381,8 +491,8 @@ const Navbar = ({ toggleSidebar, sidebarOpen }) => {
                   </div>
 
                   <div className="py-1">
-                    <a
-                      href="#"
+                    <Link
+                      to="/app/profile"
                       className="group flex items-center px-3 py-2 text-sm text-gray-700 hover:bg-gray-50"
                       role="menuitem"
                     >
@@ -390,9 +500,9 @@ const Navbar = ({ toggleSidebar, sidebarOpen }) => {
                         <path strokeLinecap="round" strokeLinejoin="round" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
                       </svg>
                       Your Profile
-                    </a>
+                    </Link>
                     <a
-                      href="#"
+                      href="/app/settings"
                       className="group flex items-center px-3 py-2 text-sm text-gray-700 hover:bg-gray-50"
                       role="menuitem"
                     >

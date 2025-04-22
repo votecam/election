@@ -9,11 +9,11 @@ const StatCard = ({ title, value, icon, iconBg, iconColor }) => {
       aria-label={`${title} statistics card showing ${value}`}
     >
       {/* Large gray background decorative icon */}
-      <div className="absolute right-0 top-0 bottom-0 w-1/2 flex items-center justify-center opacity-[0.06] pointer-events-none" aria-hidden="true">
-        <div className="w-48 h-48">
+      <div className="absolute right-[-35px] bottom-[-50px] opacity-[0.06] pointer-events-none" aria-hidden="true">
+        <div className="w-36 h-36">
           {React.cloneElement(icon, { className: "w-full h-full text-gray-500" })}
-              </div>
-          </div>
+        </div>
+      </div>
           
       <div className="p-6 relative z-10">
         <div className="flex items-start">

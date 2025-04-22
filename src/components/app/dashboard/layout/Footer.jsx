@@ -7,17 +7,7 @@ const Footer = () => {
         <p className="text-gray-600 text-sm mb-2 md:mb-0">
           &copy; {new Date().getFullYear()} Election Information System. All rights reserved.
         </p>
-        <div className="flex space-x-4">
-          <a href="#" className="text-gray-600 hover:text-emerald-600 text-sm">
-            Privacy Policy
-          </a>
-          <a href="#" className="text-gray-600 hover:text-emerald-600 text-sm">
-            Terms of Service
-          </a>
-          <a href="#" className="text-gray-600 hover:text-emerald-600 text-sm">
-            Contact Us
-          </a>
-        </div>
+        
       </div>
     </footer>
   );

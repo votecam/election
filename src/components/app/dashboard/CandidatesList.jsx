@@ -160,7 +160,7 @@ const CandidatesList = () => {
                 className={`px-4 sm:px-6 py-3 sm:py-4 ${index !== 3 ? 'border-b border-gray-50' : ''} hover:bg-gray-50/50 transition-colors`}
               >
                 <div className="flex items-center">
-                  <div className="flex-shrink-0 h-10 w-10 sm:h-12 sm:w-12">
+                  <div className="flex-shrink-0 h-10 w-10 sm:h-12 sm:w-12 relative">
                     {/* Real image from randomuser.me or fallback to initials */}
                     {candidate.imageUrl ? (
                       <img 
@@ -177,13 +177,29 @@ const CandidatesList = () => {
                         {candidate.name.split(' ').map(n => n[0]).join('')}
                       </div>
                     )}
+                    
+                    {/* Party Badge positioned at bottom right of the profile image */}
+                    <div className="absolute bottom-0 right-0 z-20">
+                      <div className="w-5 h-5 sm:w-6 sm:h-6 rounded-full flex items-center justify-center border-2 border-white overflow-hidden bg-white shadow-sm">
+                        {/* Party Icon */}
+                        {candidate.party === 'CPDM' ? (
+                          <span className="bg-red-600 text-white w-full h-full flex items-center justify-center text-[8px] sm:text-[10px] font-bold">CP</span>
+                        ) : candidate.party === 'SDF' ? (
+                          <span className="bg-blue-600 text-white w-full h-full flex items-center justify-center text-[8px] sm:text-[10px] font-bold">SD</span>
+                        ) : candidate.party === 'UNDP' ? (
+                          <span className="bg-green-600 text-white w-full h-full flex items-center justify-center text-[8px] sm:text-[10px] font-bold">UN</span>
+                        ) : candidate.party === 'MRC' ? (
+                          <span className="bg-purple-600 text-white w-full h-full flex items-center justify-center text-[8px] sm:text-[10px] font-bold">MR</span>
+                        ) : (
+                          <span className="bg-gray-600 text-white w-full h-full flex items-center justify-center text-[8px] sm:text-[10px] font-bold">{candidate.party.substring(0,2)}</span>
+                        )}
+                      </div>
+                    </div>
                   </div>
+                  
                   <div className="ml-3 sm:ml-4 flex-1 min-w-0">
                     <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between">
                       <p className="text-base sm:text-lg font-medium text-gray-800 truncate">{candidate.name}</p>
-                      <div className="mt-1 sm:mt-0">
-                        {getPartyBadge(candidate.party)}
-                      </div>
                     </div>
                     <div className="flex flex-col mt-0.5 sm:mt-0">
                       <p className="text-sm sm:text-base text-gray-500 truncate max-w-[200px] sm:max-w-[300px]">

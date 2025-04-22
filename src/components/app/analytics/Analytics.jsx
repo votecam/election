@@ -44,24 +44,9 @@ const Analytics = () => {
 
   return (
     <div className="w-full">
-      {/* Breadcrumbs */}
-      <nav className="mb-5 text-base" aria-label="Breadcrumb">
-        <ol className="flex items-center space-x-2">
-          <li>
-            <a href="#" className="text-gray-500 hover:text-gray-700">Dashboard</a>
-          </li>
-          <li className="flex items-center">
-            <svg className="h-5 w-5 text-gray-400 mx-1" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
-              <path fillRule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clipRule="evenodd" />
-            </svg>
-            <span className="text-emerald-600 font-medium">Analytics Dashboard</span>
-          </li>
-        </ol>
-      </nav>
-      
       <header className="mb-6">
         <h1 className="text-3xl font-bold text-gray-800">Voting Information Analytics</h1>
-        <div className="w-32 h-1 bg-emerald-600 rounded-sm mt-2"></div>
+        <div className="w-32 h-0.5 bg-emerald-600 rounded-sm mt-2"></div>
         <p className="text-gray-600 text-lg mt-2">Visual insights into polling centers distribution and accessibility</p>
       </header>
       
@@ -197,8 +182,8 @@ const Analytics = () => {
                     <div className="absolute inset-0 bg-white opacity-0 group-hover:opacity-20 transition-opacity"></div>
                   </div>
                   <div className="text-xs font-medium text-gray-500 mt-2">{item.month}</div>
-          </div>
-        ))}
+                </div>
+              ))}
             </div>
           </div>
           
@@ -228,7 +213,7 @@ const Analytics = () => {
                     <div
                       className="bg-emerald-500 h-3 rounded-full"
                       style={{ width: `${group.percentage}%` }}
-                ></div>
+                    ></div>
                   </div>
                 </div>
                 <span className="ml-3 text-sm font-medium text-gray-700">
@@ -294,7 +279,7 @@ const Analytics = () => {
                 <div className="absolute inset-0 flex flex-col items-center justify-center">
                   <span className="text-2xl font-bold" style={{ color: item.color }}>{item.count}</span>
                   <span className="text-sm text-gray-500">{item.status}</span>
-              </div>
+                </div>
               </div>
               <div className="text-sm font-medium text-gray-700 mt-2">{item.percentage}% of Centers</div>
             </div>
