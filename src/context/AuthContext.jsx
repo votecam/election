@@ -94,14 +94,14 @@ export const AuthProvider = ({ children }) => {
         }
       }
       
-      // Clear localStorage
+    // Clear localStorage
       localStorage.removeItem('token');
-      localStorage.removeItem('user');
-      
-      // Update state
-      setUser(null);
-      
-      // Redirect to login page
+    localStorage.removeItem('user');
+    
+    // Update state
+    setUser(null);
+    
+    // Redirect to login page
       navigate('/login', { replace: true });
     } catch (err) {
       console.error('Error during logout process:', err);

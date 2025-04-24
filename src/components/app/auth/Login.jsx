@@ -91,11 +91,11 @@ const Login = () => {
       setAlert({ show: false, type: 'info', message: '' });
       
       // Use a generic error message for all login failures for better security
-      setAlert({
-        show: true,
-        type: 'error',
+        setAlert({
+          show: true,
+          type: 'error',
         message: 'Invalid email or password'
-      });
+        });
 
       // Auto-hide error alert after 3 seconds
       setTimeout(() => {
