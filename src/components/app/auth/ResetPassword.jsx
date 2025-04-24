@@ -1,8 +1,8 @@
-import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import React, { useState, useEffect } from 'react';
+import { useNavigate, useLocation } from 'react-router-dom';
 import AuthInfo from './AuthInfo';
 import Alert from '../../common/Alert';
-import mockUserService from '../../../services/mockUserService';
+import apiService from '../../../services/apiService';
 
 const ResetPassword = () => {
   const [formData, setFormData] = useState({
@@ -15,7 +15,31 @@ const ResetPassword = () => {
   const [errors, setErrors] = useState({});
   const [alert, setAlert] = useState({ show: false, type: 'info', message: '' });
   const [isLoading, setIsLoading] = useState(false);
+  
   const navigate = useNavigate();
+  const location = useLocation();
+  const [email, setEmail] = useState('');
+  const [otp, setOtp] = useState('');
+
+  useEffect(() => {
+    // Check if we have email and OTP from previous page
+    if (location.state && location.state.email && location.state.otp) {
+      setEmail(location.state.email);
+      setOtp(location.state.otp);
+    } else {
+      // If missing required data, show error and redirect back to forgot password
+      setAlert({
+        show: true,
+        type: 'error',
+        message: 'Missing required information. Please restart the password reset process.'
+      });
+      
+      // Redirect after a short delay
+      setTimeout(() => {
+        navigate('/forgot-password');
+      }, 3000);
+    }
+  }, [location, navigate]);
 
   const { password, confirmPassword } = formData;
 
@@ -88,11 +112,21 @@ const ResetPassword = () => {
       return;
     }
     
+    // Ensure we have email and OTP before proceeding
+    if (!email || !otp) {
+      setAlert({
+        show: true,
+        type: 'error',
+        message: 'Missing required information. Please restart the password reset process.'
+      });
+      return;
+    }
+    
     setIsLoading(true);
     
     try {
-      // Simulate API call for password reset
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      // Call the real API for password reset with both password and confirmPassword
+      await apiService.auth.resetPassword(email, otp, password, confirmPassword);
       
       // Show success message
       setAlert({
@@ -109,7 +143,7 @@ const ResetPassword = () => {
       setAlert({
         show: true,
         type: 'error',
-        message: 'Failed to reset password. Please try again.'
+        message: error.message || 'Failed to reset password. Please try again.'
       });
       
       // Auto-hide error alert after 3 seconds

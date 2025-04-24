@@ -137,9 +137,8 @@ const Navbar = ({ toggleSidebar, sidebarOpen }) => {
   }, [location]);
 
   const languages = [
-    { code: 'en', name: 'English', flag: '/images/flags/us.svg' },
-    { code: 'fr', name: 'Français', flag: '/images/flags/fr.svg' },
-    { code: 'es', name: 'Español', flag: '/images/flags/es.svg' },
+    { code: 'en', name: 'English', flag: '/images/usflag.png' },
+    { code: 'fr', name: 'Français', flag: '/images/cameroonflag.png' },
   ];
 
   const [currentLanguage, setCurrentLanguage] = useState(languages[0]);
@@ -323,8 +322,8 @@ const Navbar = ({ toggleSidebar, sidebarOpen }) => {
               >
                 <span className="sr-only">Change language</span>
                 <div className="flex items-center">
-                  <div className="h-6 w-6 flex items-center justify-center rounded bg-gray-100 text-gray-700">
-                    <span className="text-sm font-medium">{currentLanguage.code.toUpperCase().slice(0, 2)}</span>
+                  <div className="h-6 w-6 flex items-center justify-center rounded overflow-hidden">
+                    <img src={currentLanguage.flag} alt={currentLanguage.name} className="w-full h-full object-cover" />
                   </div>
                   <svg className="ml-1 h-4 w-4 text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
@@ -351,6 +350,9 @@ const Navbar = ({ toggleSidebar, sidebarOpen }) => {
                         }`}
                         role="menuitem"
                       >
+                        <div className="h-5 w-5 rounded overflow-hidden mr-2">
+                          <img src={language.flag} alt={language.name} className="w-full h-full object-cover" />
+                        </div>
                         <span className="flex-1">{language.name}</span>
                         {currentLanguage.code === language.code && (
                           <svg className="h-4 w-4 text-gray-600" viewBox="0 0 20 20" fill="currentColor">

@@ -176,7 +176,7 @@ const OTPVerification = () => {
       
       // Redirect to reset password page after a short delay
       setTimeout(() => {
-        navigate('/ResetPassword', { state: { email, otpCode: otpValue } });
+        navigate('/ResetPassword', { state: { email, otp: otpValue } });
       }, 1500);
     } catch (error) {
       // Show error message

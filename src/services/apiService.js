@@ -152,6 +152,36 @@ const apiService = {
       }
     },
     
+    // Reset password endpoint
+    resetPassword: async (email, otp, password, confirmPassword) => {
+      try {
+        const response = await api.post('/user/reset-password', { 
+          email, 
+          otp, 
+          password,
+          confirmPassword 
+        });
+        
+        // Check if response is successful
+        if (response.data && response.data.status === 'success') {
+          return response.data;
+        } else if (response.data && response.data.status === 'fail') {
+          // Handle failure status explicitly
+          throw new Error(response.data.message || 'Failed to reset password');
+        } else {
+          throw new Error('Failed to reset password');
+        }
+      } catch (error) {
+        console.error('Reset password error:', error); // Add for debugging
+        // If the error has a response, extract the message
+        if (error.response && error.response.data) {
+          throw new Error(error.response.data.message || 'Failed to reset password. Please try again.');
+        }
+        // Otherwise, use the error message or a default
+        throw new Error(error.message || 'Failed to reset password. Please try again.');
+      }
+    },
+    
     // You can add other auth-related endpoints here as needed
     // register, refreshToken, etc.
   },
@@ -211,6 +241,74 @@ const apiService = {
       }
     }
     // Add more polling endpoints as needed
+  },
+  
+  // Centre management endpoints
+  centres: {
+    // Register a new electoral centre
+    register: async (centreData) => {
+      try {
+        const response = await api.post('/centre/register-centre', centreData);
+        
+        // Check if response is successful
+        if (response.data && response.data.status === 'success') {
+          return response.data.data;
+        } else if (response.data && response.data.status === 'fail') {
+          // Handle failure status explicitly
+          throw new Error(response.data.message || 'Failed to register centre');
+        } else {
+          throw new Error('Failed to register centre');
+        }
+      } catch (error) {
+        console.error('Centre registration error:', error); // Add for debugging
+        // If the error has a response, extract the message
+        if (error.response && error.response.data) {
+          throw new Error(error.response.data.message || 'Failed to register electoral centre. Please try again.');
+        }
+        // Otherwise, use the error message or a default
+        throw new Error(error.message || 'Failed to register electoral centre. Please try again.');
+      }
+    },
+    
+    // Bulk register multiple electoral centres
+    registerBulk: async (centresData) => {
+      try {
+        const response = await api.post('/centre/upload-centre-bulk', centresData);
+        
+        // Check if response is successful
+        if (response.data && response.data.status === 'success') {
+          return response.data;
+        } else if (response.data && response.data.status === 'fail') {
+          // Handle failure status explicitly
+          throw new Error(response.data.message || 'Failed to register centres in bulk');
+        } else {
+          throw new Error('Failed to register centres in bulk');
+        }
+      } catch (error) {
+        console.error('Bulk centre registration error:', error); // Add for debugging
+        // If the error has a response, extract the message
+        if (error.response && error.response.data) {
+          throw new Error(error.response.data.message || 'Failed to register electoral centres in bulk. Please try again.');
+        }
+        // Otherwise, use the error message or a default
+        throw new Error(error.message || 'Failed to register electoral centres in bulk. Please try again.');
+      }
+    },
+    
+    // Get all centres - placeholder for future implementation
+    getAll: async () => {
+      try {
+        const response = await api.get('/centre/centres');
+        if (response.data && response.data.status === 'success') {
+          return response.data.data;
+        } else {
+          throw new Error('Invalid centres data received');
+        }
+      } catch (error) {
+        throw new Error(error.response?.data?.message || 'Failed to fetch electoral centres');
+      }
+    }
+    // Add more centre endpoints as needed
   }
   
   // You can add more API slices here (e.g., elections, results, etc.)
