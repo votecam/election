@@ -10,7 +10,7 @@ const Navbar = ({ toggleSidebar, sidebarOpen }) => {
   const location = useLocation();
   const [currentPath, setCurrentPath] = useState(location.pathname);
   const navigate = useNavigate();
-  const { logout } = useAuth();
+  const { logout, user } = useAuth();
 
   // Check if screen is mobile on resize
   useEffect(() => {
@@ -259,6 +259,24 @@ const Navbar = ({ toggleSidebar, sidebarOpen }) => {
   // Count new notifications
   const newNotificationsCount = notifications.filter(n => n.isNew).length;
   
+  // Helper function to get user initials
+  const getUserInitials = () => {
+    if (!user?.name) return 'U';
+    
+    const nameParts = user.name.split(' ');
+    if (nameParts.length === 1) return nameParts[0].charAt(0).toUpperCase();
+    
+    return (nameParts[0].charAt(0) + nameParts[nameParts.length - 1].charAt(0)).toUpperCase();
+  };
+
+  // Get display role
+  const getDisplayRole = () => {
+    if (!user?.role) return 'User';
+    
+    const role = user.role;
+    return role.charAt(0).toUpperCase() + role.slice(1);
+  };
+
   return (
     <header className="bg-white border-b border-gray-200 sticky top-0 z-30">
       <div className="mx-auto px-2 sm:px-4 md:px-6">
@@ -467,11 +485,15 @@ const Navbar = ({ toggleSidebar, sidebarOpen }) => {
               >
                 <span className="sr-only">Open user menu</span>
                 <div className="hidden sm:flex sm:flex-col sm:items-end sm:mr-3">
-                  <span className="text-base font-medium text-gray-900">Admin User</span>
-                  <span className="text-sm text-gray-500">Administrator</span>
+                  <span className="text-base font-medium text-gray-900">
+                    {user?.name || 'User'}
+                  </span>
+                  <span className="text-sm text-gray-500">
+                    {getDisplayRole()}
+                  </span>
                 </div>
                 <div className="h-9 w-9 sm:h-10 sm:w-10 rounded-full bg-emerald-50 flex items-center justify-center ring-2 ring-emerald-500 text-gray-700 font-semibold">
-                  AU
+                  {getUserInitials()}
                 </div>
               </button>
 
@@ -486,12 +508,12 @@ const Navbar = ({ toggleSidebar, sidebarOpen }) => {
                     <div className="flex items-center">
                       <div className="flex-shrink-0">
                         <div className="h-8 w-8 rounded-full bg-emerald-100 flex items-center justify-center ring-2 ring-emerald-500 text-gray-700 font-semibold">
-                          AU
+                          {getUserInitials()}
                         </div>
                       </div>
                       <div className="ml-3">
-                        <p className="text-sm font-medium text-gray-900">Admin User</p>
-                        <p className="text-xs text-gray-500">admin@example.com</p>
+                        <p className="text-sm font-medium text-gray-900">{user?.name || 'User'}</p>
+                        <p className="text-xs text-gray-500">{user?.email || 'user@example.com'}</p>
                       </div>
                     </div>
                   </div>

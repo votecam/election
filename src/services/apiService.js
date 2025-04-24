@@ -206,6 +206,24 @@ const apiService = {
       }
     },
     
+    getUserByEmail: async (email) => {
+      try {
+        const response = await api.get(`/user/by-email/${email}`);
+        
+        // Check if response contains the expected data format
+        if (response.data && response.data.status === 'success') {
+          return response.data.data;
+        } else {
+          throw new Error('Invalid user data received from server');
+        }
+      } catch (error) {
+        throw new Error(
+          error.response?.data?.message || 
+          'Failed to fetch user information.'
+        );
+      }
+    },
+    
     updateProfile: async (userData) => {
       try {
         const response = await api.put('/user/profile', userData);
