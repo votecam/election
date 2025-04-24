@@ -1,8 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useLocation } from 'react-router-dom';
+import { useAuth } from '../../../../context/AuthContext';
 
 const Sidebar = ({ isOpen, toggleSidebar }) => {
   const location = useLocation();
+  const { user } = useAuth();
   const [expandedMenus, setExpandedMenus] = useState({
     dashboard: true,
     elections: false,
@@ -41,6 +43,11 @@ const Sidebar = ({ isOpen, toggleSidebar }) => {
     // Special case for feedback
     if (path === '/feedback' || path === '/app/feedback') {
       return location.pathname === '/app/feedback';
+    }
+    
+    // Special case for administrator
+    if (path === '/administrator' || path === '/app/administrator') {
+      return location.pathname === '/app/administrator';
     }
     
     // Special case for guides upload as default
@@ -132,6 +139,24 @@ const Sidebar = ({ isOpen, toggleSidebar }) => {
     }
   };
   
+  // Get user initials
+  const getUserInitials = () => {
+    if (!user?.name) return 'U';
+    
+    const nameParts = user.name.split(' ');
+    if (nameParts.length === 1) return nameParts[0].charAt(0).toUpperCase();
+    
+    return (nameParts[0].charAt(0) + nameParts[nameParts.length - 1].charAt(0)).toUpperCase();
+  };
+  
+  // Get display role
+  const getDisplayRole = () => {
+    if (!user?.role) return 'User';
+    
+    const role = user.role;
+    return role.charAt(0).toUpperCase() + role.slice(1);
+  };
+
   return (
     <div>
       {/* Overlay for mobile when sidebar is open - with blur effect */}
@@ -670,6 +695,39 @@ const Sidebar = ({ isOpen, toggleSidebar }) => {
                 </Link>
               </li>
               
+              {/* Administrator */}
+              <li>
+                <Link 
+                  to="/app/administrator"
+                  onClick={handleMenuItemClick}
+                  className={`flex items-center px-3 py-3 transition-all duration-200 group focus-visible-only ${
+                    isActive('/administrator') 
+                      ? 'bg-white/80 text-gray-800 font-medium shadow-sm' 
+                      : 'text-white hover:bg-white/10'
+                  } rounded-lg focus:outline-none`}
+                  aria-current={isActive('/administrator') ? 'page' : undefined}
+                >
+                  <div className={`flex items-center justify-center w-9 h-9 ${isActive('/administrator') ? 'text-gray-800' : 'text-white group-hover:text-white'}`}>
+                    <svg 
+                      xmlns="http://www.w3.org/2000/svg" 
+                      viewBox="0 0 24 24" 
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="2"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      className="w-7 h-7"
+                    >
+                      <path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+                      <circle cx="8.5" cy="7" r="4"></circle>
+                      <path d="M20 8v6"></path>
+                      <path d="M23 11h-6"></path>
+                    </svg>
+                  </div>
+                  <span className="ml-3 font-medium text-xl whitespace-nowrap">Administrator</span>
+                </Link>
+              </li>
+              
               {/* Feedback */}
               <li>
                 <Link 
@@ -706,12 +764,12 @@ const Sidebar = ({ isOpen, toggleSidebar }) => {
             <div className="flex items-center">
               <div className="flex-shrink-0">
                 <div className="w-10 h-8 rounded-full bg-white/20 flex items-center justify-center text-white font-bold text-lg">
-                  A
+                  {getUserInitials()}
                 </div>
               </div>
               <div className="ml-3">
-                <p className="text-base font-medium text-white">Admin User</p>
-                <p className="text-sm text-white/80">Administrator</p>
+                <p className="text-base font-medium text-white">{user?.name || 'Admin User'}</p>
+                <p className="text-sm text-white/80">{getDisplayRole()}</p>
               </div>
             </div>
            

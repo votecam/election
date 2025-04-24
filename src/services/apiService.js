@@ -206,6 +206,31 @@ const apiService = {
       }
     },
     
+    createAdministrator: async (userData) => {
+      try {
+        const response = await api.post('/user/register', {
+          name: userData.name,
+          email: userData.email,
+          password: userData.password
+        });
+        
+        // Check if response contains the expected data format
+        if (response.data && response.data.status === 'success') {
+          return response.data.data;
+        } else {
+          throw new Error('Failed to create administrator account');
+        }
+      } catch (error) {
+        console.error('Create administrator error:', error);
+        // If the error has a response, extract the message
+        if (error.response && error.response.data) {
+          throw new Error(error.response.data.message || 'Failed to create administrator account. Please try again.');
+        }
+        // Otherwise, use the error message or a default
+        throw new Error(error.message || 'Failed to create administrator account. Please try again.');
+      }
+    },
+    
     getUserByEmail: async (email) => {
       try {
         const response = await api.get(`/user/by-email/${email}`);

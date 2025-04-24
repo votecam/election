@@ -18,6 +18,7 @@ import Feedback from './components/app/feedback/Feedback'
 import UploadGuide from './components/app/guides/UploadGuide'
 import ManageGuide from './components/app/guides/ManageGuide'
 import Settings from './components/app/settings/Settings'
+import Administrator from './components/app/administrator/Administrator'
 import { AuthProvider } from './context/AuthContext'
 
 function App() {
@@ -48,6 +49,9 @@ function App() {
               
               {/* Settings Route */}
               <Route path="settings" element={<Settings />} />
+              
+              {/* Administrator Route */}
+              <Route path="administrator" element={<Administrator />} />
               
               {/* Auth Routes (Protected) */}
               <Route path="auth">
