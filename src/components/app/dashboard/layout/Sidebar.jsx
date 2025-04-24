@@ -232,7 +232,7 @@ const Sidebar = ({ isOpen, toggleSidebar }) => {
           </div>
           
           {/* Add custom styles in the component */}
-          <style jsx global>{`
+          <style>{`
             /* Only show focus styles for keyboard navigation, not for mouse clicks */
             .focus-visible-only:focus:not(:focus-visible) {
               outline: none;

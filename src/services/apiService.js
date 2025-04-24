@@ -338,6 +338,25 @@ const apiService = {
       }
     },
     
+    // Get all centres with pagination
+    getAllCentres: async (page = 1, limit = 10) => {
+      try {
+        const response = await api.get(`/centre/get-all-centres?page=${page}&limit=${limit}`);
+        
+        if (response.data && response.data.status === 'success') {
+          return response.data.data;
+        } else {
+          throw new Error('Failed to fetch centres');
+        }
+      } catch (error) {
+        console.error('Get all centres error:', error);
+        if (error.response && error.response.data) {
+          throw new Error(error.response.data.message || 'Failed to fetch centres. Please try again.');
+        }
+        throw new Error(error.message || 'Failed to fetch centres. Please try again.');
+      }
+    },
+    
     // Get all centres - placeholder for future implementation
     getAll: async () => {
       try {
@@ -349,6 +368,27 @@ const apiService = {
         }
       } catch (error) {
         throw new Error(error.response?.data?.message || 'Failed to fetch electoral centres');
+      }
+    },
+    
+    // Delete an electoral centre
+    deleteCentre: async (centreId) => {
+      try {
+        const response = await api.delete(`/centre/delete-centre/${centreId}`);
+        
+        if (response.data && response.data.status === 'success') {
+          return response.data.data;
+        } else if (response.data && response.data.status === 'fail') {
+          throw new Error(response.data.message || 'Failed to delete centre');
+        } else {
+          throw new Error('Failed to delete centre');
+        }
+      } catch (error) {
+        console.error('Delete centre error:', error);
+        if (error.response && error.response.data) {
+          throw new Error(error.response.data.message || 'Failed to delete electoral centre. Please try again.');
+        }
+        throw new Error(error.message || 'Failed to delete electoral centre. Please try again.');
       }
     }
     // Add more centre endpoints as needed

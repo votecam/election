@@ -52,13 +52,50 @@ const RegisterCentre = () => {
       [name]: value
     });
     
-    // Clear error for this field when user starts typing
-    if (errors[name]) {
-      setErrors({
-        ...errors,
-        [name]: ''
-      });
+    // Validate the field immediately to provide instant feedback
+    validateField(name, value);
+  };
+  
+  // Add a validateField function to check individual fields
+  const validateField = (name, value) => {
+    let errorMessage = '';
+    
+    switch (name) {
+      case 'name':
+        errorMessage = !value.trim() ? 'Centre name is required' : '';
+        break;
+      case 'address':
+        errorMessage = !value.trim() ? 'Centre address is required' : '';
+        break;
+      case 'region':
+        errorMessage = !value.trim() ? 'Region is required' : '';
+        break;
+      case 'municipalities':
+        errorMessage = !value.trim() ? 'Municipality is required' : '';
+        break;
+      case 'contact_number':
+        if (!value.trim()) {
+          errorMessage = 'Contact number is required';
+        } else if (!/^\d+$/.test(value.trim())) {
+          errorMessage = 'Contact number must contain only digits';
+        }
+        break;
+      case 'responsible':
+        errorMessage = !value.trim() ? 'Responsible person is required' : '';
+        break;
+      case 'description':
+        errorMessage = !value.trim() ? 'Description is required' : '';
+        break;
+      default:
+        break;
     }
+    
+    setErrors(prev => ({
+      ...prev,
+      [name]: errorMessage
+    }));
+    
+    return !errorMessage;
   };
   
   const handleTimeChange = (e) => {
@@ -88,6 +125,7 @@ const RegisterCentre = () => {
       region: value
     });
     setRegionOpen(false);
+    validateField('region', value);
   };
   
   const handleMunicipalitiesSelect = (value) => {
@@ -96,6 +134,7 @@ const RegisterCentre = () => {
       municipalities: value
     });
     setMunicipalitiesOpen(false);
+    validateField('municipalities', value);
   };
   
   const handleCheckboxChange = (e) => {
@@ -115,47 +154,31 @@ const RegisterCentre = () => {
   
   const validateForm = () => {
     const newErrors = {};
+    let isValid = true;
     
-    if (!formData.name.trim()) {
-      newErrors.name = 'Centre name is required';
-    }
+    // Validate all fields
+    const fields = ['name', 'address', 'region', 'municipalities', 'contact_number', 'responsible', 'description'];
     
-    if (!formData.address.trim()) {
-      newErrors.address = 'Centre address is required';
-    }
+    fields.forEach(field => {
+      const fieldValue = field === 'region' || field === 'municipalities' ? 
+        formData[field] : 
+        formData[field]?.toString() || '';
+        
+      const fieldIsValid = validateField(field, fieldValue);
+      if (!fieldIsValid) {
+        isValid = false;
+      }
+    });
     
-    if (!formData.region.trim()) {
-      newErrors.region = 'Region is required';
-    }
-    
-    if (!formData.municipalities.trim()) {
-      newErrors.municipalities = 'Municipality is required';
-    }
-    
-    if (!formData.contact_number.trim()) {
-      newErrors.contact_number = 'Contact number is required';
-    } else if (!/^\d+$/.test(formData.contact_number.trim())) {
-      newErrors.contact_number = 'Contact number must contain only digits';
-    }
-    
-    if (!formData.responsible.trim()) {
-      newErrors.responsible = 'Responsible person is required';
-    }
-    
-    if (!formData.description.trim()) {
-      newErrors.description = 'Description is required';
-    }
-    
-    return newErrors;
+    return isValid;
   };
   
   const handleSubmit = async (e) => {
     e.preventDefault();
     
     // Validate form first
-    const formErrors = validateForm();
-    if (Object.keys(formErrors).length > 0) {
-      setErrors(formErrors);
+    const isFormValid = validateForm();
+    if (!isFormValid) {
       setAlert({
         show: true,
         type: 'error',
@@ -306,10 +329,17 @@ const RegisterCentre = () => {
                   value={formData.name}
                   onChange={handleChange}
                   placeholder="E.g. Centro Electoral Nacional"
-                  className={`pl-16 w-full px-4 py-3 border ${errors.name ? 'border-red-500' : 'border-gray-300'} rounded-none text-base font-medium bg-white focus:outline-none focus:ring-1 focus:ring-emerald-500 focus:border-emerald-500 transition-all duration-200 ease-in-out`}
+                  className={`pl-16 w-full px-4 py-3 border ${errors.name ? 'border-red-500 focus:ring-red-500 focus:border-red-500' : 'border-gray-300 focus:ring-emerald-500 focus:border-emerald-500'} rounded-none text-base font-medium bg-white focus:outline-none focus:ring-1 transition-all duration-200 ease-in-out`}
                 />
               </div>
-              {errors.name && <p className="mt-1 text-sm text-red-600">{errors.name}</p>}
+              {errors.name && (
+                <p className="mt-1 text-sm text-red-600 font-medium flex items-center">
+                  <svg className="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
+                    <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+                  </svg>
+                  {errors.name}
+                </p>
+              )}
             </div>
             
             {/* Centre Address Field */}
@@ -335,10 +365,17 @@ const RegisterCentre = () => {
                   value={formData.address}
                   onChange={handleChange}
                   placeholder="E.g. Calle Principal 123"
-                  className={`pl-16 w-full px-4 py-3 border ${errors.address ? 'border-red-500' : 'border-gray-300'} rounded-none text-base font-medium bg-white focus:outline-none focus:ring-1 focus:ring-emerald-500 focus:border-emerald-500 transition-all duration-200 ease-in-out`}
+                  className={`pl-16 w-full px-4 py-3 border ${errors.address ? 'border-red-500 focus:ring-red-500 focus:border-red-500' : 'border-gray-300 focus:ring-emerald-500 focus:border-emerald-500'} rounded-none text-base font-medium bg-white focus:outline-none focus:ring-1 transition-all duration-200 ease-in-out`}
                 />
               </div>
-              {errors.address && <p className="mt-1 text-sm text-red-600">{errors.address}</p>}
+              {errors.address && (
+                <p className="mt-1 text-sm text-red-600 font-medium flex items-center">
+                  <svg className="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
+                    <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+                  </svg>
+                  {errors.address}
+                </p>
+              )}
             </div>
             
             {/* Region - Custom Dropdown */}
@@ -360,11 +397,11 @@ const RegisterCentre = () => {
                   className={`pl-16 w-full px-4 py-3 border ${errors.region ? 'border-red-500' : regionOpen ? 'border-emerald-500 ring-1 ring-emerald-500' : 'border-gray-300'} rounded-none text-base font-medium bg-white flex justify-between items-center cursor-pointer transition-all duration-200 ease-in-out`}
                   onClick={() => setRegionOpen(!regionOpen)}
                 >
-                  <span className={formData.region ? "text-gray-900 font-medium" : "text-gray-500"}>
+                  <span className={formData.region ? "text-gray-900 font-medium" : errors.region ? "text-red-500" : "text-gray-500"}>
                     {formData.region || "Select Region"}
                   </span>
                   <svg 
-                    className={`h-5 w-5 text-emerald-600 transition-transform duration-200 ${regionOpen ? 'transform rotate-180' : ''}`} 
+                    className={`h-5 w-5 ${errors.region ? 'text-red-500' : 'text-emerald-600'} transition-transform duration-200 ${regionOpen ? 'transform rotate-180' : ''}`} 
                     xmlns="http://www.w3.org/2000/svg" 
                     viewBox="0 0 20 20" 
                     fill="currentColor"
@@ -415,7 +452,14 @@ const RegisterCentre = () => {
                   </div>
                 )}
               </div>
-              {errors.region && <p className="mt-1 text-sm text-red-600">{errors.region}</p>}
+              {errors.region && (
+                <p className="mt-1 text-sm text-red-600 font-medium flex items-center">
+                  <svg className="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
+                    <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+                  </svg>
+                  {errors.region}
+                </p>
+              )}
             </div>
             
             {/* Municipalities - Custom Dropdown */}
@@ -437,11 +481,11 @@ const RegisterCentre = () => {
                   className={`pl-16 w-full px-4 py-3 border ${errors.municipalities ? 'border-red-500' : municipalitiesOpen ? 'border-emerald-500 ring-1 ring-emerald-500' : 'border-gray-300'} rounded-none text-base font-medium bg-white flex justify-between items-center cursor-pointer transition-all duration-200 ease-in-out`}
                   onClick={() => setMunicipalitiesOpen(!municipalitiesOpen)}
                 >
-                  <span className={formData.municipalities ? "text-gray-900 font-medium" : "text-gray-500"}>
+                  <span className={formData.municipalities ? "text-gray-900 font-medium" : errors.municipalities ? "text-red-500" : "text-gray-500"}>
                     {formData.municipalities || "Select Municipality"}
                   </span>
                   <svg 
-                    className={`h-5 w-5 text-emerald-600 transition-transform duration-200 ${municipalitiesOpen ? 'transform rotate-180' : ''}`} 
+                    className={`h-5 w-5 ${errors.municipalities ? 'text-red-500' : 'text-emerald-600'} transition-transform duration-200 ${municipalitiesOpen ? 'transform rotate-180' : ''}`} 
                     xmlns="http://www.w3.org/2000/svg" 
                     viewBox="0 0 20 20" 
                     fill="currentColor"
@@ -492,7 +536,14 @@ const RegisterCentre = () => {
                   </div>
                 )}
               </div>
-              {errors.municipalities && <p className="mt-1 text-sm text-red-600">{errors.municipalities}</p>}
+              {errors.municipalities && (
+                <p className="mt-1 text-sm text-red-600 font-medium flex items-center">
+                  <svg className="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
+                    <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+                  </svg>
+                  {errors.municipalities}
+                </p>
+              )}
             </div>
             
             {/* Subdivision Field */}
@@ -572,10 +623,17 @@ const RegisterCentre = () => {
                   value={formData.contact_number}
                   onChange={handleChange}
                   placeholder="E.g. 683123456"
-                  className={`pl-16 w-full px-4 py-3 border ${errors.contact_number ? 'border-red-500' : 'border-gray-300'} rounded-none text-base font-medium bg-white focus:outline-none focus:ring-1 focus:ring-emerald-500 focus:border-emerald-500 transition-all duration-200 ease-in-out`}
+                  className={`pl-16 w-full px-4 py-3 border ${errors.contact_number ? 'border-red-500 focus:ring-red-500 focus:border-red-500' : 'border-gray-300 focus:ring-emerald-500 focus:border-emerald-500'} rounded-none text-base font-medium bg-white focus:outline-none focus:ring-1 transition-all duration-200 ease-in-out`}
                 />
               </div>
-              {errors.contact_number && <p className="mt-1 text-sm text-red-600">{errors.contact_number}</p>}
+              {errors.contact_number && (
+                <p className="mt-1 text-sm text-red-600 font-medium flex items-center">
+                  <svg className="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
+                    <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+                  </svg>
+                  {errors.contact_number}
+                </p>
+              )}
             </div>
             
             {/* Wait Time Field */}
@@ -629,10 +687,17 @@ const RegisterCentre = () => {
                   value={formData.responsible}
                   onChange={handleChange}
                   placeholder="E.g. John Doe"
-                  className={`pl-16 w-full px-4 py-3 border ${errors.responsible ? 'border-red-500' : 'border-gray-300'} rounded-none text-base font-medium bg-white focus:outline-none focus:ring-1 focus:ring-emerald-500 focus:border-emerald-500 transition-all duration-200 ease-in-out`}
+                  className={`pl-16 w-full px-4 py-3 border ${errors.responsible ? 'border-red-500 focus:ring-red-500 focus:border-red-500' : 'border-gray-300 focus:ring-emerald-500 focus:border-emerald-500'} rounded-none text-base font-medium bg-white focus:outline-none focus:ring-1 transition-all duration-200 ease-in-out`}
                 />
               </div>
-              {errors.responsible && <p className="mt-1 text-sm text-red-600">{errors.responsible}</p>}
+              {errors.responsible && (
+                <p className="mt-1 text-sm text-red-600 font-medium flex items-center">
+                  <svg className="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
+                    <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+                  </svg>
+                  {errors.responsible}
+                </p>
+              )}
             </div>
           </div>
           
@@ -743,17 +808,24 @@ const RegisterCentre = () => {
               name="description"
               rows={4}
               required
-              className={`block w-full px-4 py-3 border ${errors.description ? 'border-red-500' : 'border-gray-300'} rounded-none focus:outline-none focus:ring-1 focus:border-emerald-600 transition-shadow duration-300 text-base font-medium bg-white`}
+              className={`block w-full px-4 py-3 border ${errors.description ? 'border-red-500 focus:ring-red-500 focus:border-red-500' : 'border-gray-300 focus:border-emerald-600'} rounded-none focus:outline-none focus:ring-1 transition-shadow duration-300 text-base font-medium bg-white`}
               style={{ 
-                "--tw-ring-color": "#00694B",
+                "--tw-ring-color": errors.description ? "#f56565" : "#00694B",
                 "--tw-border-opacity": 1,
-                "--tw-border-color": "rgba(0, 105, 75, var(--tw-border-opacity))"
+                "--tw-border-color": errors.description ? "rgba(239, 68, 68, var(--tw-border-opacity))" : "rgba(0, 105, 75, var(--tw-border-opacity))"
               }}
               placeholder="E.g. Centro Electoral Nacional de Malabo, cerca del Ministerio de Educación"
               value={formData.description}
               onChange={handleChange}
             />
-            {errors.description && <p className="mt-1 text-sm text-red-600">{errors.description}</p>}
+            {errors.description && (
+              <p className="mt-1 text-sm text-red-600 font-medium flex items-center">
+                <svg className="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
+                  <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+                </svg>
+                {errors.description}
+              </p>
+            )}
           </div>
           
           {/* Submit Button */}
