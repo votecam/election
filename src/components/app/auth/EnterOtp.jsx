@@ -1,11 +1,39 @@
 import { useState, useEffect, useRef } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import AuthInfo from './AuthInfo';
+import Alert from '../../common/Alert';
+import apiService from '../../../services/apiService';
 
 const OTPVerification = () => {
   const [otp, setOtp] = useState(['', '', '', '', '', '']);
+  const [errors, setErrors] = useState({});
+  const [alert, setAlert] = useState({ show: false, type: 'info', message: '' });
+  const [isLoading, setIsLoading] = useState(false);
+  const [resendDisabled, setResendDisabled] = useState(false);
+  const [countdown, setCountdown] = useState(60);
   const inputRefs = useRef([]);
   const navigate = useNavigate();
+  const location = useLocation();
+  
+  // Extract email from location state (passed from ForgotPassword)
+  const email = location.state?.email || '';
+
+  // If no email is provided, redirect back to forgot password
+  useEffect(() => {
+    if (!email) {
+      // Show error message about missing email
+      setAlert({
+        show: true,
+        type: 'error',
+        message: 'Email address is missing. Please try again.'
+      });
+      
+      // Redirect back to forgot password page after a short delay
+      setTimeout(() => {
+        navigate('/ForgotPassword');
+      }, 2000);
+    }
+  }, [email, navigate]);
 
   // Focus on first input when component mounts
   useEffect(() => {
@@ -13,6 +41,33 @@ const OTPVerification = () => {
       inputRefs.current[0].focus();
     }
   }, []);
+
+  // Countdown timer for resend button
+  useEffect(() => {
+    let timer;
+    if (resendDisabled && countdown > 0) {
+      timer = setInterval(() => {
+        setCountdown(prev => prev - 1);
+      }, 1000);
+    } else if (countdown === 0) {
+      setResendDisabled(false);
+    }
+    return () => clearInterval(timer);
+  }, [resendDisabled, countdown]);
+
+  const validateOtp = () => {
+    const newErrors = {};
+    const otpValue = otp.join('');
+    
+    if (otpValue.length !== 6) {
+      newErrors.otp = 'Please enter all 6 digits of the verification code';
+    } else if (!/^\d{6}$/.test(otpValue)) {
+      newErrors.otp = 'Verification code must contain only numbers';
+    }
+    
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
 
   const handleChange = (e, index) => {
     const value = e.target.value;
@@ -27,6 +82,11 @@ const OTPVerification = () => {
     // Only take the last character if user pastes multiple digits
     newOtp[index] = value.slice(-1);
     setOtp(newOtp);
+
+    // Clear error when user types
+    if (errors.otp) {
+      setErrors({});
+    }
 
     // Auto-focus to next input after entry
     if (value && index < 5) {
@@ -76,6 +136,11 @@ const OTPVerification = () => {
     
     setOtp(newOtp);
     
+    // Clear error when user pastes
+    if (errors.otp) {
+      setErrors({});
+    }
+    
     // Focus the next empty input or the last input
     const nextEmptyIndex = newOtp.findIndex(val => val === '');
     if (nextEmptyIndex !== -1 && nextEmptyIndex < 6) {
@@ -87,19 +152,96 @@ const OTPVerification = () => {
     }
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
+    
+    // Validate OTP
+    if (!validateOtp()) {
+      return;
+    }
+    
+    setIsLoading(true);
     const otpValue = otp.join('');
-    console.log('OTP Submitted:', otpValue);
-    // Navigate to next page or process verification
-    if (otpValue.length === 6) {
-      navigate('/ResetPassword');
+    
+    try {
+      // Call the API to verify OTP
+      await apiService.auth.verifyOtp(email, otpValue);
+      
+      // Show success message
+      setAlert({
+        show: true,
+        type: 'success',
+        message: 'OTP verified successfully'
+      });
+      
+      // Redirect to reset password page after a short delay
+      setTimeout(() => {
+        navigate('/ResetPassword', { state: { email, otpCode: otpValue } });
+      }, 1500);
+    } catch (error) {
+      // Show error message
+      setAlert({
+        show: true,
+        type: 'error',
+        message: error.message || 'Unable to verify OTP. Please try again.'
+      });
+      
+      // Auto-hide error alert after 3 seconds
+      setTimeout(() => {
+        setAlert(prev => ({ ...prev, show: false }));
+      }, 3000);
+    } finally {
+      setIsLoading(false);
     }
   };
 
-  const handleResendCode = () => {
-    console.log('Resending OTP code');
-    // Implement resend logic here
+  const handleResendCode = async () => {
+    if (resendDisabled) return;
+    
+    try {
+      setIsLoading(true);
+      
+      // Call the API to resend OTP
+      await apiService.auth.resendOtp(email);
+      
+      // Show success message
+      setAlert({
+        show: true,
+        type: 'success',
+        message: 'New verification code has been sent to your email'
+      });
+      
+      // Disable resend button and start countdown
+      setResendDisabled(true);
+      setCountdown(60);
+      
+      // Clear current OTP fields
+      setOtp(['', '', '', '', '', '']);
+      
+      // Focus first input
+      if (inputRefs.current[0]) {
+        inputRefs.current[0].focus();
+      }
+      
+      // Auto-hide success alert after 3 seconds
+      setTimeout(() => {
+        setAlert(prev => ({ ...prev, show: false }));
+      }, 3000);
+    } catch (error) {
+      // Show error message
+      setAlert({
+        show: true,
+        type: 'error',
+        message: error.message || 'Failed to resend verification code. Please try again.'
+      });
+      
+      // Auto-hide error alert after 3 seconds
+      setTimeout(() => {
+        setAlert(prev => ({ ...prev, show: false }));
+      }, 3000);
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   const handleBackToLogin = (e) => {
@@ -159,6 +301,14 @@ const OTPVerification = () => {
             </p>
           </div>
           
+          {/* Alert Component */}
+          <Alert 
+            type={alert.type} 
+            message={alert.message} 
+            show={alert.show} 
+            onClose={() => setAlert({...alert, show: false})} 
+          />
+          
           <form onSubmit={handleSubmit} className="space-y-5">
             <div>
               <label htmlFor="otp-input" className="block text-base font-semibold text-gray-700 mb-1">
@@ -175,39 +325,57 @@ const OTPVerification = () => {
                       onChange={(e) => handleChange(e, index)}
                       onKeyDown={(e) => handleKeyDown(e, index)}
                       onPaste={index === 0 ? handlePaste : null}
-                      className="w-full aspect-square text-center px-0 py-3 border border-gray-300 rounded-none focus:outline-none focus:ring-1 focus:border-emerald-600 transition-shadow duration-300 text-xl font-bold bg-white"
+                      className={`w-full aspect-square text-center px-0 py-3 border ${errors.otp ? 'border-red-500' : 'border-gray-300'} rounded-none focus:outline-none focus:ring-1 focus:border-emerald-600 transition-shadow duration-300 text-xl font-bold bg-white`}
                       style={{ 
                         "--tw-ring-color": "#00694B",
                         "--tw-border-opacity": 1,
-                        "--tw-border-color": "rgba(0, 105, 75, var(--tw-border-opacity))"
+                        "--tw-border-color": errors.otp ? "rgba(239, 68, 68, var(--tw-border-opacity))" : "rgba(0, 105, 75, var(--tw-border-opacity))"
                       }}
                       required
                     />
                   </div>
                 ))}
               </div>
+              {errors.otp && <p className="mt-1 text-sm text-red-600 text-center">{errors.otp}</p>}
               <p className="mt-2 text-sm text-gray-500 text-center">
-                Didn't receive the code? <button type="button" onClick={handleResendCode} className="text-emerald-700 font-medium hover:underline">Resend</button>
+                Didn't receive the code?{' '}
+                <button 
+                  type="button" 
+                  onClick={handleResendCode} 
+                  disabled={resendDisabled}
+                  className={`text-emerald-700 font-medium hover:underline ${resendDisabled ? 'opacity-50 cursor-not-allowed' : ''}`}
+                >
+                  {resendDisabled ? `Resend in ${countdown}s` : 'Resend'}
+                </button>
               </p>
             </div>
             
             <div className="mt-6">
               <button
                 type="submit"
-                className="w-full py-4 px-5 text-white font-semibold rounded-none focus:outline-none focus:ring-2 focus:ring-offset-2 transition-all duration-300 text-xl"
+                disabled={isLoading}
+                className="w-full py-4 px-5 text-white font-semibold rounded-none focus:outline-none focus:ring-2 focus:ring-offset-2 transition-all duration-300 text-xl disabled:opacity-70 disabled:cursor-not-allowed"
                 style={{ 
                   background: "linear-gradient(to right, #00694B, #005941)", 
                   "--tw-ring-color": "#00694B" 
                 }}
               >
-                Verify Code
+                {isLoading ? (
+                  <span className="flex items-center justify-center">
+                    <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                    </svg>
+                    Verifying...
+                  </span>
+                ) : 'Verify Code'}
               </button>
             </div>
           </form>
           
           <div className="mt-6 text-center">
             <p className="text-lg text-gray-600 font-medium">
-              Need to go back?{' '}
+              Remember your password?{' '}
               <a href="#" 
                 onClick={handleBackToLogin}
                 className="hover:text-emerald-900 font-semibold"

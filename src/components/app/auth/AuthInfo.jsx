@@ -63,7 +63,7 @@ const AuthSidebar = ({ title }) => {
 
   return (
     <div className="hidden lg:block lg:w-3/5 bg-slate-900">
-      <style jsx>{animationStyles}</style>
+      <style>{animationStyles}</style>
       <div className="h-full relative overflow-hidden">
         {/* Background placeholder to prevent white flash */}
         <div className="absolute inset-0 bg-slate-900"></div>

@@ -1,6 +1,8 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import AuthInfo from './AuthInfo';
+import Alert from '../../common/Alert';
+import mockUserService from '../../../services/mockUserService';
 
 const ResetPassword = () => {
   const [formData, setFormData] = useState({
@@ -10,17 +12,64 @@ const ResetPassword = () => {
   
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
-  const [error, setError] = useState('');
+  const [errors, setErrors] = useState({});
+  const [alert, setAlert] = useState({ show: false, type: 'info', message: '' });
+  const [isLoading, setIsLoading] = useState(false);
   const navigate = useNavigate();
 
   const { password, confirmPassword } = formData;
+
+  const validatePassword = () => {
+    const newErrors = {};
+    
+    // Check if password is empty
+    if (!password) {
+      newErrors.password = 'Password is required';
+    } 
+    // Check password length
+    else if (password.length < 8) {
+      newErrors.password = 'Password must be at least 8 characters long';
+    }
+    // Check for password complexity
+    else if (!/(?=.*[a-z])/.test(password)) {
+      newErrors.password = 'Password must contain at least one lowercase letter';
+    }
+    else if (!/(?=.*[A-Z])/.test(password)) {
+      newErrors.password = 'Password must contain at least one uppercase letter';
+    }
+    else if (!/(?=.*\d)/.test(password)) {
+      newErrors.password = 'Password must contain at least one number';
+    }
+    else if (!/(?=.*[!@#$%^&*])/.test(password)) {
+      newErrors.password = 'Password must contain at least one special character (!@#$%^&*)';
+    }
+    
+    // Check if confirm password is empty
+    if (!confirmPassword) {
+      newErrors.confirmPassword = 'Please confirm your password';
+    }
+    // Check if passwords match
+    else if (password !== confirmPassword) {
+      newErrors.confirmPassword = 'Passwords do not match';
+    }
+    
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
 
   const handleChange = (e) => {
     setFormData({
       ...formData,
       [e.target.name]: e.target.value
     });
-    setError('');
+    
+    // Clear specific field error when user types
+    if (errors[e.target.name]) {
+      setErrors({
+        ...errors,
+        [e.target.name]: ''
+      });
+    }
   };
 
   const togglePasswordVisibility = (field) => {
@@ -31,26 +80,45 @@ const ResetPassword = () => {
     }
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     
     // Validate password
-    if (password.length < 8) {
-      setError('Password must be at least 8 characters long');
+    if (!validatePassword()) {
       return;
     }
     
-    // Validate password match
-    if (password !== confirmPassword) {
-      setError('Passwords do not match');
-      return;
+    setIsLoading(true);
+    
+    try {
+      // Simulate API call for password reset
+      await new Promise(resolve => setTimeout(resolve, 1000));
+      
+      // Show success message
+      setAlert({
+        show: true,
+        type: 'success',
+        message: 'Password reset successful! Redirecting to login...'
+      });
+      
+      // Navigate to login page after a short delay
+      setTimeout(() => {
+        navigate('/login');
+      }, 2000);
+    } catch (error) {
+      setAlert({
+        show: true,
+        type: 'error',
+        message: 'Failed to reset password. Please try again.'
+      });
+      
+      // Auto-hide error alert after 3 seconds
+      setTimeout(() => {
+        setAlert(prev => ({ ...prev, show: false }));
+      }, 3000);
+    } finally {
+      setIsLoading(false);
     }
-    
-    // If validation passes, proceed with password reset
-    console.log('Password reset submitted:', formData);
-    
-    // Navigate to success page
-    navigate('/password-reset-success');
   };
 
   const handleBackToLogin = (e) => {
@@ -99,22 +167,24 @@ const ResetPassword = () => {
 
         <div className="w-full max-w-md z-10">
           <div className="flex flex-col items-center mb-8">
-            <img 
-              src="/images/logo(2).png" 
-              alt="Election Information System Logo" 
+              <img 
+                src="/images/logo(2).png" 
+                alt="Election Information System Logo" 
               className="w-28 h-28 object-contain mb-1"
             />
             <h2 className="text-3xl font-black text-gray-800">Reset Password</h2>
             <p className="text-gray-700 mt-1 text-lg font-medium">Create a new secure password for your account</p>
           </div>
           
+          {/* Alert Component */}
+          <Alert 
+            type={alert.type} 
+            message={alert.message} 
+            show={alert.show} 
+            onClose={() => setAlert({...alert, show: false})} 
+          />
+          
           <form onSubmit={handleSubmit} className="space-y-5">
-            {error && (
-              <div className="p-3 bg-red-50 border border-red-200 text-red-700 text-sm rounded-none">
-                {error}
-              </div>
-            )}
-            
             <div>
               <label htmlFor="password" className="block text-base font-semibold text-gray-700 mb-1">
                 New Password
@@ -133,11 +203,11 @@ const ResetPassword = () => {
                   name="password"
                   value={password}
                   onChange={handleChange}
-                  className="pl-16 w-full px-4 py-3 border border-gray-300 rounded-none focus:outline-none focus:ring-1 focus:border-emerald-600 transition-shadow duration-300 text-lg font-medium bg-white"
+                  className={`pl-16 w-full px-4 py-3 border ${errors.password ? 'border-red-500' : 'border-gray-300'} rounded-none focus:outline-none focus:ring-1 focus:border-emerald-600 transition-shadow duration-300 text-lg font-medium bg-white`}
                   style={{ 
                     "--tw-ring-color": "#00694B",
                     "--tw-border-opacity": 1,
-                    "--tw-border-color": "rgba(0, 105, 75, var(--tw-border-opacity))"
+                    "--tw-border-color": errors.password ? "rgba(239, 68, 68, var(--tw-border-opacity))" : "rgba(0, 105, 75, var(--tw-border-opacity))"
                   }}
                   placeholder="Enter your new password"
                   required
@@ -159,7 +229,8 @@ const ResetPassword = () => {
                   )}
                 </button>
               </div>
-              <p className="mt-1 text-sm text-gray-500">Password must be at least 8 characters long</p>
+              {errors.password && <p className="mt-1 text-sm text-red-600">{errors.password}</p>}
+              <p className="mt-1 text-sm text-gray-500">Password must be at least 8 characters long and include uppercase, lowercase, number, and special character</p>
             </div>
             
             <div>
@@ -180,11 +251,11 @@ const ResetPassword = () => {
                   name="confirmPassword"
                   value={confirmPassword}
                   onChange={handleChange}
-                  className="pl-16 w-full px-4 py-3 border border-gray-300 rounded-none focus:outline-none focus:ring-1 focus:border-emerald-600 transition-shadow duration-300 text-lg font-medium bg-white"
+                  className={`pl-16 w-full px-4 py-3 border ${errors.confirmPassword ? 'border-red-500' : 'border-gray-300'} rounded-none focus:outline-none focus:ring-1 focus:border-emerald-600 transition-shadow duration-300 text-lg font-medium bg-white`}
                   style={{ 
                     "--tw-ring-color": "#00694B",
                     "--tw-border-opacity": 1,
-                    "--tw-border-color": "rgba(0, 105, 75, var(--tw-border-opacity))"
+                    "--tw-border-color": errors.confirmPassword ? "rgba(239, 68, 68, var(--tw-border-opacity))" : "rgba(0, 105, 75, var(--tw-border-opacity))"
                   }}
                   placeholder="Confirm your new password"
                   required
@@ -206,22 +277,32 @@ const ResetPassword = () => {
                   )}
                 </button>
               </div>
+              {errors.confirmPassword && <p className="mt-1 text-sm text-red-600">{errors.confirmPassword}</p>}
             </div>
             
-            <div>
+            <div className="mt-6">
               <button
                 type="submit"
-                className="w-full py-4 px-5 text-white font-semibold rounded-none focus:outline-none focus:ring-2 focus:ring-offset-2 transition-all duration-300 text-xl"
+                disabled={isLoading}
+                className="w-full py-4 px-5 text-white font-semibold rounded-none focus:outline-none focus:ring-2 focus:ring-offset-2 transition-all duration-300 text-xl disabled:opacity-70 disabled:cursor-not-allowed"
                 style={{ 
                   background: "linear-gradient(to right, #00694B, #005941)", 
                   "--tw-ring-color": "#00694B" 
                 }}
               >
-                Reset Password
+                {isLoading ? (
+                  <span className="flex items-center justify-center">
+                    <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                    </svg>
+                    Resetting Password...
+                  </span>
+                ) : 'Reset Password'}
               </button>
             </div>
           </form>
-          
+              
           <div className="mt-6 text-center">
             <p className="text-lg text-gray-600 font-medium">
               Remember your password?{' '}
@@ -245,4 +326,4 @@ const ResetPassword = () => {
   );
 };
 
-export default ResetPassword; 
+export default ResetPassword;

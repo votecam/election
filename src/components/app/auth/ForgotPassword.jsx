@@ -1,20 +1,79 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import AuthInfo from './AuthInfo';
+import Alert from '../../common/Alert';
+import apiService from '../../../services/apiService';
 
 const ForgotPassword = () => {
   const [email, setEmail] = useState('');
+  const [errors, setErrors] = useState({});
+  const [alert, setAlert] = useState({ show: false, type: 'info', message: '' });
+  const [isLoading, setIsLoading] = useState(false);
   const navigate = useNavigate();
+
+  const validateEmail = () => {
+    const newErrors = {};
+    
+    if (!email) {
+      newErrors.email = 'Email is required';
+    } else if (!/\S+@\S+\.\S+/.test(email)) {
+      newErrors.email = 'Please enter a valid email address';
+    }
+    
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
 
   const handleChange = (e) => {
     setEmail(e.target.value);
+    
+    // Clear error when user starts typing
+    if (errors.email) {
+      setErrors({});
+    }
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    console.log('Password reset submitted for:', email);
-    // Redirect to the EmailConfirmation page
-    navigate('/EnterOtp');
+    
+    // Validate email format
+    if (!validateEmail()) {
+      return;
+    }
+    
+    setIsLoading(true);
+    
+    try {
+      // Call the forgot password API
+      const response = await apiService.auth.forgotPassword(email);
+      
+      // Show success message
+      setAlert({
+        show: true,
+        type: 'success',
+        message: response.data?.message || 'Password reset OTP sent to your email'
+      });
+      
+      // Redirect to OTP page after a short delay
+      setTimeout(() => {
+        navigate('/EnterOtp', { state: { email } });
+      }, 2000);
+      
+    } catch (error) {
+      // Handle error response
+      setAlert({
+        show: true,
+        type: 'error',
+        message: error.message || 'Unable to process your request. Please try again'
+      });
+      
+      // Auto-hide error alert after 5 seconds
+      setTimeout(() => {
+        setAlert(prev => ({ ...prev, show: false }));
+      }, 5000);
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   const handleBackToLogin = (e) => {
@@ -72,6 +131,14 @@ const ForgotPassword = () => {
             <p className="text-gray-700 mt-1 text-lg font-medium">Enter your email to receive a password reset link</p>
           </div>
           
+          {/* Alert Component */}
+          <Alert 
+            type={alert.type} 
+            message={alert.message} 
+            show={alert.show} 
+            onClose={() => setAlert({...alert, show: false})} 
+          />
+          
           <form onSubmit={handleSubmit} className="space-y-5">
             <div>
               <label htmlFor="email" className="block text-base font-semibold text-gray-700 mb-1">
@@ -91,28 +158,38 @@ const ForgotPassword = () => {
                   name="email"
                   value={email}
                   onChange={handleChange}
-                  className="pl-16 w-full px-4 py-3 border border-gray-300 rounded-none focus:outline-none focus:ring-1 focus:border-emerald-600 transition-shadow duration-300 text-lg font-medium bg-white"
+                  className={`pl-16 w-full px-4 py-3 border ${errors.email ? 'border-red-500' : 'border-gray-300'} rounded-none focus:outline-none focus:ring-1 focus:border-emerald-600 transition-shadow duration-300 text-lg font-medium bg-white`}
                   style={{ 
                     "--tw-ring-color": "#00694B",
                     "--tw-border-opacity": 1,
-                    "--tw-border-color": "rgba(0, 105, 75, var(--tw-border-opacity))"
+                    "--tw-border-color": errors.email ? "rgba(239, 68, 68, var(--tw-border-opacity))" : "rgba(0, 105, 75, var(--tw-border-opacity))"
                   }}
                   placeholder="your@agency.gov"
                   required
                 />
               </div>
+              {errors.email && <p className="mt-1 text-sm text-red-600">{errors.email}</p>}
             </div>
             
             <div>
               <button
                 type="submit"
-                className="w-full py-4 px-5 text-white font-semibold rounded-none focus:outline-none focus:ring-2 focus:ring-offset-2 transition-all duration-300 text-xl"
+                disabled={isLoading}
+                className="w-full py-4 px-5 text-white font-semibold rounded-none focus:outline-none focus:ring-2 focus:ring-offset-2 transition-all duration-300 text-xl disabled:opacity-70 disabled:cursor-not-allowed"
                 style={{ 
                   background: "linear-gradient(to right, #00694B, #005941)", 
                   "--tw-ring-color": "#00694B" 
                 }}
               >
-                Reset Password
+                {isLoading ? (
+                  <span className="flex items-center justify-center">
+                    <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                    </svg>
+                    Processing...
+                  </span>
+                ) : 'Reset Password'}
               </button>
             </div>
           </form>

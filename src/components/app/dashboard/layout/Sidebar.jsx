@@ -124,6 +124,13 @@ const Sidebar = ({ isOpen, toggleSidebar }) => {
       window.removeEventListener('resize', handleResize);
     };
   }, []);
+
+  // Handle menu item click - close sidebar on mobile
+  const handleMenuItemClick = () => {
+    if (isMobile && isOpen) {
+      toggleSidebar();
+    }
+  };
   
   return (
     <div>
@@ -244,6 +251,7 @@ const Sidebar = ({ isOpen, toggleSidebar }) => {
               <li>
                 <Link 
                   to="/app/dashboard"
+                  onClick={handleMenuItemClick}
                   className={`flex items-center px-3 py-3 transition-all duration-200 group focus-visible-only ${
                     isActive('/dashboard') 
                       ? 'bg-white/80 text-gray-800 font-medium shadow-sm' 
@@ -325,6 +333,7 @@ const Sidebar = ({ isOpen, toggleSidebar }) => {
                       <li>
                         <Link 
                           to="/app/centres/register"
+                          onClick={handleMenuItemClick}
                           className={`flex items-center px-3 py-2.5 focus-visible-only ${
                             isActive('/app/centres/register') 
                               ? 'bg-white/80 text-gray-800 font-medium' 
@@ -351,6 +360,7 @@ const Sidebar = ({ isOpen, toggleSidebar }) => {
                       <li>
                         <Link 
                           to="/app/centres/upload"
+                          onClick={handleMenuItemClick}
                           className={`flex items-center px-3 py-2.5 focus-visible-only ${
                             isActive('/app/centres/upload') 
                               ? 'bg-white/80 text-gray-800 font-medium' 
@@ -377,6 +387,7 @@ const Sidebar = ({ isOpen, toggleSidebar }) => {
                       <li>
                         <Link 
                           to="/app/centres/manage-polling"
+                          onClick={handleMenuItemClick}
                           className={`flex items-center px-3 py-2.5 focus-visible-only ${
                             isActive('/app/centres/manage-polling') 
                               ? 'bg-white/80 text-gray-800 font-medium' 
@@ -411,7 +422,7 @@ const Sidebar = ({ isOpen, toggleSidebar }) => {
                     onClick={() => toggleMenu('candidates')}
                     className={`w-full flex items-center justify-between px-3 py-3 transition-all duration-200 group focus-visible-only ${
                       isMenuActive('/app/candidates') 
-                        ? 'bg-white/80 text-gray-800 font-medium shadow-sm' 
+                        ? 'bg-white text-gray-800 font-medium shadow-sm' 
                         : 'text-white hover:bg-white/10'
                     } rounded-lg focus:outline-none`}
                     aria-expanded={expandedMenus.candidates}
@@ -461,6 +472,7 @@ const Sidebar = ({ isOpen, toggleSidebar }) => {
                       <li>
                         <Link 
                           to="/app/candidates/register"
+                          onClick={handleMenuItemClick}
                           className={`flex items-center px-3 py-2.5 focus-visible-only ${
                             isActive('/app/candidates/register') 
                               ? 'bg-white/80 text-gray-800 font-medium' 
@@ -489,6 +501,7 @@ const Sidebar = ({ isOpen, toggleSidebar }) => {
                       <li>
                         <Link 
                           to="/app/candidates/manage"
+                          onClick={handleMenuItemClick}
                           className={`flex items-center px-3 py-2.5 focus-visible-only ${
                             isActive('/app/candidates/manage') 
                               ? 'bg-white/80 text-gray-800 font-medium' 
@@ -576,6 +589,7 @@ const Sidebar = ({ isOpen, toggleSidebar }) => {
                       <li>
                         <Link 
                           to="/app/guides/upload"
+                          onClick={handleMenuItemClick}
                           className={`flex items-center px-3 py-2.5 focus-visible-only ${
                             isActive('/app/guides/upload') 
                               ? 'bg-white/80 text-gray-800 font-medium' 
@@ -602,6 +616,7 @@ const Sidebar = ({ isOpen, toggleSidebar }) => {
                       <li>
                         <Link 
                           to="/app/guides/manage"
+                          onClick={handleMenuItemClick}
                           className={`flex items-center px-3 py-2.5 focus-visible-only ${
                             isActive('/app/guides/manage') 
                               ? 'bg-white/80 text-gray-800 font-medium' 
@@ -633,6 +648,7 @@ const Sidebar = ({ isOpen, toggleSidebar }) => {
               <li>
                 <Link 
                   to="/app/analytics"
+                  onClick={handleMenuItemClick}
                   className={`flex items-center px-3 py-3 transition-all duration-200 group focus-visible-only ${
                     isActive('/analytics') 
                       ? 'bg-white/80 text-gray-800 font-medium shadow-sm' 
@@ -658,6 +674,7 @@ const Sidebar = ({ isOpen, toggleSidebar }) => {
               <li>
                 <Link 
                   to="/app/feedback"
+                  onClick={handleMenuItemClick}
                   className={`flex items-center px-3 py-3 transition-all duration-200 group focus-visible-only ${
                     isActive('/feedback') 
                       ? 'bg-white/80 text-gray-800 font-medium shadow-sm' 

@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, Link, useLocation } from 'react-router-dom';
+import { useAuth } from '../../../../context/AuthContext';
 
 const Navbar = ({ toggleSidebar, sidebarOpen }) => {
   const [dropdownOpen, setDropdownOpen] = useState(false);
@@ -9,6 +10,7 @@ const Navbar = ({ toggleSidebar, sidebarOpen }) => {
   const location = useLocation();
   const [currentPath, setCurrentPath] = useState(location.pathname);
   const navigate = useNavigate();
+  const { logout } = useAuth();
 
   // Check if screen is mobile on resize
   useEffect(() => {
@@ -180,12 +182,14 @@ const Navbar = ({ toggleSidebar, sidebarOpen }) => {
     closeAllDropdowns();
   };
 
-  const handleLogout = () => {
-    // Clear authentication status
-    localStorage.removeItem('isAuthenticated');
-    
-    // Redirect to login page
-    navigate('/login');
+  const handleLogout = async () => {
+    try {
+      // Use the logout function from AuthContext (now async)
+      await logout();
+      // No need to manually navigate, logout function already does that
+    } catch (error) {
+      console.error('Error during logout:', error);
+    }
   };
 
   // Notification data

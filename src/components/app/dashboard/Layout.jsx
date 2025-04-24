@@ -3,19 +3,20 @@ import { Outlet, useNavigate } from 'react-router-dom';
 import Navbar from './layout/Navbar';
 import Sidebar from './layout/Sidebar';
 import Footer from './layout/Footer';
+import { useAuth } from '../../../context/AuthContext';
 
 const Layout = () => {
   const [sidebarOpen, setSidebarOpen] = useState(false); // Default closed for all devices
   const navigate = useNavigate();
+  const { isAuthenticated, loading } = useAuth();
 
   // Check authentication on component mount
   useEffect(() => {
-    const isAuthenticated = localStorage.getItem('isAuthenticated') === 'true';
-    if (!isAuthenticated) {
-      // Redirect to login if not authenticated
+    // If not in loading state and not authenticated, redirect to login
+    if (!loading && !isAuthenticated) {
       navigate('/login');
     }
-  }, [navigate]);
+  }, [navigate, isAuthenticated, loading]);
 
   // Check if screen is mobile on resize
   const [isMobile, setIsMobile] = useState(false);
@@ -41,6 +42,11 @@ const Layout = () => {
   const toggleSidebar = () => {
     setSidebarOpen(!sidebarOpen);
   };
+
+  // Show loading state while checking authentication but only if not during logout
+  if (loading && localStorage.getItem('token')) {
+    return <div className="flex h-screen items-center justify-center">Loading...</div>;
+  }
 
   return (
     <div className="flex h-screen bg-gray-50 overflow-hidden">

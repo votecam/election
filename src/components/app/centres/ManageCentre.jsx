@@ -1,4 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
+import ViewCentreModal from './ViewCentreModal';
+import EditCentreModal from './EditCentreModal';
 
 const ManageCentre = () => {
   // Sample data - in a real application, this would come from an API
@@ -55,6 +57,14 @@ const ManageCentre = () => {
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const dropdownRef = useRef(null);
   const [openMenuId, setOpenMenuId] = useState(null);
+  
+  // State for the view modal
+  const [isViewModalOpen, setIsViewModalOpen] = useState(false);
+  const [selectedCentre, setSelectedCentre] = useState(null);
+  
+  // State for the edit modal
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [centreToEdit, setCentreToEdit] = useState(null);
   
   // Close dropdown when clicking outside
   useEffect(() => {
@@ -128,6 +138,7 @@ const ManageCentre = () => {
 
   // Handle opening/closing menu
   const toggleMenu = (id) => {
+    console.log('Toggling menu for id:', id);
     setOpenMenuId(openMenuId === id ? null : id);
   };
 
@@ -135,6 +146,54 @@ const ManageCentre = () => {
   const getMenuPosition = (centreId, index, total) => {
     // If in the last 2 rows, show menu above
     return index >= total - 2 ? { bottom: '100%', right: 0 } : { top: '100%', right: 0 };
+  };
+
+  // Handle opening the view modal
+  const handleViewCentre = (centre) => {
+    console.log('Opening modal for centre:', centre);
+    setSelectedCentre({
+      ...centre,
+      // Ensure all required fields are present
+      id: centre.id,
+      name: centre.name,
+      region: centre.region,
+      division: centre.division,
+      location: centre.location,
+      stations: centre.stations,
+      status: centre.status
+    });
+    setIsViewModalOpen(true);
+    setOpenMenuId(null); // Close the action menu
+  };
+
+  // Handle closing the view modal
+  const handleCloseViewModal = () => {
+    console.log('Closing modal');
+    setIsViewModalOpen(false);
+    setTimeout(() => setSelectedCentre(null), 300); // Clear data after animation
+  };
+
+  // Handle opening the edit modal
+  const handleEditCentre = (centre) => {
+    console.log('Opening edit modal for centre:', centre);
+    setCentreToEdit(centre);
+    setIsEditModalOpen(true);
+    setOpenMenuId(null); // Close the action menu
+  };
+  
+  // Handle closing the edit modal
+  const handleCloseEditModal = () => {
+    console.log('Closing edit modal');
+    setIsEditModalOpen(false);
+    setTimeout(() => setCentreToEdit(null), 300); // Clear data after animation
+  };
+  
+  // Handle saving edited centre
+  const handleSaveCentre = (updatedCentre) => {
+    console.log('Saving updated centre:', updatedCentre);
+    setCentres(centres.map(centre => 
+      centre.id === updatedCentre.id ? updatedCentre : centre
+    ));
   };
 
   return (
@@ -148,22 +207,22 @@ const ManageCentre = () => {
       {/* Search and filters */}
       <div className="flex flex-col md:flex-row justify-between gap-4 mb-6">
         <div className="w-full md:w-1/2 relative">
-              <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+          <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
             <svg className="h-5 w-5 text-gray-500" viewBox="0 0 20 20" fill="currentColor">
-                  <path fillRule="evenodd" d="M8 4a4 4 0 100 8 4 4 0 000-8zM2 8a6 6 0 1110.89 3.476l4.817 4.817a1 1 0 01-1.414 1.414l-4.816-4.816A6 6 0 012 8z" clipRule="evenodd" />
-                </svg>
-              </div>
-              <input
-                type="text"
-                name="search"
-                id="search"
-                className="block w-full pl-10 py-2 sm:py-3 text-sm sm:text-base border border-gray-300 rounded-md focus:outline-none focus:ring-emerald-500 focus:border-emerald-500"
-                placeholder="Search centres by name, region or location"
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-              />
+              <path fillRule="evenodd" d="M8 4a4 4 0 100 8 4 4 0 000-8zM2 8a6 6 0 1110.89 3.476l4.817 4.817a1 1 0 01-1.414 1.414l-4.816-4.816A6 6 0 012 8z" clipRule="evenodd" />
+            </svg>
           </div>
-          
+          <input
+            type="text"
+            name="search"
+            id="search"
+            className="block w-full pl-10 py-2 sm:py-3 text-sm sm:text-base border border-gray-300 rounded-md focus:outline-none focus:ring-emerald-500 focus:border-emerald-500"
+            placeholder="Search centres by name, region or location"
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+          />
+        </div>
+        
         <div className="flex flex-row items-center justify-end space-x-2 sm:space-x-4">
           <div className="relative" ref={dropdownRef}>
             <button
@@ -287,106 +346,40 @@ const ManageCentre = () => {
                         )}
                       </td>
                       <td className="px-2 sm:px-6 py-3 sm:py-5 whitespace-nowrap text-right">
-                        <div className="flex justify-end">
-                          <div className="relative inline-block text-left">
-                            <button 
-                              type="button" 
-                              className="inline-flex items-center p-1.5 sm:p-2 rounded-full bg-transparent text-gray-400 hover:text-gray-600 hover:bg-gray-100 focus:outline-none"
-                              id={`action-menu-${centre.id}`}
-                              aria-expanded={openMenuId === centre.id}
-                              aria-haspopup="true"
-                              onClick={() => toggleMenu(centre.id)}
-                            >
-                              <svg className="h-4 w-4 sm:h-5 sm:w-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 5v.01M12 12v.01M12 19v.01M12 6a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2z" />
-                              </svg>
-                            </button>
-
-                            {openMenuId === centre.id && (
-                              <div 
-                                className="action-menu-dropdown origin-top-right absolute right-0 mt-1 mb-1 w-36 rounded-md shadow-lg bg-white border border-gray-200 focus:outline-none z-20"
-                                style={getMenuPosition(centre.id, index, filteredCentres.length)}
-                                role="menu" 
-                                aria-orientation="vertical" 
-                                aria-labelledby={`action-menu-${centre.id}`}
-                              >
-                                <div className="py-1" role="none">
-                                  <button
-                                    type="button"
-                                    className="w-full text-left block px-3 py-1.5 text-sm text-gray-700 hover:bg-gray-50"
-                                    role="menuitem"
-                                    onClick={() => {/* View details */}}
-                                  >
-                                    <div className="flex items-center">
-                                      <svg className="h-4 w-4 mr-2 text-gray-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
-                                      </svg>
-                                      View
-                                    </div>
-                                  </button>
-                                  
-                                  <button
-                                    type="button"
-                                    className="w-full text-left block px-3 py-1.5 text-sm text-gray-700 hover:bg-gray-50"
-                                    role="menuitem"
-                                    onClick={() => {/* Edit centre */}}
-                                  >
-                                    <div className="flex items-center">
-                                      <svg className="h-4 w-4 mr-2 text-gray-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
-                                      </svg>
-                                      Edit
-                                    </div>
-                                  </button>
-                                  
-                                  {centre.status === 'active' ? (
-                                    <button
-                                      type="button"
-                                      className="w-full text-left block px-3 py-1.5 text-sm text-red-600 hover:bg-red-50"
-                                      role="menuitem"
-                                      onClick={() => handleStatusChange(centre.id, 'inactive')}
-                                    >
-                                      <div className="flex items-center">
-                                        <svg className="h-4 w-4 mr-2" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636" />
-                                        </svg>
-                                        Disable
-                                      </div>
-                                    </button>
-                                  ) : (
-                                    <button
-                                      type="button"
-                                      className="w-full text-left block px-3 py-1.5 text-sm text-emerald-600 hover:bg-emerald-50"
-                                      role="menuitem"
-                                      onClick={() => handleStatusChange(centre.id, 'active')}
-                                    >
-                                      <div className="flex items-center">
-                                        <svg className="h-4 w-4 mr-2" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                                        </svg>
-                                        Enable
-                                      </div>
-                                    </button>
-                                  )}
-                                </div>
-                              </div>
-                            )}
-                          </div>
+                        <div className="flex justify-end space-x-2">
+                          <button
+                            onClick={() => handleViewCentre(centre)}
+                            className="p-1.5 rounded-full bg-gray-100 text-gray-600 hover:bg-gray-200"
+                            title="View Centre"
+                          >
+                            <svg className="h-4 w-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                            </svg>
+                          </button>
+                          <button
+                            onClick={() => handleEditCentre(centre)}
+                            className="p-1.5 rounded-full bg-gray-100 text-gray-600 hover:bg-gray-200"
+                            title="Edit Centre"
+                          >
+                            <svg className="h-4 w-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                            </svg>
+                          </button>
                         </div>
                       </td>
                     </tr>
                   ))
                 ) : (
                   <tr>
-                  <td colSpan="7" className="px-6 py-10 text-center">
-                    <div className="flex flex-col items-center justify-center">
-                      <svg className="w-12 h-12 text-gray-400 mb-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9.172 16.172a4 4 0 015.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                      </svg>
-                      <p className="text-lg font-medium text-gray-500">No centres found</p>
-                      <p className="text-base text-gray-400 mt-1">Try adjusting your search or filter criteria</p>
-                    </div>
+                    <td colSpan="7" className="px-6 py-10 text-center">
+                      <div className="flex flex-col items-center justify-center">
+                        <svg className="w-12 h-12 text-gray-400 mb-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9.172 16.172a4 4 0 015.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
+                        <p className="text-lg font-medium text-gray-500">No centres found</p>
+                        <p className="text-base text-gray-400 mt-1">Try adjusting your search or filter criteria</p>
+                      </div>
                     </td>
                   </tr>
                 )}
@@ -426,6 +419,25 @@ const ManageCentre = () => {
           </div>
         </div>
       </div>
+
+      {/* View Centre Modal */}
+      {isViewModalOpen && (
+        <ViewCentreModal 
+          isOpen={isViewModalOpen}
+          onClose={handleCloseViewModal}
+          centre={selectedCentre}
+        />
+      )}
+      
+      {/* Edit Centre Modal */}
+      {isEditModalOpen && (
+        <EditCentreModal 
+          isOpen={isEditModalOpen}
+          onClose={handleCloseEditModal}
+          centre={centreToEdit}
+          onSave={handleSaveCentre}
+        />
+      )}
     </div>
   );
 };

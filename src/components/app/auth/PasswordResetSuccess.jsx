@@ -1,21 +1,29 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import AuthInfo from './AuthInfo';
 
 const PasswordResetSuccess = () => {
   const navigate = useNavigate();
+  const [isVisible, setIsVisible] = useState(false);
 
-  const handleBackToLogin = (e) => {
-    e.preventDefault();
-    navigate('/login');
-  };
+  useEffect(() => {
+    // Trigger animation after component mount
+    setTimeout(() => setIsVisible(true), 100);
+
+    // Redirect after 2 seconds
+    const redirectTimer = setTimeout(() => {
+      navigate('/login');
+    }, 2000);
+
+    return () => clearTimeout(redirectTimer);
+  }, [navigate]);
 
   return (
     <div className="h-screen flex flex-row-reverse overflow-hidden">
       {/* Right Column - Image Carousel (larger) */}
       <AuthInfo />
       
-      {/* Left Column - Success Message */}
+      {/* Left Column - Success Message (smaller) */}
       <div className="w-full lg:w-2/5 flex items-center justify-center px-8 py-6 bg-gradient-to-br from-gray-50 to-gray-100 relative">
         {/* Single Fingerprint - Top Left */}
         <div className="absolute inset-0 z-0 overflow-hidden">
@@ -41,6 +49,8 @@ const PasswordResetSuccess = () => {
                     <circle cx="5" cy="5" r="1" fill="#345554" opacity="0.15" />
                   </pattern>
                 </defs>
+                
+                {/* Only small dot pattern in circle */}
                 <circle cx="100" cy="100" r="100" fill="url(#dots-pattern-small)" />
               </svg>
             </div>
@@ -48,53 +58,35 @@ const PasswordResetSuccess = () => {
         </div>
 
         <div className="w-full max-w-md z-10">
-          <div className="text-center py-8">
-            <div className="flex flex-col items-center mb-6">
-              <img 
-                src="/images/logo(2).png" 
-                alt="Election Information System Logo" 
-                className="w-28 h-28 object-contain mb-2"
-              />
-              
-              {/* Success Icon */}
-              <div className="mb-6 relative">
-                <div className="w-20 h-20 rounded-full bg-emerald-100 flex items-center justify-center mb-4">
-                  <svg xmlns="http://www.w3.org/2000/svg" className="h-12 w-12 text-emerald-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+          <div className="flex flex-col items-center mb-8">
+            <img 
+              src="/images/logo(2).png" 
+              alt="Election Information System Logo" 
+              className="w-28 h-28 object-contain mb-1"
+            />
+            <h2 className="text-3xl font-black text-gray-800">Password Reset Successful</h2>
+            <p className="text-gray-700 mt-1 text-lg font-medium">Your password has been reset successfully</p>
+          </div>
+          
+          <div className={`transform transition-all duration-500 ease-out ${isVisible ? 'translate-y-0 opacity-100' : 'translate-y-full opacity-0'}`}>
+            <div className="bg-white p-8 rounded-none shadow-lg border border-gray-200">
+              <div className="flex flex-col items-center">
+                <div className="w-16 h-16 bg-emerald-100 rounded-full flex items-center justify-center mb-4">
+                  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="w-8 h-8 text-emerald-600">
+                    <path fillRule="evenodd" d="M2.25 12c0-5.385 4.365-9.75 9.75-9.75s9.75 4.365 9.75 9.75-4.365 9.75-9.75 9.75S2.25 17.385 2.25 12zm13.36-1.814a.75.75 0 10-1.22-.872l-3.236 4.53L9.53 12.22a.75.75 0 00-1.06 1.06l2.25 2.25a.75.75 0 001.14-.094l3.75-5.25z" clipRule="evenodd" />
                   </svg>
                 </div>
-                {/* Decorative circles */}
-                <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 -z-10">
-                  <div className="w-24 h-24 rounded-full border-4 border-emerald-100 animate-ping opacity-75"></div>
-                </div>
+                <p className="text-gray-600 text-center text-lg">
+                  You will be redirected to the login page in a moment...
+                </p>
               </div>
-              
-              <h2 className="text-3xl font-black text-gray-800 mb-3">Password Reset Successful!</h2>
-              <p className="text-lg text-gray-600 font-medium max-w-sm mx-auto mb-8">
-                Your password has been successfully updated. You can now log in with your new password.
-              </p>
-              
-              {/* Back to Login Button */}
-              <button
-                onClick={handleBackToLogin}
-                className="w-full sm:w-2/3 py-4 px-6 text-white font-semibold rounded-none shadow-sm focus:outline-none focus:ring-2 focus:ring-offset-2 transition-all duration-300 text-xl hover:shadow-md"
-                style={{ 
-                  background: "linear-gradient(to right, #00694B, #005941)",
-                  "--tw-ring-color": "#00694B"
-                }}
-              >
-                Back to Login
-              </button>
-              
-              {/* Security Reminder */}
-             
             </div>
-            
-            <div className="mt-8 border-t border-gray-200 pt-4">
-              <p className="text-lg text-center text-gray-600 font-medium">
-                © 2025 All rights reserved. Official Electoral Information System.
-              </p>
-            </div>
+          </div>
+          
+          <div className="mt-8 border-t border-gray-200 pt-4">
+            <p className="text-lg text-center text-gray-600 font-medium">
+              © 2025 All rights reserved. Official Electoral Information System.
+            </p>
           </div>
         </div>
       </div>
