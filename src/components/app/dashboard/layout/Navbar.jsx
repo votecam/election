@@ -529,8 +529,8 @@ const Navbar = ({ toggleSidebar, sidebarOpen }) => {
                       </svg>
                       Your Profile
                     </Link>
-                    <a
-                      href="/app/settings"
+                    <Link
+                      to="/app/settings"
                       className="group flex items-center px-3 py-2 text-sm text-gray-700 hover:bg-gray-50"
                       role="menuitem"
                     >
@@ -539,7 +539,7 @@ const Navbar = ({ toggleSidebar, sidebarOpen }) => {
                         <path strokeLinecap="round" strokeLinejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
                       </svg>
                       Settings
-                    </a>
+                    </Link>
                   </div>
                   
                   <div className="border-t border-gray-200 py-1">

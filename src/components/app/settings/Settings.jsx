@@ -98,10 +98,23 @@ const Settings = () => {
   };
   
   const toggleCountdown = () => {
-    setElectionSettings(prev => ({
-      ...prev,
-      countdownEnabled: !prev.countdownEnabled
-    }));
+    setElectionSettings({
+      ...electionSettings,
+      countdownEnabled: !electionSettings.countdownEnabled
+    });
+  };
+  
+  // Save settings function
+  const saveSettings = () => {
+    // Here you would typically make an API call to save the settings
+    // For example:
+    // apiService.settings.saveSettings(electionSettings);
+    
+    // Show success message
+    alert('Settings saved successfully!');
+    
+    // In a real application, you might use a toast notification instead:
+    // toast.success('Settings saved successfully!');
   };
   
   // Reusable toggle switch component
@@ -443,6 +456,7 @@ const Settings = () => {
         <div className="flex justify-end">
           <button
             type="button"
+            onClick={saveSettings}
             className="px-6 py-2.5 border border-transparent text-sm font-medium rounded-none shadow-sm text-white focus:outline-none focus:ring-1 focus:ring-offset-1 transition-all duration-300"
             style={{ 
               background: "linear-gradient(to right, #00694B, #005941)",
