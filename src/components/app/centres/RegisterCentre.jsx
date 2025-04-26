@@ -3,13 +3,10 @@ import apiService from '../../../services/apiService';
 
 const RegisterCentre = () => {
   const [formData, setFormData] = useState({
-    name: '',
-    address: '',
     region: '',
     municipalities: '',
     subdivision: '',
     department: '',
-    description: '',
     contact_number: '',
     wait_time: '',
     accessibility: [],
@@ -28,6 +25,7 @@ const RegisterCentre = () => {
   
   const regionRef = useRef(null);
   const municipalitiesRef = useRef(null);
+  const descriptionRef = useRef(null);
   
   useEffect(() => {
     function handleClickOutside(event) {
@@ -61,12 +59,6 @@ const RegisterCentre = () => {
     let errorMessage = '';
     
     switch (name) {
-      case 'name':
-        errorMessage = !value.trim() ? 'Centre name is required' : '';
-        break;
-      case 'address':
-        errorMessage = !value.trim() ? 'Centre address is required' : '';
-        break;
       case 'region':
         errorMessage = !value.trim() ? 'Region is required' : '';
         break;
@@ -82,9 +74,6 @@ const RegisterCentre = () => {
         break;
       case 'responsible':
         errorMessage = !value.trim() ? 'Responsible person is required' : '';
-        break;
-      case 'description':
-        errorMessage = !value.trim() ? 'Description is required' : '';
         break;
       default:
         break;
@@ -157,7 +146,7 @@ const RegisterCentre = () => {
     let isValid = true;
     
     // Validate all fields
-    const fields = ['name', 'address', 'region', 'municipalities', 'contact_number', 'responsible', 'description'];
+    const fields = ['region', 'municipalities', 'contact_number', 'responsible'];
     
     fields.forEach(field => {
       const fieldValue = field === 'region' || field === 'municipalities' ? 
@@ -169,6 +158,21 @@ const RegisterCentre = () => {
         isValid = false;
       }
     });
+    
+    // Validate the description textarea
+    const description = descriptionRef.current?.value || '';
+    if (!description.trim()) {
+      setErrors(prev => ({
+        ...prev,
+        description_details: 'Description is required'
+      }));
+      isValid = false;
+    } else {
+      setErrors(prev => ({
+        ...prev,
+        description_details: ''
+      }));
+    }
     
     return isValid;
   };
@@ -199,21 +203,27 @@ const RegisterCentre = () => {
     setSubmitting(true);
     
     try {
+      // Get description from textarea
+      const description = descriptionRef.current?.value || '';
+      
+      // Create data object with description from textarea
+      const dataToSend = {
+        ...formData,
+        description: description
+      };
+      
       // Call the real API endpoint to register the centre
-      await apiService.centres.register(formData);
+      await apiService.centres.register(dataToSend);
       
       // Show success message
       setSubmitSuccess(true);
       
       // Reset form after successful submission
       setFormData({
-        name: '',
-        address: '',
         region: '',
         municipalities: '',
         subdivision: '',
         department: '',
-        description: '',
         contact_number: '',
         wait_time: '',
         accessibility: [],
@@ -223,6 +233,11 @@ const RegisterCentre = () => {
         },
         responsible: ''
       });
+      
+      // Reset textarea
+      if (descriptionRef.current) {
+        descriptionRef.current.value = '';
+      }
       
       // Reset errors
       setErrors({});
@@ -306,78 +321,6 @@ const RegisterCentre = () => {
       <div className="bg-white rounded-lg border border-gray-100 w-full overflow-hidden">
         <form onSubmit={handleSubmit} className="p-6 space-y-6">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            {/* Centre Name Field */}
-            <div>
-              <label htmlFor="name" className="block text-base font-semibold text-gray-700 mb-1">
-                Centre Name
-              </label>
-              <div className="relative">
-                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="h-6 w-6 text-gray-600">
-                    <path d="M19 2H5c-1.103 0-2 .897-2 2v16c0 1.103.897 2 2 2h14c1.103 0 2-.897 2-2V4c0-1.103-.897-2-2-2zm0 18H5V4h14v16z" />
-                    <path d="M7 7h10v2H7zm0 4h10v2H7zm0 4h7v2H7z" />
-                  </svg>
-                </div>
-                
-                {/* Vertical separator line */}
-                <div className="absolute inset-y-2 left-12 w-px bg-gray-300"></div>
-                
-                <input
-                  type="text"
-                  id="name"
-                  name="name"
-                  value={formData.name}
-                  onChange={handleChange}
-                  placeholder="E.g. Centro Electoral Nacional"
-                  className={`pl-16 w-full px-4 py-3 border ${errors.name ? 'border-red-500 focus:ring-red-500 focus:border-red-500' : 'border-gray-300 focus:ring-emerald-500 focus:border-emerald-500'} rounded-none text-base font-medium bg-white focus:outline-none focus:ring-1 transition-all duration-200 ease-in-out`}
-                />
-              </div>
-              {errors.name && (
-                <p className="mt-1 text-sm text-red-600 font-medium flex items-center">
-                  <svg className="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
-                    <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
-                  </svg>
-                  {errors.name}
-                </p>
-              )}
-            </div>
-            
-            {/* Centre Address Field */}
-            <div>
-              <label htmlFor="address" className="block text-base font-semibold text-gray-700 mb-1">
-                Centre Address
-              </label>
-              <div className="relative">
-                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="h-6 w-6 text-gray-600">
-                    <path d="M12 14c2.206 0 4-1.794 4-4s-1.794-4-4-4-4 1.794-4 4 1.794 4 4 4zm0-6c1.103 0 2 .897 2 2s-.897 2-2 2-2-.897-2-2 .897-2 2-2z" />
-                    <path d="M11.42 21.814a.998.998 0 0 0 1.16 0C12.884 21.599 20.029 16.44 20 10c0-4.411-3.589-8-8-8S4 5.589 4 10c-.029 6.44 7.116 11.599 7.42 11.814zM12 4c3.309 0 6 2.691 6 6.008.015 4.712-5.284 8.706-6 9.274-.716-.568-6.015-4.562-6-9.274C6 6.691 8.691 4 12 4z" />
-                  </svg>
-                </div>
-                
-                {/* Vertical separator line */}
-                <div className="absolute inset-y-2 left-12 w-px bg-gray-300"></div>
-                
-                <input
-                  type="text"
-                  id="address"
-                  name="address"
-                  value={formData.address}
-                  onChange={handleChange}
-                  placeholder="E.g. Calle Principal 123"
-                  className={`pl-16 w-full px-4 py-3 border ${errors.address ? 'border-red-500 focus:ring-red-500 focus:border-red-500' : 'border-gray-300 focus:ring-emerald-500 focus:border-emerald-500'} rounded-none text-base font-medium bg-white focus:outline-none focus:ring-1 transition-all duration-200 ease-in-out`}
-                />
-              </div>
-              {errors.address && (
-                <p className="mt-1 text-sm text-red-600 font-medium flex items-center">
-                  <svg className="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
-                    <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
-                  </svg>
-                  {errors.address}
-                </p>
-              )}
-            </div>
-            
             {/* Region - Custom Dropdown */}
             <div>
               <label htmlFor="region" className="block text-base font-semibold text-gray-700 mb-1">
@@ -567,7 +510,7 @@ const RegisterCentre = () => {
                   name="subdivision"
                   value={formData.subdivision}
                   onChange={handleChange}
-                  placeholder="E.g. Zona Este"
+                  placeholder="E.g. Antenne Communale d'Akoeman"
                   className="pl-16 w-full px-4 py-3 border border-gray-300 rounded-none text-base font-medium bg-white focus:outline-none focus:ring-1 focus:ring-emerald-500 focus:border-emerald-500 transition-all duration-200 ease-in-out"
                 />
               </div>
@@ -594,7 +537,7 @@ const RegisterCentre = () => {
                   name="department"
                   value={formData.department}
                   onChange={handleChange}
-                  placeholder="E.g. Centro Electoral Principal"
+                  placeholder="E.g. Nyong-et-So'o"
                   className="pl-16 w-full px-4 py-3 border border-gray-300 rounded-none text-base font-medium bg-white focus:outline-none focus:ring-1 focus:ring-emerald-500 focus:border-emerald-500 transition-all duration-200 ease-in-out"
                 />
               </div>
@@ -686,7 +629,7 @@ const RegisterCentre = () => {
                   name="responsible"
                   value={formData.responsible}
                   onChange={handleChange}
-                  placeholder="E.g. John Doe"
+                  placeholder="E.g. Ondoua Zoa Godfroid"
                   className={`pl-16 w-full px-4 py-3 border ${errors.responsible ? 'border-red-500 focus:ring-red-500 focus:border-red-500' : 'border-gray-300 focus:ring-emerald-500 focus:border-emerald-500'} rounded-none text-base font-medium bg-white focus:outline-none focus:ring-1 transition-all duration-200 ease-in-out`}
                 />
               </div>
@@ -800,30 +743,29 @@ const RegisterCentre = () => {
           
           {/* Description */}
           <div>
-            <label htmlFor="description" className="block text-base font-semibold text-gray-700 mb-1">
-              Describe the electoral centre.
+            <label htmlFor="description_details" className="block text-base font-semibold text-gray-700 mb-1">
+              Description/Location
             </label>
             <textarea
-              id="description"
-              name="description"
+              id="description_details"
+              name="description_details"
               rows={4}
-              required
-              className={`block w-full px-4 py-3 border ${errors.description ? 'border-red-500 focus:ring-red-500 focus:border-red-500' : 'border-gray-300 focus:border-emerald-600'} rounded-none focus:outline-none focus:ring-1 transition-shadow duration-300 text-base font-medium bg-white`}
+              ref={descriptionRef}
+              className={`block w-full px-4 py-3 border ${errors.description_details ? 'border-red-500 focus:ring-red-500 focus:border-red-500' : 'border-gray-300 focus:border-emerald-600'} rounded-none focus:outline-none focus:ring-1 transition-shadow duration-300 text-base font-medium bg-white`}
               style={{ 
-                "--tw-ring-color": errors.description ? "#f56565" : "#00694B",
+                "--tw-ring-color": "#00694B",
                 "--tw-border-opacity": 1,
-                "--tw-border-color": errors.description ? "rgba(239, 68, 68, var(--tw-border-opacity))" : "rgba(0, 105, 75, var(--tw-border-opacity))"
+                "--tw-border-color": "rgba(0, 105, 75, var(--tw-border-opacity))"
               }}
-              placeholder="E.g. Centro Electoral Nacional de Malabo, cerca del Ministerio de Educación"
-              value={formData.description}
-              onChange={handleChange}
+              placeholder="E.g. Located at Face ancienne Gendarmerie, this centre is easily accessible and provides ample parking. The building is painted white with a green roof."
+              required
             />
-            {errors.description && (
+            {errors.description_details && (
               <p className="mt-1 text-sm text-red-600 font-medium flex items-center">
                 <svg className="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
                   <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
                 </svg>
-                {errors.description}
+                {errors.description_details}
               </p>
             )}
           </div>

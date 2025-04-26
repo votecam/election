@@ -1,13 +1,37 @@
 import React, { useEffect, useState } from 'react';
-import { XMarkIcon, MapPinIcon, PhoneIcon, EnvelopeIcon, GlobeAltIcon, UserGroupIcon, CalendarIcon, ClockIcon, BuildingLibraryIcon, HomeModernIcon } from '@heroicons/react/24/outline';
+import { XMarkIcon, MapPinIcon, PhoneIcon, EnvelopeIcon, GlobeAltIcon, UserGroupIcon, CalendarIcon, ClockIcon, BuildingLibraryIcon, HomeModernIcon, TableCellsIcon } from '@heroicons/react/24/outline';
+import axios from 'axios';
 
-const ViewCentreModal = ({ isOpen, onClose, centre }) => {
+// Create an axios instance with the correct base URL
+const api = axios.create({
+  baseURL: import.meta.env.VITE_API_URL || '',
+  headers: {
+    'Content-Type': 'application/json',
+  },
+});
+
+// Add request interceptor for auth token
+api.interceptors.request.use(
+  (config) => {
+    const token = localStorage.getItem('token');
+    if (token) {
+      config.headers.Authorization = `Bearer ${token}`;
+    }
+    return config;
+  },
+  (error) => Promise.reject(error)
+);
+
+const ViewCentreModal = ({ isOpen, onClose, centre, onCentreDeleted }) => {
   const [isVisible, setIsVisible] = useState(false);
   const [showDeleteConfirmation, setShowDeleteConfirmation] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
+  const [deleteError, setDeleteError] = useState(null);
 
   useEffect(() => {
     if (isOpen) {
       setIsVisible(true);
+      setDeleteError(null);
     } else {
       setIsVisible(false);
     }
@@ -25,8 +49,6 @@ const ViewCentreModal = ({ isOpen, onClose, centre }) => {
     municipalities: centre?.municipalities || 'N/A',
     subdivision: centre?.subdivision || 'N/A',
     department: centre?.department || 'N/A',
-    stations: centre?.stations || 0,
-    status: centre?.status || 'inactive',
     phone: centre?.contact_number || 'N/A',
     wait_time: centre?.wait_time || 'N/A',
     accessibility: Array.isArray(centre?.accessibility) 
@@ -51,18 +73,87 @@ const ViewCentreModal = ({ isOpen, onClose, centre }) => {
 
   const handleDelete = () => {
     setShowDeleteConfirmation(true);
+    setDeleteError(null);
   };
 
-  const confirmDelete = () => {
-    if (typeof centre.onDelete === 'function') {
-      centre.onDelete(centre);
+  const confirmDelete = async () => {
+    try {
+      setIsDeleting(true);
+      setDeleteError(null);
+      
+      // Use the provided endpoint with the centre's ID
+      const response = await api.delete(`/centre/delete-centre/${centreData.id}`);
+      
+      if (response.data.status === 'fail') {
+        setDeleteError(response.data.message || 'Failed to delete centre');
+        setIsDeleting(false);
+      } else {
+        // Successfully deleted
+        setIsDeleting(false);
+        setShowDeleteConfirmation(false);
+        
+        // Notify parent component about the deletion with centre name for success message
+        if (typeof onCentreDeleted === 'function') {
+          onCentreDeleted(centreData.id, centreData.name);
+        }
+        
+        onClose();
+      }
+    } catch (error) {
+      console.error("Error during delete operation:", error);
+      setDeleteError(error.response?.data?.message || 'An error occurred while deleting the centre');
+      setIsDeleting(false);
     }
-    setShowDeleteConfirmation(false);
-    onClose();
   };
 
   const cancelDelete = () => {
     setShowDeleteConfirmation(false);
+    setDeleteError(null);
+  };
+
+  // Helper function to check if coordinates are valid
+  const hasValidCoordinates = () => {
+    if (!centreData.location || centreData.location === 'N/A') return false;
+    
+    // If location is already a string, check if it contains coordinates
+    if (typeof centreData.location === 'string') {
+      // Try to extract coordinates from string format like "Point (longitude, latitude)"
+      const match = centreData.location.match(/\(([^)]+)\)/);
+      if (match && match[1]) {
+        const coords = match[1].split(',').map(coord => parseFloat(coord.trim()));
+        return coords.length === 2 && !isNaN(coords[0]) && !isNaN(coords[1]);
+      }
+      return false;
+    }
+    
+    // Check if it's a GeoJSON object
+    if (typeof centreData.location === 'object' && centreData.location.coordinates) {
+      const coords = centreData.location.coordinates;
+      return Array.isArray(coords) && coords.length === 2 && 
+             !isNaN(parseFloat(coords[0])) && !isNaN(parseFloat(coords[1]));
+    }
+    
+    return false;
+  };
+
+  // Function to get coordinates in the correct format for Google Maps
+  const getMapCoordinates = () => {
+    if (typeof centreData.location === 'object' && centreData.location.coordinates) {
+      // GeoJSON format: [longitude, latitude]
+      // Google Maps format: latitude,longitude
+      return `${centreData.location.coordinates[1]},${centreData.location.coordinates[0]}`;
+    } else if (typeof centreData.location === 'string') {
+      // Try to extract coordinates from string format
+      const match = centreData.location.match(/\(([^)]+)\)/);
+      if (match && match[1]) {
+        const coords = match[1].split(',').map(coord => parseFloat(coord.trim()));
+        if (coords.length === 2) {
+          // Assuming the format is (longitude, latitude) like GeoJSON
+          return `${coords[1]},${coords[0]}`;
+        }
+      }
+    }
+    return null;
   };
 
   return (
@@ -100,38 +191,28 @@ const ViewCentreModal = ({ isOpen, onClose, centre }) => {
         {/* Content */}
         <div className="p-6 overflow-y-auto h-[calc(100vh-80px)]">
           {/* Centre Name */}
-          <h3 className="text-3xl font-bold text-gray-800 mb-6">{centreData.name}</h3>
-
-          {/* Status Badge */}
-          <div className="mb-8">
-            <span className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-medium ${
-              centreData.status === 'active' 
-                ? 'bg-green-100 text-green-800' 
-                : centreData.status === 'pending'
-                ? 'bg-yellow-100 text-yellow-800'
-                : 'bg-red-100 text-red-800'
-            }`}>
-              {centreData.status.charAt(0).toUpperCase() + centreData.status.slice(1)}
-            </span>
-          </div>
+          <h3 className="text-3xl font-bold text-gray-800 mb-6">{centreData.address}</h3>
 
           {/* Map Section */}
           <div className="mb-8 rounded-lg overflow-hidden h-64 bg-gray-100">
-            <div className="w-full h-full flex items-center justify-center text-gray-500">
-              <div className="text-center">
-                <MapPinIcon className="h-8 w-8 mx-auto mb-2 text-gray-400" />
-                <p className="font-medium">Location Coordinates</p>
-                {typeof centreData.location === 'string' ? (
-                  <p>{centreData.location}</p>
-                ) : (
-                  <p>
-                    {centreData.location?.type || 'Point'} (
-                    {centreData.location?.coordinates?.[0] || 'N/A'}, 
-                    {centreData.location?.coordinates?.[1] || 'N/A'})
-                  </p>
-                )}
+            {hasValidCoordinates() && getMapCoordinates() ? (
+              <iframe
+                width="100%"
+                height="100%"
+                frameBorder="0"
+                style={{ border: 0 }}
+                src={`https://www.google.com/maps/embed/v1/place?key=AIzaSyBFw0Qbyq9zTFTd-tUY6dZWTgaQzuU17R8&q=${getMapCoordinates()}&zoom=15`}
+                allowFullScreen
+              ></iframe>
+            ) : (
+              <div className="w-full h-full flex items-center justify-center text-gray-500">
+                <div className="text-center">
+                  <MapPinIcon className="h-8 w-8 mx-auto mb-2 text-gray-400" />
+                  <p className="font-medium">Location Coordinates Unavailable</p>
+                  <p className="text-sm text-gray-500 mt-1">No valid coordinates provided for this center.</p>
+                </div>
               </div>
-            </div>
+            )}
           </div>
 
           {/* Details Grid */}
@@ -185,14 +266,6 @@ const ViewCentreModal = ({ isOpen, onClose, centre }) => {
             <div className="space-y-4">
               <h4 className="text-lg font-semibold text-gray-800 mb-4">Operational Details</h4>
               
-              <div className="flex items-start space-x-3">
-                <UserGroupIcon className="h-5 w-5 text-gray-500 mt-1" />
-                <div>
-                  <p className="text-sm text-gray-500">Polling Stations</p>
-                  <p className="text-gray-800">{centreData.stations} stations</p>
-                </div>
-              </div>
-
               <div className="flex items-start space-x-3">
                 <ClockIcon className="h-5 w-5 text-gray-500 mt-1" />
                 <div>
@@ -312,6 +385,11 @@ const ViewCentreModal = ({ isOpen, onClose, centre }) => {
                     <p className="text-sm text-gray-500">
                       Are you sure you want to delete this centre? This action cannot be undone.
                     </p>
+                    {deleteError && (
+                      <div className="mt-3 p-2 bg-red-50 rounded border border-red-200">
+                        <p className="text-sm text-red-600">{deleteError}</p>
+                      </div>
+                    )}
                   </div>
                 </div>
               </div>
@@ -321,15 +399,25 @@ const ViewCentreModal = ({ isOpen, onClose, centre }) => {
             <div className="bg-gray-50 px-4 py-3 sm:px-6 sm:flex sm:flex-row-reverse">
               <button 
                 type="button" 
-                className="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-red-600 text-base font-medium text-white hover:bg-red-700 focus:outline-none sm:ml-3 sm:w-auto sm:text-sm"
+                className="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-red-600 text-base font-medium text-white hover:bg-red-700 focus:outline-none sm:ml-3 sm:w-auto sm:text-sm disabled:opacity-50 disabled:cursor-not-allowed"
                 onClick={confirmDelete}
+                disabled={isDeleting}
               >
-                Delete
+                {isDeleting ? (
+                  <span className="flex items-center">
+                    <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                    </svg>
+                    Deleting...
+                  </span>
+                ) : "Delete"}
               </button>
               <button 
                 type="button" 
-                className="mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none sm:mt-0 sm:ml-3 sm:w-auto sm:text-sm"
+                className="mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none sm:mt-0 sm:ml-3 sm:w-auto sm:text-sm disabled:opacity-50 disabled:cursor-not-allowed"
                 onClick={cancelDelete}
+                disabled={isDeleting}
               >
                 Cancel
               </button>

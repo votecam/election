@@ -3,8 +3,9 @@ import { XMarkIcon, PlusIcon, MinusIcon } from '@heroicons/react/24/outline';
 
 const EditCentreModal = ({ isOpen, onClose, centre, onSave }) => {
   const [isVisible, setIsVisible] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [error, setError] = useState(null);
   const [formData, setFormData] = useState({
-    name: '',
     region: '',
     municipalities: '',
     subdivision: '',
@@ -12,19 +13,20 @@ const EditCentreModal = ({ isOpen, onClose, centre, onSave }) => {
     description: '',
     contact_number: '',
     wait_time: '',
-    stations: 0,
-    status: 'active',
     accessibility: [],
     opening_time: {
       from: '08:00',
       to: '17:00'
-    }
+    },
+    responsible: ''
   });
 
   // Control visibility with animation
   useEffect(() => {
     if (isOpen) {
       setIsVisible(true);
+      // Reset error when modal opens
+      setError(null);
     } else {
       setTimeout(() => setIsVisible(false), 300);
     }
@@ -34,7 +36,6 @@ const EditCentreModal = ({ isOpen, onClose, centre, onSave }) => {
   useEffect(() => {
     if (centre) {
       setFormData({
-        name: centre.name || '',
         region: centre.region || '',
         municipalities: centre.municipalities || '',
         subdivision: centre.subdivision || '',
@@ -42,13 +43,12 @@ const EditCentreModal = ({ isOpen, onClose, centre, onSave }) => {
         description: centre.description || '',
         contact_number: centre.contact_number || '',
         wait_time: centre.wait_time || '',
-        stations: centre.stations || 0,
-        status: centre.status || 'active',
         accessibility: Array.isArray(centre.accessibility) ? [...centre.accessibility] : [],
         opening_time: {
           from: centre.opening_time?.from || '08:00',
           to: centre.opening_time?.to || '17:00'
-        }
+        },
+        responsible: centre.responsible || ''
       });
     }
   }, [centre]);
@@ -88,15 +88,23 @@ const EditCentreModal = ({ isOpen, onClose, centre, onSave }) => {
     });
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    onSave({
-      ...centre,
-      ...formData,
-      // Make sure to preserve any location data
-      location: centre.location || { type: 'Point', coordinates: [0, 0] }
-    });
-    onClose();
+    setIsSubmitting(true);
+    setError(null);
+    
+    try {
+      await onSave({
+        ...centre,
+        ...formData
+      });
+      onClose();
+    } catch (error) {
+      console.error("Error saving centre:", error);
+      setError(error.message || "Failed to save centre. Please try again.");
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   if (!isOpen) {
@@ -149,77 +157,27 @@ const EditCentreModal = ({ isOpen, onClose, centre, onSave }) => {
         {/* Content */}
         {centre && (
           <form onSubmit={handleSubmit} className="p-6 overflow-y-auto h-[calc(100vh-80px)]">
+            {/* Error message */}
+            {error && (
+              <div className="mb-6 p-4 bg-red-50 border-l-4 border-red-500 text-red-700">
+                <div className="flex">
+                  <div className="flex-shrink-0">
+                    <svg className="h-5 w-5 text-red-400" fill="currentColor" viewBox="0 0 20 20">
+                      <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
+                    </svg>
+                  </div>
+                  <div className="ml-3">
+                    <p className="text-sm font-medium">{error}</p>
+                  </div>
+                </div>
+              </div>
+            )}
+            
             <div className="space-y-8">
               {/* Basic Information Section */}
               <div>
                 <h3 className="text-lg font-semibold text-gray-800 mb-4 pb-2 border-b border-gray-200">
                   Basic Information
-                </h3>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  <div>
-                    <label htmlFor="name" className="block text-base font-semibold text-gray-700 mb-1">
-                      Centre Name*
-                    </label>
-                    <div className="relative">
-                      <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="h-6 w-6 text-gray-600">
-                          <path d="M19 2H5c-1.103 0-2 .897-2 2v16c0 1.103.897 2 2 2h14c1.103 0 2-.897 2-2V4c0-1.103-.897-2-2-2zm0 18H5V4h14v16z" />
-                          <path d="M7 7h10v2H7zm0 4h10v2H7zm0 4h7v2H7z" />
-                        </svg>
-                      </div>
-                      
-                      {/* Vertical separator line */}
-                      <div className="absolute inset-y-2 left-12 w-px bg-gray-300"></div>
-                      
-                      <input
-                        type="text"
-                        id="name"
-                        name="name"
-                        value={formData.name}
-                        onChange={handleChange}
-                        placeholder="E.g. Centro Electoral Nacional"
-                        className="pl-16 w-full px-4 py-3 border border-gray-300 rounded-none text-base font-medium bg-white focus:outline-none focus:ring-1 focus:ring-emerald-500 focus:border-emerald-500 transition-all duration-200 ease-in-out"
-                        required
-                      />
-                    </div>
-                  </div>
-                  
-                  <div>
-                    <label htmlFor="status" className="block text-base font-semibold text-gray-700 mb-1">
-                      Status*
-                    </label>
-                    <div className="relative">
-                      <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="h-6 w-6 text-gray-600">
-                          <path d="M12 2C6.486 2 2 6.486 2 12s4.486 10 10 10 10-4.486 10-10S17.514 2 12 2zm0 18c-4.411 0-8-3.589-8-8s3.589-8 8-8 8 3.589 8 8-3.589 8-8 8z" />
-                          <path d="M9.999 13.587 7.7 11.292l-1.412 1.416 3.713 3.705 6.706-6.706-1.414-1.414z" />
-                        </svg>
-                      </div>
-                      
-                      {/* Vertical separator line */}
-                      <div className="absolute inset-y-2 left-12 w-px bg-gray-300"></div>
-                      
-                      <select
-                        name="status"
-                        id="status"
-                        value={formData.status}
-                        onChange={handleChange}
-                        className="pl-16 w-full px-4 py-3 border border-gray-300 rounded-none text-base font-medium bg-white focus:outline-none focus:ring-1 focus:ring-emerald-500 focus:border-emerald-500 transition-all duration-200 ease-in-out"
-                        required
-                      >
-                        <option value="active">Active</option>
-                        <option value="inactive">Inactive</option>
-                        <option value="pending">Pending</option>
-                      </select>
-                    </div>
-                  </div>
-                </div>
-              </div>
-              
-              {/* Location Information Section */}
-              <div>
-                <h3 className="text-lg font-semibold text-gray-800 mb-4 pb-2 border-b border-gray-200">
-                  Location Details
                 </h3>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <div>
@@ -275,7 +233,15 @@ const EditCentreModal = ({ isOpen, onClose, centre, onSave }) => {
                       />
                     </div>
                   </div>
-                  
+                </div>
+              </div>
+              
+              {/* Location Information Section */}
+              <div>
+                <h3 className="text-lg font-semibold text-gray-800 mb-4 pb-2 border-b border-gray-200">
+                  Location Details
+                </h3>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <div>
                     <label htmlFor="subdivision" className="block text-base font-semibold text-gray-700 mb-1">
                       Subdivision*
@@ -344,7 +310,7 @@ const EditCentreModal = ({ isOpen, onClose, centre, onSave }) => {
                       
                       {/* Vertical separator line */}
                       <div className="absolute inset-y-2 left-12 w-px bg-gray-300"></div>
-                      
+                       
                       <textarea
                         name="description"
                         id="description"
@@ -367,13 +333,14 @@ const EditCentreModal = ({ isOpen, onClose, centre, onSave }) => {
                 </h3>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <div>
-                    <label htmlFor="stations" className="block text-base font-semibold text-gray-700 mb-1">
-                      Number of Stations*
+                    <label htmlFor="wait_time" className="block text-base font-semibold text-gray-700 mb-1">
+                      Wait Time
                     </label>
                     <div className="relative">
                       <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="h-6 w-6 text-gray-600">
-                          <path d="M19 7h-5V5c0-.6-.4-1-1-1H5a2 2 0 0 0-2 2v10c0 .6.4 1 1 1h1c0 1.7 1.3 3 3 3s3-1.3 3-3h4c0 1.7 1.3 3 3 3s3-1.3 3-3h2v-5l-3-4zM8 19c-.6 0-1-.4-1-1s.4-1 1-1 1 .4 1 1-.4 1-1 1zm10 0c-.6 0-1-.4-1-1s.4-1 1-1 1 .4 1 1-.4 1-1 1zm-1-7V9l2.3 3H17z"/>
+                          <path d="M12 2C6.486 2 2 6.486 2 12s4.486 10 10 10 10-4.486 10-10S17.514 2 12 2zm0 18c-4.411 0-8-3.589-8-8s3.589-8 8-8 8 3.589 8 8-3.589 8-8 8z" />
+                          <path d="M13 7h-2v5.414l3.293 3.293 1.414-1.414L13 11.586z" />
                         </svg>
                       </div>
                       
@@ -381,15 +348,13 @@ const EditCentreModal = ({ isOpen, onClose, centre, onSave }) => {
                       <div className="absolute inset-y-2 left-12 w-px bg-gray-300"></div>
                       
                       <input
-                        type="number"
-                        name="stations"
-                        id="stations"
-                        value={formData.stations}
+                        type="text"
+                        name="wait_time"
+                        id="wait_time"
+                        value={formData.wait_time}
                         onChange={handleChange}
-                        min="1"
-                        placeholder="E.g. 5"
+                        placeholder="E.g. 15 Mins"
                         className="pl-16 w-full px-4 py-3 border border-gray-300 rounded-none text-base font-medium bg-white focus:outline-none focus:ring-1 focus:ring-emerald-500 focus:border-emerald-500 transition-all duration-200 ease-in-out"
-                        required
                       />
                     </div>
                   </div>
@@ -422,14 +387,14 @@ const EditCentreModal = ({ isOpen, onClose, centre, onSave }) => {
                   </div>
                   
                   <div>
-                    <label htmlFor="wait_time" className="block text-base font-semibold text-gray-700 mb-1">
-                      Wait Time
+                    <label htmlFor="responsible" className="block text-base font-semibold text-gray-700 mb-1">
+                      Responsible Person*
                     </label>
                     <div className="relative">
                       <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="h-6 w-6 text-gray-600">
-                          <path d="M12 2C6.486 2 2 6.486 2 12s4.486 10 10 10 10-4.486 10-10S17.514 2 12 2zm0 18c-4.411 0-8-3.589-8-8s3.589-8 8-8 8 3.589 8 8-3.589 8-8 8z" />
-                          <path d="M13 7h-2v5.414l3.293 3.293 1.414-1.414L13 11.586z" />
+                          <path d="M12,2A10,10,0,0,0,2,12a9.89,9.89,0,0,0,2.26,6.33l-2,2a1,1,0,0,0-.21,1.09A1,1,0,0,0,3,22h9A10,10,0,0,0,12,2Zm0,18H5.41l.93-.93a1,1,0,0,0,.3-.71,1,1,0,0,0-.3-.7A8,8,0,1,1,12,20Z"></path>
+                          <path d="M12 6a3.91 3.91 0 0 0-4 4 3.91 3.91 0 0 0 4 4 3.91 3.91 0 0 0 4-4 3.91 3.91 0 0 0-4-4zm0 6a1.91 1.91 0 0 1-2-2 1.91 1.91 0 0 1 2-2 1.91 1.91 0 0 1 2 2 1.91 1.91 0 0 1-2 2z"></path>
                         </svg>
                       </div>
                       
@@ -438,17 +403,18 @@ const EditCentreModal = ({ isOpen, onClose, centre, onSave }) => {
                       
                       <input
                         type="text"
-                        name="wait_time"
-                        id="wait_time"
-                        value={formData.wait_time}
+                        name="responsible"
+                        id="responsible"
+                        value={formData.responsible}
                         onChange={handleChange}
-                        placeholder="E.g. 15 Mins"
+                        placeholder="E.g. Ondoua Zoa Godfroid"
                         className="pl-16 w-full px-4 py-3 border border-gray-300 rounded-none text-base font-medium bg-white focus:outline-none focus:ring-1 focus:ring-emerald-500 focus:border-emerald-500 transition-all duration-200 ease-in-out"
+                        required
                       />
                     </div>
                   </div>
                   
-                  <div>
+                  <div className="md:col-span-2">
                     <label className="block text-base font-semibold text-gray-700 mb-1">
                       Operating Hours
                     </label>
@@ -543,24 +509,33 @@ const EditCentreModal = ({ isOpen, onClose, centre, onSave }) => {
               </div>
             </div>
 
-            {/* Action Buttons */}
-            <div className="mt-8 flex space-x-4">
-              <button
-                type="submit"
-                className="flex-1 py-4 px-5 text-white font-semibold rounded-md focus:outline-none focus:ring-2 focus:ring-offset-2 transition-all duration-300 text-xl"
-                style={{ 
-                  background: "linear-gradient(to right, #00694B, #005941)", 
-                  "--tw-ring-color": "#00694B" 
-                }}
-              >
-                Save Changes
-              </button>
-              <button
-                type="button"
-                className="flex-1 py-4 px-5 border-2 border-gray-300 text-gray-700 font-semibold rounded-md hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500 transition-all duration-300 text-xl"
+            {/* Form buttons */}
+            <div className="flex justify-end space-x-4 pt-6 border-t border-gray-200">
+              <button 
+                type="button" 
                 onClick={onClose}
+                className="px-6 py-3 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors font-medium flex-1 sm:flex-none"
+                disabled={isSubmitting}
               >
                 Cancel
+              </button>
+              <button 
+                type="submit" 
+                className="px-6 py-3 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 transition-colors font-medium flex-1 sm:flex-none disabled:opacity-70 disabled:cursor-not-allowed"
+                style={{ 
+                  "--tw-ring-color": "#00694B" 
+                }}
+                disabled={isSubmitting}
+              >
+                {isSubmitting ? (
+                  <span className="flex items-center justify-center">
+                    <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                    </svg>
+                    Saving...
+                  </span>
+                ) : 'Save Changes'}
               </button>
             </div>
           </form>

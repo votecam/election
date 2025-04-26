@@ -313,6 +313,35 @@ const apiService = {
       }
     },
     
+    // Upload Excel file for bulk centre registration
+    uploadBulk: async (formData) => {
+      try {
+        const response = await api.post('/centre/upload-centre-bulk', formData, {
+          headers: {
+            'Content-Type': 'multipart/form-data'
+          }
+        });
+        
+        // Check if response is successful
+        if (response.data && response.data.status === 'success') {
+          return response.data;
+        } else if (response.data && response.data.status === 'fail') {
+          // Handle failure status explicitly
+          throw new Error(response.data.message || 'Failed to upload centres');
+        } else {
+          throw new Error('Failed to upload centres');
+        }
+      } catch (error) {
+        console.error('Centre bulk upload error:', error);
+        // If the error has a response, extract the message
+        if (error.response && error.response.data) {
+          throw new Error(error.response.data.message || 'Failed to upload centres. Please try again.');
+        }
+        // Otherwise, use the error message or a default
+        throw new Error(error.message || 'Failed to upload centres. Please try again.');
+      }
+    },
+    
     // Bulk register multiple electoral centres
     registerBulk: async (centresData) => {
       try {
@@ -390,11 +419,272 @@ const apiService = {
         }
         throw new Error(error.message || 'Failed to delete electoral centre. Please try again.');
       }
+    },
+    
+    // Update an electoral centre
+    updateCentre: async (centreId, centreData) => {
+      try {
+        const response = await api.put(`/centre/update-centre/${centreId}`, centreData);
+        
+        if (response.data && response.data.status === 'success') {
+          return response.data.data;
+        } else if (response.data && response.data.status === 'fail') {
+          throw new Error(response.data.message || 'Failed to update centre');
+        } else {
+          throw new Error('Failed to update centre');
+        }
+      } catch (error) {
+        console.error('Update centre error:', error);
+        if (error.response && error.response.data) {
+          throw new Error(error.response.data.message || 'Failed to update electoral centre. Please try again.');
+        }
+        throw new Error(error.message || 'Failed to update electoral centre. Please try again.');
+      }
     }
     // Add more centre endpoints as needed
-  }
+  },
   
-  // You can add more API slices here (e.g., elections, results, etc.)
+  // Candidate management endpoints
+  candidates: {
+    // Register a new candidate with photo
+    register: async (candidateData) => {
+      try {
+        // Create FormData to handle file upload
+        const formData = new FormData();
+        
+        // Add all text fields directly
+        formData.append('name', candidateData.fullName);
+        formData.append('party_id', candidateData.party);
+        formData.append('position', candidateData.position);
+        formData.append('region', candidateData.region);
+        formData.append('election_type', candidateData.election_type);
+        
+        // Add the photo file with the correct field name
+        if (candidateData.photo) {
+          formData.append('candidate_image', candidateData.photo);
+        }
+        
+        // Debug: Log form data
+        console.log('Candidate form data being sent:');
+        console.log('- name:', formData.get('name'));
+        console.log('- party_id:', formData.get('party_id'));
+        console.log('- position:', formData.get('position'));
+        console.log('- region:', formData.get('region'));
+        console.log('- election_type:', formData.get('election_type'));
+        console.log('- candidate_image:', formData.get('candidate_image') ? 'File attached' : 'No file');
+        
+        const response = await api.post('/candidate/register-candidate', formData, {
+          headers: {
+            'Content-Type': 'multipart/form-data'
+          }
+        });
+        
+        // Check if response is successful
+        if (response.data && response.data.status === 'success') {
+          return response.data.data;
+        } else if (response.data && (response.data.status === 'fail' || response.data.status === 'error')) {
+          // For validation errors, throw with the full error object
+          throw response.data;
+        } else {
+          throw new Error('Failed to register candidate');
+        }
+      } catch (error) {
+        console.error('Candidate registration error:', error);
+        // If the error is already our custom error with details, just re-throw it
+        if (error.status && (error.message || error.details)) {
+          throw error;
+        }
+        // If the error has a response from the server, throw that
+        if (error.response && error.response.data) {
+          throw error.response.data;
+        }
+        // Otherwise, throw a generic error
+        throw new Error(error.message || 'Failed to register candidate. Please try again.');
+      }
+    },
+    
+    // Get all candidates with pagination
+    getAll: async (page = 1, limit = 10) => {
+      try {
+        const response = await api.get(`/candidate/get-all-candidates?page=${page}&limit=${limit}`);
+        
+        if (response.data && response.data.status === 'success') {
+          return response.data.data;
+        } else {
+          throw new Error('Failed to fetch candidates');
+        }
+      } catch (error) {
+        console.error('Get all candidates error:', error);
+        if (error.response && error.response.data) {
+          throw new Error(error.response.data.message || 'Failed to fetch candidates. Please try again.');
+        }
+        throw new Error(error.message || 'Failed to fetch candidates. Please try again.');
+      }
+    },
+    
+    // Delete a candidate
+    deleteCandidate: async (candidateId) => {
+      try {
+        const response = await api.delete(`/candidate/delete-candidate/${candidateId}`);
+        
+        if (response.data && response.data.status === 'success') {
+          return response.data.data;
+        } else if (response.data && response.data.status === 'fail') {
+          throw new Error(response.data.message || 'Failed to delete candidate');
+        } else {
+          throw new Error('Failed to delete candidate');
+        }
+      } catch (error) {
+        console.error('Delete candidate error:', error);
+        if (error.response && error.response.data) {
+          throw new Error(error.response.data.message || 'Failed to delete candidate. Please try again.');
+        }
+        throw new Error(error.message || 'Failed to delete candidate. Please try again.');
+      }
+    },
+    
+    // Update a candidate
+    updateCandidate: async (candidateId, candidateData) => {
+      try {
+        // Create FormData to handle file upload if needed
+        const formData = new FormData();
+        
+        // Append all fields to FormData
+        Object.keys(candidateData).forEach(key => {
+          // If the value is a File object or it's not a string URL path (for images)
+          if (candidateData[key] && 
+              (candidateData[key] instanceof File || 
+               (key === 'candidate_image' && typeof candidateData[key] !== 'string'))) {
+            formData.append(key, candidateData[key]);
+          } else if (candidateData[key] !== null && candidateData[key] !== undefined) {
+            formData.append(key, candidateData[key]);
+          }
+        });
+        
+        const response = await api.put(
+          `/candidate/update-candidate/${candidateId}`,
+          formData,
+          {
+            headers: {
+              'Content-Type': 'multipart/form-data'
+            }
+          }
+        );
+        
+        if (response.data && response.data.status === 'success') {
+          return response.data.data;
+        } else if (response.data && response.data.status === 'fail') {
+          throw new Error(response.data.message || 'Failed to update candidate');
+        } else {
+          throw new Error('Failed to update candidate');
+        }
+      } catch (error) {
+        console.error('Update candidate error:', error);
+        if (error.response && error.response.data) {
+          throw new Error(error.response.data.message || 'Failed to update candidate. Please try again.');
+        }
+        throw new Error(error.message || 'Failed to update candidate. Please try again.');
+      }
+    }
+    // Add more candidate endpoints as needed
+  },
+  
+  // Party management endpoints
+  parties: {
+    // Get all parties
+    getAll: async () => {
+      try {
+        const response = await api.get('/party/get-parties');
+        
+        // Check if response is successful
+        if (response.data && response.data.status === 'success') {
+          return response.data;
+        } else {
+          throw new Error('Failed to fetch parties');
+        }
+      } catch (error) {
+        console.error('Fetch parties error:', error);
+        throw error;
+      }
+    },
+    
+    // Get a specific party by ID
+    getPartyById: async (partyId) => {
+      try {
+        const response = await api.get(`/party/get-party/${partyId}`);
+        
+        // Return the complete response data
+        return response.data;
+      } catch (error) {
+        console.error(`Get party by ID (${partyId}) error:`, error);
+        if (error.response && error.response.data) {
+          throw error.response.data;
+        }
+        throw new Error(error.message || 'Failed to fetch party details. Please try again.');
+      }
+    }
+    // Add more party endpoints as needed
+  },
+  
+  // Analytics endpoints
+  analytics: {
+    // Get candidates grouped by party
+    getCandidatesByParty: async () => {
+      try {
+        const response = await api.get('/analytics/candidates-by-party');
+        
+        if (response.data && response.data.status === 'success') {
+          return response.data;
+        } else {
+          throw new Error('Failed to fetch candidates by party data');
+        }
+      } catch (error) {
+        console.error('Fetch candidates by party error:', error);
+        if (error.response && error.response.data) {
+          throw new Error(error.response.data.message || 'Failed to fetch candidates by party. Please try again.');
+        }
+        throw new Error(error.message || 'Failed to fetch candidates by party. Please try again.');
+      }
+    },
+    
+    // Get centres grouped by region
+    getCentresByRegion: async () => {
+      try {
+        const response = await api.get('/analytics/centres-by-region');
+        
+        if (response.data && response.data.status === 'success') {
+          return response.data;
+        } else {
+          throw new Error('Failed to fetch centres by region data');
+        }
+      } catch (error) {
+        console.error('Fetch centres by region error:', error);
+        if (error.response && error.response.data) {
+          throw new Error(error.response.data.message || 'Failed to fetch centres by region. Please try again.');
+        }
+        throw new Error(error.message || 'Failed to fetch centres by region. Please try again.');
+      }
+    },
+    
+    // Get candidates grouped by position
+    getCandidatesByPosition: async () => {
+      try {
+        const response = await api.get('/analytics/candidates-by-position');
+        
+        if (response.data && response.data.status === 'success') {
+          return response.data;
+        } else {
+          throw new Error('Failed to fetch candidates by position data');
+        }
+      } catch (error) {
+        console.error('Fetch candidates by position error:', error);
+        if (error.response && error.response.data) {
+          throw new Error(error.response.data.message || 'Failed to fetch candidates by position. Please try again.');
+        }
+        throw new Error(error.message || 'Failed to fetch candidates by position. Please try again.');
+      }
+    }
+  }
 };
 
 export default apiService; 

@@ -1,21 +1,56 @@
 import React, { useState, useRef, useEffect } from 'react';
+import apiService from '../../../services/apiService';
+import axios from 'axios';
+
+// Create axios instance with base URL from env
+const api = axios.create({
+  baseURL: import.meta.env.VITE_API_URL || '',
+  headers: {
+    'Content-Type': 'application/json',
+  },
+});
+
+// Add request interceptor for auth token
+api.interceptors.request.use(
+  (config) => {
+    const token = localStorage.getItem('token');
+    if (token) {
+      config.headers.Authorization = `Bearer ${token}`;
+    }
+    return config;
+  },
+  (error) => Promise.reject(error)
+);
 
 const RegisterCandidate = () => {
   const [formData, setFormData] = useState({
     fullName: '',
     party: '',
+    partyName: '',
     position: '',
-    region: ''
+    region: '',
+    election_type: ''
   });
   
   const [submitting, setSubmitting] = useState(false);
   const [submitSuccess, setSubmitSuccess] = useState(false);
   const [partyOpen, setPartyOpen] = useState(false);
   const [positionOpen, setPositionOpen] = useState(false);
+  const [electionTypeOpen, setElectionTypeOpen] = useState(false);
   const [photoPreview, setPhotoPreview] = useState(null);
+  const [photoFile, setPhotoFile] = useState(null);
+  const [errors, setErrors] = useState([]);
+  const [alert, setAlert] = useState({
+    show: false,
+    type: 'error',
+    message: ''
+  });
+  const [parties, setParties] = useState([]);
+  const [loadingParties, setLoadingParties] = useState(false);
   
   const partyRef = useRef(null);
   const positionRef = useRef(null);
+  const electionTypeRef = useRef(null);
   const topRef = useRef(null);
   
   useEffect(() => {
@@ -25,6 +60,9 @@ const RegisterCandidate = () => {
       }
       if (positionRef.current && !positionRef.current.contains(event.target)) {
         setPositionOpen(false);
+      }
+      if (electionTypeRef.current && !electionTypeRef.current.contains(event.target)) {
+        setElectionTypeOpen(false);
       }
     }
     
@@ -41,6 +79,47 @@ const RegisterCandidate = () => {
     }
   }, [submitSuccess]);
   
+  // Fetch parties on component mount
+  useEffect(() => {
+    const fetchParties = async () => {
+      try {
+        setLoadingParties(true);
+        // Use apiService.parties.getAll() to fetch parties
+        const response = await apiService.parties.getAll();
+        console.log('Parties response:', response);
+        
+        // Check if the response has the expected data structure
+        if (response && response.status === 'success' && Array.isArray(response.data)) {
+          // Debug log for party data including logos
+          console.log('Party data with logos:', response.data);
+          
+          setParties(response.data);
+        } else {
+          console.warn('Unexpected parties data format:', response);
+          // In case of empty data
+          setParties([]);
+        }
+      } catch (error) {
+        console.error('Error fetching parties:', error);
+        setAlert({
+          show: true,
+          type: 'error',
+          message: 'Failed to load parties. Please refresh the page.'
+        });
+      } finally {
+        setLoadingParties(false);
+      }
+    };
+    
+    fetchParties();
+  }, []);
+  
+  // Updated function to directly use logo URLs from API
+  const getPartyLogo = (logoPath) => {
+    // Simply return the logo URL as is
+    return logoPath;
+  };
+  
   const handleChange = (e) => {
     const { name, value } = e.target;
     setFormData({
@@ -49,10 +128,11 @@ const RegisterCandidate = () => {
     });
   };
   
-  const handlePartySelect = (value) => {
+  const handlePartySelect = (partyId, partyName) => {
     setFormData({
       ...formData,
-      party: value
+      party: partyId,
+      partyName: partyName // Store the party name separately for display
     });
     setPartyOpen(false);
   };
@@ -65,9 +145,21 @@ const RegisterCandidate = () => {
     setPositionOpen(false);
   };
   
+  const handleElectionTypeSelect = (value) => {
+    setFormData({
+      ...formData,
+      election_type: value
+    });
+    setElectionTypeOpen(false);
+  };
+  
   const handlePhotoChange = (e) => {
     const file = e.target.files[0];
     if (file) {
+      // Store the actual file
+      setPhotoFile(file);
+      
+      // Create a preview URL
       const reader = new FileReader();
       reader.onload = (e) => {
         setPhotoPreview(e.target.result);
@@ -80,63 +172,147 @@ const RegisterCandidate = () => {
     window.scrollTo({ top: 0, behavior: 'auto' });
   };
   
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     
     // Immediately scroll to top when register button is clicked
     scrollToTop();
     
+    // Reset any previous errors
+    setErrors([]);
+    
+    // Check if photo is selected
+    if (!photoFile) {
+      setAlert({
+        show: true,
+        type: 'error',
+        message: 'Candidate photo is required'
+      });
+      
+      // Auto-hide error alert after 5 seconds
+      setTimeout(() => {
+        setAlert({
+          show: false,
+          type: 'error',
+          message: ''
+        });
+      }, 5000);
+      return;
+    }
+    
+    // Check if election type is selected
+    if (!formData.election_type) {
+      setAlert({
+        show: true,
+        type: 'error',
+        message: 'Election type is required'
+      });
+      
+      // Auto-hide error alert after 5 seconds
+      setTimeout(() => {
+        setAlert({
+          show: false,
+          type: 'error',
+          message: ''
+        });
+      }, 5000);
+      return;
+    }
+    
     setSubmitting(true);
     
-    // Simulate API call
-    setTimeout(() => {
-      setSubmitting(false);
+    try {
+      // Prepare data for API
+      const candidateData = {
+        ...formData,
+        photo: photoFile
+      };
+      
+      // Call API to register candidate
+      const registeredCandidate = await apiService.candidates.register(candidateData);
+      
+      // Log the response
+      console.log('Registered candidate:', registeredCandidate);
+      
+      // Handle success
       setSubmitSuccess(true);
       
-      // Scroll to top again after success (in case page has scrolled)
-      scrollToTop();
+      // Set success message with candidate details
+      setAlert({
+        show: true,
+        type: 'success',
+        message: `${registeredCandidate.name} has been successfully registered as a candidate for ${registeredCandidate.position} in the ${registeredCandidate.election_type} election.`
+      });
       
       // Reset form after successful submission
       setFormData({
         fullName: '',
         party: '',
+        partyName: '',
         position: '',
-        region: ''
+        region: '',
+        election_type: ''
       });
       setPhotoPreview(null);
+      setPhotoFile(null);
       
       // Auto-clear success message after 5 seconds
       setTimeout(() => {
         setSubmitSuccess(false);
+        setAlert({
+          show: false,
+          type: 'success',
+          message: ''
+        });
       }, 5000);
-    }, 1500);
+    } catch (error) {
+      console.error('Registration error:', error);
+      console.error('Error details:', {
+        message: error.message,
+        data: error.response?.data,
+        status: error.response?.status
+      });
+      
+      // Extract error details if they exist
+      if (error.response && error.response.data) {
+        const errorData = error.response.data;
+        
+        // Check if the response includes validation details
+        if (errorData.details && Array.isArray(errorData.details)) {
+          setErrors(errorData.details);
+        } else if (errorData.message) {
+          // If there's just a message, set it as a single error
+          setErrors([errorData.message]);
+        }
+        
+        // Set the alert with the error message
+        setAlert({
+          show: true,
+          type: 'error',
+          message: errorData.message || 'Failed to register candidate. Please try again.'
+        });
+      } else {
+        // For other types of errors
+        setAlert({
+          show: true,
+          type: 'error',
+          message: error.message || 'Failed to register candidate. Please try again.'
+        });
+      }
+      
+      // Auto-hide error alert after 5 seconds
+      setTimeout(() => {
+        setAlert({
+          show: false,
+          type: 'error',
+          message: ''
+        });
+      }, 5000);
+    } finally {
+      setSubmitting(false);
+    }
   };
 
-  // List of political parties in Cameroon (updated and more comprehensive)
-  const parties = [
-    'CPDM - Cameroon People\'s Democratic Movement',
-    'SDF - Social Democratic Front',
-    'UNDP - National Union for Democracy and Progress',
-    'MRC - Cameroon Renaissance Movement',
-    'UPC - Union of the Peoples of Cameroon',
-    'CPP - Cameroon People\'s Party',
-    'UDC - Cameroon Democratic Union',
-    'ANDP - National Alliance for Democracy and Progress',
-    'MDR - Movement for the Defense of the Republic',
-    'FSNC - Front for the National Salvation of Cameroon',
-    'MP - Popular Movement',
-    'PAL - Progressive African Liberal',
-    'ADD - Alliance for Democracy and Development',
-    'MLJC - Movement for the Liberation and Development of Cameroon',
-    'UMS - Union Movement for Solidarity',
-    'CNC - Cameroon National Congress',
-    'RDPC - Rassemblement Démocratique du Peuple Camerounais',
-    'AFP - Alliance of Progressive Forces',
-    'PPC - Patriots for Peace in Cameroon',
-    'UDP - United Democratic Party',
-    'Other'
-  ];
-  
   // List of possible positions
   const positions = [
     'Presidential Candidate',
@@ -155,6 +331,15 @@ const RegisterCandidate = () => {
     'Other'
   ];
 
+  // List of election types
+  const electionTypes = [
+    'presidential',
+    'parliamentary',
+    'municipal',
+   
+    
+  ];
+
   return (
     <div className="w-full max-w-5xl mx-auto">
       <div ref={topRef} id="top" className="mb-6">
@@ -164,7 +349,7 @@ const RegisterCandidate = () => {
       </div>
       
       {/* Success Message */}
-      {submitSuccess && (
+      {(submitSuccess || (alert.show && alert.type === 'success')) && (
         <div className="mb-6 p-4 bg-emerald-50 border-l-4 border-emerald-500">
           <div className="flex">
             <div className="flex-shrink-0">
@@ -174,8 +359,38 @@ const RegisterCandidate = () => {
             </div>
             <div className="ml-3">
               <p className="text-base font-medium text-emerald-800">
-                Candidate was successfully registered!
+                {alert.type === 'success' && alert.message ? 
+                  alert.message : 
+                  'Candidate was successfully registered!'}
               </p>
+              <p className="mt-1 text-sm text-emerald-700">
+                You can now view this candidate in the candidate management section.
+              </p>
+            </div>
+          </div>
+        </div>
+      )}
+      
+      {/* Error Messages */}
+      {alert.show && alert.type === 'error' && (
+        <div className="mb-6 p-4 bg-red-50 border-l-4 border-red-500">
+          <div className="flex">
+            <div className="flex-shrink-0">
+              <svg className="h-5 w-5 text-red-500" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
+              </svg>
+            </div>
+            <div className="ml-3">
+              <p className="text-base font-medium text-red-800">
+                {alert.message}
+              </p>
+              {errors.length > 0 && (
+                <ul className="mt-2 text-sm text-red-700 list-disc list-inside">
+                  {errors.map((error, index) => (
+                    <li key={index}>{error}</li>
+                  ))}
+                </ul>
+              )}
             </div>
           </div>
         </div>
@@ -258,14 +473,14 @@ const RegisterCandidate = () => {
         <div className="relative" ref={partyRef}>
           <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
             <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="h-6 w-6 text-gray-600">
-              <path d="M2 22a8 8 0 1 1 16 0H2zm8-9c-3.315 0-6-2.685-6-6s2.685-6 6-6 6 2.685 6 6-2.685 6-6 6zm7.363 2.233A7.505 7.505 0 0 1 22.983 22H20c0-2.61-1-4.986-2.637-6.767zm-2.023-2.276A7.98 7.98 0 0 0 18 7a7.964 7.964 0 0 0-1.015-3.903A5 5 0 0 1 21 8a4.999 4.999 0 0 1-5.66 4.957z" />
+              <path d="M12 3L1 9l4 2.18v6L12 21l7-3.82v-6l2-1.09V17h2V9L12 3zm6.82 6L12 12.72 5.18 9 12 5.28 18.82 9zM17 15.99l-5 2.73-5-2.73v-3.72L12 15l5-2.73v3.72z"/>
             </svg>
           </div>
-          {/* Vertical separator line - Adjusted to match other inputs */}
+          {/* Vertical separator line */}
           <div className="absolute inset-y-2 left-12 w-px bg-gray-300"></div>
           <button
             type="button"
-            className={`pl-16 w-full px-4 py-3 border border-gray-300 rounded-none text-left focus:outline-none focus:ring-1 focus:border-emerald-600 transition-shadow duration-300 text-base font-medium bg-white ${!formData.party && 'text-gray-500'}`}
+            className={`pl-16 w-full px-4 py-3 border border-gray-300 rounded-none text-left focus:outline-none focus:ring-1 focus:border-emerald-600 transition-shadow duration-300 text-base font-medium bg-white ${!formData.partyName && 'text-gray-500'}`}
             style={{ 
               "--tw-ring-color": "#00694B",
               "--tw-border-opacity": 1,
@@ -273,7 +488,45 @@ const RegisterCandidate = () => {
             }}
             onClick={() => setPartyOpen(!partyOpen)}
           >
-            {formData.party || 'Select a political party'}
+            {formData.party && formData.party !== 'other' ? (
+              (() => {
+                const selectedParty = parties.find(p => p.id === formData.party);
+                return selectedParty ? (
+                  <div className="flex items-center">
+                    <div className="w-5 h-5 mr-2 relative flex-shrink-0">
+                      {/* Always show the colored circle with initial as a reliable fallback */}
+                      <div 
+                        className="absolute inset-0 rounded-full flex items-center justify-center text-white text-xs font-bold bg-opacity-100"
+                        style={{ backgroundColor: selectedParty.color || '#00694B' }}
+                      >
+                        {selectedParty.name.charAt(0).toUpperCase()}
+                      </div>
+                      {/* Only attempt to load image if logo exists */}
+                      {selectedParty.logo && (
+                        <img 
+                          src={getPartyLogo(selectedParty.logo)}
+                          alt={`${formData.partyName} logo`} 
+                          className="h-5 w-5 object-contain absolute inset-0 z-10"
+                          style={{opacity: 0}} /* Start transparent */
+                          onLoad={(e) => {
+                            e.target.style.opacity = "1"; /* Make visible if load succeeds */
+                            e.target.style.zIndex = "10";
+                          }}
+                          onError={(e) => {
+                            /* Just keep hidden on error, fallback is already visible */
+                            console.error(`Failed to load party logo: ${e.target.src}`);
+                            e.target.onerror = null;
+                          }}
+                        />
+                      )}
+                    </div>
+                    <span>{formData.partyName}</span>
+                  </div>
+                ) : <span>Select a political party</span>;
+              })()
+            ) : (
+              <span>{formData.partyName || 'Select a political party'}</span>
+            )}
             <span className="absolute inset-y-0 right-0 flex items-center pr-2">
               <svg className="h-5 w-5 text-gray-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
                 <path fillRule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clipRule="evenodd" />
@@ -283,16 +536,76 @@ const RegisterCandidate = () => {
           <p className="mt-1 text-xs text-gray-500">Select the political affiliation of the candidate</p>
           
           {partyOpen && (
-            <div className="absolute z-10 mt-0 w-full bg-white shadow-lg max-h-60 py-1 text-base overflow-auto focus:outline-none sm:text-sm border border-gray-300">
-              <ul>
-                {parties.map((party, index) => (
+            <div className="absolute z-10 mt-0 w-full bg-white shadow-lg max-h-60 py-1 text-base overflow-auto focus:outline-none sm:text-sm border border-gray-300"
+              style={{ maxHeight: '250px', overflowY: 'auto', bottom: 'auto', top: '100%' }}>
+              {loadingParties ? (
+                <div className="p-2 text-center text-gray-500">Loading parties...</div>
+              ) : parties.length > 0 ? (
+                <ul>
+                  {parties.map((party) => (
+                    <li
+                      key={party.id}
+                      className="cursor-pointer select-none relative py-2 pl-3 pr-9 hover:bg-emerald-50 text-gray-900"
+                      onClick={() => handlePartySelect(party.id, party.name)}
+                    >
+                      <div className="flex items-center">
+                        {party.logo ? (
+                          <div className="w-6 h-6 mr-3 relative flex-shrink-0">
+                            {/* Always display the colored circle with initial */}
+                            <div 
+                              className="absolute inset-0 rounded-full flex items-center justify-center text-white text-xs font-bold bg-opacity-100"
+                              style={{ backgroundColor: party.color || '#00694B' }}
+                            >
+                              {party.name.charAt(0).toUpperCase()}
+                            </div>
+                            {/* Try to load the image on top */}
+                            <img 
+                              src={getPartyLogo(party.logo)}
+                              alt={`${party.name} logo`} 
+                              className="h-6 w-6 object-contain absolute inset-0 z-10"
+                              style={{opacity: 0}} /* Start transparent */
+                              onLoad={(e) => {
+                                e.target.style.opacity = "1"; /* Make visible if load succeeds */
+                                e.target.style.zIndex = "10";
+                              }}
+                              onError={(e) => {
+                                /* Just keep hidden on error, fallback is already visible */
+                                console.error(`Failed to load party logo in dropdown: ${e.target.src}`);
+                                e.target.onerror = null;
+                              }}
+                            />
+                          </div>
+                        ) : (
+                          <div 
+                            className="h-6 w-6 mr-3 rounded-full flex items-center justify-center text-white text-xs font-bold flex-shrink-0"
+                            style={{ backgroundColor: party.color || '#00694B' }}
+                          >
+                            {party.name.charAt(0).toUpperCase()}
+                          </div>
+                        )}
+                        <span className={`${formData.party === party.id ? 'font-medium' : ''} truncate`}>
+                          {party.name}
+                        </span>
+                      </div>
+                      {formData.party === party.id && (
+                        <span className="absolute inset-y-0 right-0 flex items-center pr-4 text-emerald-600">
+                          <svg className="h-5 w-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                            <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                          </svg>
+                        </span>
+                      )}
+                    </li>
+                  ))}
                   <li
-                    key={index}
-                    className="cursor-pointer select-none relative py-2 pl-3 pr-9 hover:bg-emerald-50 text-gray-900"
-                    onClick={() => handlePartySelect(party)}
+                    className="cursor-pointer select-none relative py-2 pl-3 pr-9 hover:bg-emerald-50 text-gray-900 border-t border-gray-200"
+                    onClick={() => handlePartySelect('other', 'Other')}
                   >
-                    {party}
-                    {formData.party === party && (
+                    <div className="flex items-center">
+                      <span className={formData.party === 'other' ? 'font-medium' : ''}>
+                        Other
+                      </span>
+                    </div>
+                    {formData.party === 'other' && (
                       <span className="absolute inset-y-0 right-0 flex items-center pr-4 text-emerald-600">
                         <svg className="h-5 w-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
                           <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
@@ -300,8 +613,10 @@ const RegisterCandidate = () => {
                       </span>
                     )}
                   </li>
-                ))}
-              </ul>
+                </ul>
+              ) : (
+                <div className="p-2 text-center text-gray-500">No parties available</div>
+              )}
             </div>
           )}
         </div>
@@ -318,7 +633,7 @@ const RegisterCandidate = () => {
               <path d="M18 14H17V15H18V14Z M7 15H13C13.55 15 14 14.55 14 14C14 13.45 13.55 13 13 13H7C6.45 13 6 13.45 6 14C6 14.55 6.45 15 7 15Z M13 11H7C6.45 11 6 10.55 6 10C6 9.45 6.45 9 7 9H13C13.55 9 14 9.45 14 10C14 10.55 13.55 11 13 11Z M7 7H13C13.55 7 14 6.55 14 6C14 5.45 13.55 5 13 5H7C6.45 5 6 5.45 6 6C6 6.55 6.45 7 7 7Z M18 12H17V13H18V12Z M19 3H14.82C14.4 1.84 13.3 1 12 1C10.7 1 9.6 1.84 9.18 3H5C3.9 3 3 3.9 3 5V19C3 20.1 3.9 21 5 21H19C20.1 21 21 20.1 21 19V5C21 3.9 20.1 3 19 3Z M12 3C12.55 3 13 3.45 13 4C13 4.55 12.55 5 12 5C11.45 5 11 4.55 11 4C11 3.45 11.45 3 12 3Z M19 19H5V5H19V19Z M18 10H17V11H18V10Z" />
             </svg>
           </div>
-          {/* Vertical separator line - Adjusted to match other inputs */}
+          {/* Vertical separator line */}
           <div className="absolute inset-y-2 left-12 w-px bg-gray-300"></div>
           <button
             type="button"
@@ -330,7 +645,9 @@ const RegisterCandidate = () => {
             }}
             onClick={() => setPositionOpen(!positionOpen)}
           >
-            {formData.position || 'Select a position'}
+            <span>
+              {formData.position || 'Select a position'}
+            </span>
             <span className="absolute inset-y-0 right-0 flex items-center pr-2">
               <svg className="h-5 w-5 text-gray-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
                 <path fillRule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clipRule="evenodd" />
@@ -340,7 +657,8 @@ const RegisterCandidate = () => {
           <p className="mt-1 text-xs text-gray-500">Select the electoral position the candidate is contesting</p>
           
           {positionOpen && (
-            <div className="absolute z-10 mt-0 w-full bg-white shadow-lg max-h-60 py-1 text-base overflow-auto focus:outline-none sm:text-sm border border-gray-300">
+            <div className="absolute z-10 mt-0 w-full bg-white shadow-lg max-h-60 py-1 text-base overflow-auto focus:outline-none sm:text-sm border border-gray-300"
+              style={{ maxHeight: '250px', overflowY: 'auto', bottom: 'auto', top: '100%' }}>
               <ul>
                 {positions.map((position, index) => (
                   <li
@@ -348,8 +666,78 @@ const RegisterCandidate = () => {
                     className="cursor-pointer select-none relative py-2 pl-3 pr-9 hover:bg-emerald-50 text-gray-900"
                     onClick={() => handlePositionSelect(position)}
                   >
-                    {position}
+                    <div className="flex items-center">
+                      <span className={`${formData.position === position ? 'font-medium' : ''} truncate`}>
+                        {position}
+                      </span>
+                    </div>
                     {formData.position === position && (
+                      <span className="absolute inset-y-0 right-0 flex items-center pr-4 text-emerald-600">
+                        <svg className="h-5 w-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                          <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                        </svg>
+                      </span>
+                    )}
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
+        </div>
+      </div>
+      
+      {/* Election Type Selection */}
+      <div>
+        <label htmlFor="election_type" className="block text-base font-semibold text-gray-700 mb-2">
+          Election Type <span className="text-red-600">*</span>
+        </label>
+        <div className="relative" ref={electionTypeRef}>
+          <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="h-6 w-6 text-gray-600">
+              <path d="M16.53 11.06L15.47 10l-4.88 4.88-2.12-2.12-1.06 1.06L10.59 17l5.94-5.94zM19 3h-1V1h-2v2H8V1H6v2H5c-1.11 0-1.99.9-1.99 2L3 19c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm0 16H5V8h14v11z"/>
+            </svg>
+          </div>
+          {/* Vertical separator line */}
+          <div className="absolute inset-y-2 left-12 w-px bg-gray-300"></div>
+          <button
+            type="button"
+            className={`pl-16 w-full px-4 py-3 border border-gray-300 rounded-none text-left focus:outline-none focus:ring-1 focus:border-emerald-600 transition-shadow duration-300 text-base font-medium bg-white ${!formData.election_type && 'text-gray-500'}`}
+            style={{ 
+              "--tw-ring-color": "#00694B",
+              "--tw-border-opacity": 1,
+              "--tw-border-color": "rgba(0, 105, 75, var(--tw-border-opacity))"
+            }}
+            onClick={() => setElectionTypeOpen(!electionTypeOpen)}
+          >
+            <span>
+              {formData.election_type ? 
+                formData.election_type.charAt(0).toUpperCase() + formData.election_type.slice(1) : 
+                'Select election type'}
+            </span>
+            <span className="absolute inset-y-0 right-0 flex items-center pr-2">
+              <svg className="h-5 w-5 text-gray-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+                <path fillRule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clipRule="evenodd" />
+              </svg>
+            </span>
+          </button>
+          <p className="mt-1 text-xs text-gray-500">Select the type of election this candidate is participating in</p>
+          
+          {electionTypeOpen && (
+            <div className="absolute z-10 mt-0 w-full bg-white shadow-lg max-h-60 py-1 text-base overflow-auto focus:outline-none sm:text-sm border border-gray-300"
+              style={{ maxHeight: '250px', overflowY: 'auto', bottom: 'auto', top: '100%' }}>
+              <ul>
+                {electionTypes.map((type, index) => (
+                  <li
+                    key={index}
+                    className="cursor-pointer select-none relative py-2 pl-3 pr-9 hover:bg-emerald-50 text-gray-900"
+                    onClick={() => handleElectionTypeSelect(type)}
+                  >
+                    <div className="flex items-center">
+                      <span className={`${formData.election_type === type ? 'font-medium' : ''} truncate`}>
+                        {type.charAt(0).toUpperCase() + type.slice(1)}
+                      </span>
+                    </div>
+                    {formData.election_type === type && (
                       <span className="absolute inset-y-0 right-0 flex items-center pr-4 text-emerald-600">
                         <svg className="h-5 w-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
                           <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />

@@ -1,24 +1,23 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import apiService from '../../../services/apiService';
 
 const Analytics = () => {
-  // State for chart animations
+  // State for chart animations and data
   const [activeTab, setActiveTab] = useState('party');
+  const [candidatesByParty, setCandidatesByParty] = useState([]);
+  const [partyDataLoading, setPartyDataLoading] = useState(true);
+  const [partyDataError, setPartyDataError] = useState(null);
   
-  // Candidate data by party
-  const candidatesByParty = [
-    { name: 'PDGE', count: 156, percentage: 45, color: '#10B981' },
-    { name: 'CSDI', count: 89, percentage: 26, color: '#3B82F6' },
-    { name: 'APP', count: 56, percentage: 16, color: '#6366F1' },
-    { name: 'PS', count: 27, percentage: 8, color: '#EC4899' },
-    { name: 'Others', count: 17, percentage: 5, color: '#F59E0B' },
-  ];
+  // State for regional data
+  const [regionData, setRegionData] = useState([]);
+  const [regionDataLoading, setRegionDataLoading] = useState(true);
+  const [regionDataError, setRegionDataError] = useState(null);
+  const [totalCentres, setTotalCentres] = useState(0);
   
-  // Candidate data by position
-  const candidatesByPosition = [
-    { name: 'President', count: 8, percentage: 2, color: '#10B981' },
-    { name: 'Parliamentary', count: 125, percentage: 36, color: '#3B82F6' },
-    { name: 'Municipal', count: 212, percentage: 62, color: '#6366F1' },
-  ];
+  // State for position data
+  const [candidatesByPosition, setCandidatesByPosition] = useState([]);
+  const [positionDataLoading, setPositionDataLoading] = useState(true);
+  const [positionDataError, setPositionDataError] = useState(null);
   
   // Monthly registration data
   const monthlyData = [
@@ -30,6 +29,113 @@ const Analytics = () => {
     { month: 'Jun', registrations: 43 },
   ];
   
+  // Fetch candidates by party from API
+  useEffect(() => {
+    const fetchCandidatesByParty = async () => {
+      setPartyDataLoading(true);
+      try {
+        const result = await apiService.analytics.getCandidatesByParty();
+        
+        if (result.status === 'success' && Array.isArray(result.data)) {
+          // Calculate total candidates
+          const total = result.data.reduce((sum, party) => sum + party.count, 0);
+          
+          // Process the data and add colors
+          const colors = ['#10B981', '#3B82F6', '#6366F1', '#EC4899', '#F59E0B', '#8B5CF6', '#2DD4BF', '#F97316'];
+          
+          const processedData = result.data.map((party, index) => ({
+            name: party.name,
+            count: party.count,
+            percentage: total > 0 ? Math.round((party.count / total) * 100) : 0,
+            color: colors[index % colors.length]
+          }));
+          
+          setCandidatesByParty(processedData);
+        } else {
+          setPartyDataError('Failed to load party data');
+        }
+      } catch (error) {
+        console.error('Error fetching candidates by party:', error);
+        setPartyDataError('Error loading party data. Please try again later.');
+      } finally {
+        setPartyDataLoading(false);
+      }
+    };
+    
+    fetchCandidatesByParty();
+  }, []);
+
+  // Fetch centres by region from API
+  useEffect(() => {
+    const fetchCentresByRegion = async () => {
+      setRegionDataLoading(true);
+      try {
+        const result = await apiService.analytics.getCentresByRegion();
+        
+        if (result.status === 'success' && result.data && Array.isArray(result.data.regions)) {
+          // Set total centres
+          setTotalCentres(result.data.total || 0);
+          
+          // Process the data and add colors
+          const colors = ['#10B981', '#3B82F6', '#6366F1', '#EC4899', '#F59E0B', '#8B5CF6', '#2DD4BF', '#F97316'];
+          
+          const processedData = result.data.regions.map((item, index) => ({
+            name: item.region,
+            count: item.count,
+            color: colors[index % colors.length]
+          }));
+          
+          setRegionData(processedData);
+        } else {
+          setRegionDataError('Failed to load regional data');
+        }
+      } catch (error) {
+        console.error('Error fetching centres by region:', error);
+        setRegionDataError('Error loading regional data. Please try again later.');
+      } finally {
+        setRegionDataLoading(false);
+      }
+    };
+    
+    fetchCentresByRegion();
+  }, []);
+  
+  // Fetch candidates by position from API
+  useEffect(() => {
+    const fetchCandidatesByPosition = async () => {
+      setPositionDataLoading(true);
+      try {
+        const result = await apiService.analytics.getCandidatesByPosition();
+        
+        if (result.status === 'success' && Array.isArray(result.data)) {
+          // Calculate total candidates
+          const total = result.data.reduce((sum, position) => sum + position.count, 0);
+          
+          // Process the data and add colors
+          const colors = ['#10B981', '#3B82F6', '#6366F1', '#EC4899', '#F59E0B', '#8B5CF6'];
+          
+          const processedData = result.data.map((position, index) => ({
+            name: position.position,
+            count: position.count,
+            percentage: total > 0 ? Math.round((position.count / total) * 100) : 0,
+            color: colors[index % colors.length]
+          }));
+          
+          setCandidatesByPosition(processedData);
+        } else {
+          setPositionDataError('Failed to load position data');
+        }
+      } catch (error) {
+        console.error('Error fetching candidates by position:', error);
+        setPositionDataError('Error loading position data. Please try again later.');
+      } finally {
+        setPositionDataLoading(false);
+      }
+    };
+    
+    fetchCandidatesByPosition();
+  }, []);
+  
   // Get the total candidates
   const getTotalByParty = () => {
     return candidatesByParty.reduce((total, item) => total + item.count, 0);
@@ -37,6 +143,12 @@ const Analytics = () => {
   
   const getTotalByPosition = () => {
     return candidatesByPosition.reduce((total, item) => total + item.count, 0);
+  };
+
+  // Find the max count for the bar chart scaling
+  const getMaxRegionCount = () => {
+    if (regionData.length === 0) return 50;
+    return Math.max(...regionData.map(region => region.count));
   };
 
   // CSS for animations
@@ -89,6 +201,14 @@ const Analytics = () => {
       filter: brightness(1.1);
       transform: scaleY(1.05);
     }
+    
+    .region-name {
+      display: inline-block;
+      max-width: 100%;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
   `;
 
   // Function to render pie chart
@@ -96,9 +216,12 @@ const Analytics = () => {
     let cumulativePercentage = 0;
     
     return (
-      <div className="flex flex-col md:flex-row items-center justify-between animate-fade-in" style={{ animationDelay: '100ms' }}>
+      <div className="flex flex-col items-center animate-fade-in" style={{ animationDelay: '100ms' }}>
+        {/* Title */}
+        <h3 className="text-lg font-semibold text-gray-800 mb-4">{title}</h3>
+        
         {/* Pie Chart */}
-        <div className="relative w-56 h-56 mb-4 md:mb-0">
+        <div className="relative w-56 h-56 mb-6">
           <svg className="w-full h-full" viewBox="0 0 100 100">
             {/* Pie chart segments */}
             {data.map((item, index) => {
@@ -147,18 +270,25 @@ const Analytics = () => {
           </div>
         </div>
         
-        {/* Legend */}
-        <div className="space-y-3 md:ml-8 flex-1">
-          <h3 className="text-lg font-semibold text-gray-800 mb-2">{title}</h3>
+        {/* Legend - Two column layout */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-4 gap-y-3 w-full">
           {data.map((item, index) => (
             <div 
               key={item.name} 
-              className="flex items-center animate-fade-in" 
+              className="flex items-center group animate-fade-in" 
               style={{ animationDelay: `${200 + (index * 100)}ms` }}
             >
-              <div className="w-4 h-4 rounded-sm mr-2" style={{ backgroundColor: item.color }}></div>
-              <span className="text-sm font-medium text-gray-700">{item.name}</span>
-              <span className="ml-auto text-sm font-semibold text-gray-900">
+              <div className="w-4 h-4 rounded-sm mr-2 flex-shrink-0" style={{ backgroundColor: item.color }}></div>
+              <div className="relative flex-1 min-w-0">
+                <span className="text-sm font-medium text-gray-700 truncate block" title={item.name}>
+                  {item.name}
+                </span>
+                {/* Tooltip for long names */}
+                <div className="absolute left-0 -top-8 z-10 bg-gray-800 text-white text-xs px-2 py-1 rounded whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity">
+                  {item.name}
+                </div>
+              </div>
+              <span className="ml-2 text-sm font-semibold text-gray-900 whitespace-nowrap flex-shrink-0">
                 {item.count} ({item.percentage}%)
               </span>
             </div>
@@ -183,112 +313,194 @@ const Analytics = () => {
         {/* Candidates by Party - Pie Chart */}
         <div className="bg-white rounded-lg border border-gray-100 p-6 shadow-sm hover:shadow-md transition-shadow duration-300">
           <h2 className="text-xl font-semibold text-gray-900 mb-4">Candidates by Party</h2>
-          {renderPieChart(candidatesByParty, getTotalByParty(), "Political Parties")}
+          
+          {partyDataLoading ? (
+            <div className="flex justify-center items-center h-64">
+              <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-emerald-500"></div>
+            </div>
+          ) : partyDataError ? (
+            <div className="bg-red-50 border-l-4 border-red-500 p-4 my-6">
+              <div className="flex">
+                <div className="flex-shrink-0">
+                  <svg className="h-5 w-5 text-red-500" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                    <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
+                  </svg>
+                </div>
+                <div className="ml-3">
+                  <p className="text-sm text-red-700">{partyDataError}</p>
+                </div>
+              </div>
+            </div>
+          ) : candidatesByParty.length === 0 ? (
+            <div className="flex justify-center items-center h-64">
+              <p className="text-gray-500 text-center">No party data available</p>
+            </div>
+          ) : (
+            <div className="flex justify-center">
+              <div className="max-w-md w-full">
+                {renderPieChart(candidatesByParty, getTotalByParty(), "Political Parties")}
+              </div>
+            </div>
+          )}
         </div>
         
         {/* Candidates by Position - Pie Chart */}
         <div className="bg-white rounded-lg border border-gray-100 p-6 shadow-sm hover:shadow-md transition-shadow duration-300">
           <h2 className="text-xl font-semibold text-gray-900 mb-4">Candidates by Position</h2>
-          {renderPieChart(candidatesByPosition, getTotalByPosition(), "Election Positions")}
+          
+          {positionDataLoading ? (
+            <div className="flex justify-center items-center h-64">
+              <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-emerald-500"></div>
+            </div>
+          ) : positionDataError ? (
+            <div className="bg-red-50 border-l-4 border-red-500 p-4 my-6">
+              <div className="flex">
+                <div className="flex-shrink-0">
+                  <svg className="h-5 w-5 text-red-500" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                    <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
+                  </svg>
+                </div>
+                <div className="ml-3">
+                  <p className="text-sm text-red-700">{positionDataError}</p>
+                </div>
+              </div>
+            </div>
+          ) : candidatesByPosition.length === 0 ? (
+            <div className="flex justify-center items-center h-64">
+              <p className="text-gray-500 text-center">No position data available</p>
+            </div>
+          ) : (
+            <div className="flex justify-center">
+              <div className="max-w-md w-full">
+                {renderPieChart(candidatesByPosition, getTotalByPosition(), "Election Positions")}
+              </div>
+            </div>
+          )}
         </div>
       </div>
       
       {/* Regions Bar Chart */}
       <div className="bg-white rounded-lg border border-gray-100 p-6 mb-6 shadow-sm hover:shadow-md transition-shadow duration-300">
-        <h2 className="text-xl font-semibold text-gray-900 mb-4 animate-fade-in" style={{ animationDelay: '300ms' }}>Regional Analytics</h2>
+        <h2 className="text-xl font-semibold text-gray-900 mb-4 animate-fade-in" style={{ animationDelay: '300ms' }}>Electoral Centres by Region</h2>
         
-        <div className="mt-4">
-          <div className="relative h-80">
-            {/* Y-axis labels */}
-            <div className="absolute left-0 top-0 bottom-10 flex flex-col justify-between text-xs text-gray-500 py-2">
-              <span>50</span>
-              <span>40</span>
-              <span>30</span>
-              <span>20</span>
-              <span>10</span>
-              <span>0</span>
+        {regionDataLoading ? (
+          <div className="flex justify-center items-center h-80">
+            <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-emerald-500"></div>
+          </div>
+        ) : regionDataError ? (
+          <div className="bg-red-50 border-l-4 border-red-500 p-4 my-6">
+            <div className="flex">
+              <div className="flex-shrink-0">
+                <svg className="h-5 w-5 text-red-500" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                  <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
+                </svg>
+              </div>
+              <div className="ml-3">
+                <p className="text-sm text-red-700">{regionDataError}</p>
+              </div>
             </div>
-            
-            {/* Chart grid lines */}
-            <div className="absolute left-8 right-0 top-0 bottom-10 flex flex-col justify-between">
-              <div className="border-b border-gray-100"></div>
-              <div className="border-b border-gray-100"></div>
-              <div className="border-b border-gray-100"></div>
-              <div className="border-b border-gray-100"></div>
-              <div className="border-b border-gray-100"></div>
-            </div>
-            
-            {/* Actual bar chart */}
-            <div className="absolute left-10 right-0 top-0 bottom-10 flex items-end">
-              <div className="flex items-end justify-around w-full h-full">
-                {[
-                  { name: 'Bioko Norte', count: 42, color: '#10B981' },
-                  { name: 'Bioko Sur', count: 38, color: '#3B82F6' },
-                  { name: 'Annobón', count: 31, color: '#6366F1' },
-                  { name: 'Centro Sur', count: 27, color: '#EC4899' },
-                  { name: 'Kié-Ntem', count: 35, color: '#F59E0B' },
-                  { name: 'Litoral', count: 45, color: '#8B5CF6' },
-                  { name: 'Wele-Nzas', count: 29, color: '#2DD4BF' }
-                ].map((region, index) => (
-                  <div 
-                    key={region.name} 
-                    className="flex flex-col items-center group animate-fade-in" 
-                    style={{ 
-                      width: '12%', 
-                      animationDelay: `${400 + (index * 100)}ms` 
-                    }}
-                  >
-                    {/* Tooltip */}
-                    <div className="absolute bottom-full mb-2 opacity-0 group-hover:opacity-100 transition-opacity z-10">
-                      <div className="bg-gray-800 text-white text-xs px-2 py-1 rounded whitespace-nowrap">
-                        {region.name}: {region.count} centers
-                      </div>
-                    </div>
-                    
-                    <div className="relative w-full">
-                      <div 
-                        className="w-full rounded-t transition-all duration-300 group-hover:opacity-90 region-bar"
-                        style={{ 
-                          height: `${(region.count / 50) * 100}%`, 
-                          backgroundColor: region.color,
-                          minHeight: '24px',
-                          transform: 'scaleY(0)',
-                          animation: 'scaleYIn 0.5s ease-out forwards',
-                          animationDelay: `${400 + (index * 100)}ms`
-                        }}
-                      >
-                        <div className="absolute -top-6 left-1/2 transform -translate-x-1/2 text-xs font-semibold">
-                          {region.count}
-                        </div>
-                      </div>
-                    </div>
-                    
-                    {/* X-axis labels */}
-                    <div className="mt-2 text-xs font-medium text-gray-600 transform -rotate-45 origin-top-left whitespace-nowrap">
-                      {region.name}
-                    </div>
-                  </div>
+          </div>
+        ) : regionData.length === 0 ? (
+          <div className="flex justify-center items-center h-80">
+            <p className="text-gray-500 text-center">No regional data available</p>
+          </div>
+        ) : (
+          <div className="mt-4">
+            <div className="relative h-96">
+              {/* Y-axis labels */}
+              <div className="absolute left-0 top-0 bottom-32 flex flex-col justify-between text-xs text-gray-500 py-2">
+                {[...Array(6)].map((_, i) => {
+                  const maxCount = getMaxRegionCount();
+                  const step = Math.ceil(maxCount / 5);
+                  const value = (5 - i) * step;
+                  return <span key={i}>{value}</span>;
+                })}
+              </div>
+              
+              {/* Chart grid lines */}
+              <div className="absolute left-8 right-0 top-0 bottom-32 flex flex-col justify-between">
+                {[...Array(6)].map((_, i) => (
+                  <div key={i} className="border-b border-gray-100"></div>
                 ))}
               </div>
+              
+              {/* Actual bar chart */}
+              <div className="absolute left-10 right-0 top-0 bottom-32 flex items-end">
+                <div className="flex items-end justify-around w-full h-full">
+                  {regionData.map((region, index) => {
+                    const maxCount = getMaxRegionCount();
+                    const heightPercentage = (region.count / maxCount) * 100;
+                    
+                    return (
+                      <div 
+                        key={region.name} 
+                        className="flex flex-col items-center group animate-fade-in" 
+                        style={{ 
+                          width: `${100 / Math.max(regionData.length, 1)}%`, 
+                          maxWidth: "160px",
+                          animationDelay: `${400 + (index * 100)}ms` 
+                        }}
+                      >
+                        {/* Value label */}
+                        <div className="mb-1 text-xs font-semibold text-gray-700">
+                          {region.count}
+                        </div>
+                        
+                        {/* Bar */}
+                        <div className="relative w-full px-2">
+                          <div 
+                            className="w-full rounded-t transition-all duration-300 group-hover:opacity-90 region-bar"
+                            style={{ 
+                              height: `${heightPercentage}%`, 
+                              backgroundColor: region.color,
+                              minHeight: '24px',
+                              transform: 'scaleY(0)',
+                              animation: 'scaleYIn 0.5s ease-out forwards',
+                              animationDelay: `${400 + (index * 100)}ms`
+                            }}
+                          >
+                            {/* Hover tooltip */}
+                            <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-1 opacity-0 group-hover:opacity-100 transition-opacity z-10 pointer-events-none">
+                              <div className="bg-gray-800 text-white text-xs px-2 py-1 rounded whitespace-nowrap">
+                                {region.name}: {region.count} centres
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                        
+                        {/* Region name label */}
+                        <div className="mt-2 px-1 w-full">
+                          <div className="text-xs font-medium text-gray-600 text-center region-name" title={region.name}>
+                            {region.name}
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+              
+              {/* X-axis */}
+              <div className="absolute left-10 right-0 bottom-0 h-32 border-t border-gray-200">
+                
+              </div>
             </div>
-          </div>
-          
-          <div className="mt-16 pt-4 border-t border-gray-100">
-            <div className="flex justify-between items-center">
-              <span className="text-sm text-gray-500">Source: National Electoral Commission</span>
-              <div className="flex items-center space-x-4">
-                <span className="text-sm font-medium text-gray-700">Total Centers: 247</span>
-                <button className="px-3 py-1 bg-emerald-50 text-emerald-600 text-sm font-medium rounded-md border border-emerald-100 hover:bg-emerald-100 transition-colors duration-300">
-                  View Details
-                </button>
+            
+            <div className="mt-2 pt-4 border-t border-gray-100">
+              <div className="flex justify-between items-center">
+                <span className="text-sm text-gray-500">Source: National Electoral Commission</span>
+                <div className="flex items-center space-x-4">
+                  <span className="text-sm font-medium text-gray-700">Total Centres: {totalCentres}</span>
+                  <button className="px-3 py-1 bg-emerald-50 text-emerald-600 text-sm font-medium rounded-md border border-emerald-100 hover:bg-emerald-100 transition-colors duration-300">
+                    View Details
+                  </button>
+                </div>
               </div>
             </div>
           </div>
-        </div>
+        )}
       </div>
       
-      
-
       <div className="grid grid-cols-1 gap-6 mb-6">
       
       </div>

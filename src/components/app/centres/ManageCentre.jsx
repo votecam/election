@@ -2,12 +2,35 @@ import React, { useState, useRef, useEffect } from 'react';
 import ViewCentreModal from './ViewCentreModal';
 import EditCentreModal from './EditCentreModal';
 import apiService from '../../../services/apiService';
+import axios from 'axios';
+
+// Create an axios instance with the correct base URL
+const api = axios.create({
+  baseURL: import.meta.env.VITE_API_URL || '',
+  headers: {
+    'Content-Type': 'application/json',
+  },
+});
+
+// Add request interceptor for auth token
+api.interceptors.request.use(
+  (config) => {
+    const token = localStorage.getItem('token');
+    if (token) {
+      config.headers.Authorization = `Bearer ${token}`;
+    }
+    return config;
+  },
+  (error) => Promise.reject(error)
+);
 
 const ManageCentre = () => {
   // State for centres data
   const [centres, setCentres] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const [initialLoading, setInitialLoading] = useState(true);
+  const [tableLoading, setTableLoading] = useState(false);
   const [error, setError] = useState(null);
+  const [successMessage, setSuccessMessage] = useState(null);
   
   // Pagination state
   const [pagination, setPagination] = useState({
@@ -18,7 +41,6 @@ const ManageCentre = () => {
   });
   
   const [searchTerm, setSearchTerm] = useState('');
-  const [statusFilter, setStatusFilter] = useState('all');
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const dropdownRef = useRef(null);
   const [openMenuId, setOpenMenuId] = useState(null);
@@ -38,7 +60,7 @@ const ManageCentre = () => {
   // Fetch centres from API
   const fetchCentres = async (page = 1) => {
     try {
-      setLoading(true);
+      setTableLoading(true);
       setError(null);
       
       const data = await apiService.centres.getAllCentres(page);
@@ -83,8 +105,8 @@ const ManageCentre = () => {
         processedCentre.description = processedCentre.description || 'No description';
         processedCentre.contact_number = processedCentre.contact_number || 'N/A';
         processedCentre.wait_time = processedCentre.wait_time || 'Unknown';
-        processedCentre.stations = processedCentre.stations || 0;
-        processedCentre.status = processedCentre.status || 'unknown';
+        // processedCentre.stations = processedCentre.stations || 0;
+        // processedCentre.status = processedCentre.status || 'unknown';
         
         return processedCentre;
       });
@@ -102,7 +124,8 @@ const ManageCentre = () => {
       // Keep the previous data if we have it
       setCentres(prev => prev.length ? prev : []);
     } finally {
-      setLoading(false);
+      setInitialLoading(false);
+      setTableLoading(false);
     }
   };
   
@@ -149,47 +172,8 @@ const ManageCentre = () => {
                          centre.subdivision?.toLowerCase().includes(searchTerm.toLowerCase()) ||
                          centre.location?.toLowerCase().includes(searchTerm.toLowerCase());
     
-    const matchesStatus = statusFilter === 'all' || centre.status === statusFilter;
-    
-    return matchesSearch && matchesStatus;
+    return matchesSearch;
   });
-  
-  // Handle status change
-  const handleStatusChange = (id, newStatus) => {
-    setCentres(centres.map(centre => 
-      centre.id === id ? {...centre, status: newStatus} : centre
-    ));
-  };
-
-  // Get status badge color
-  const getStatusBadge = (status) => {
-    switch (status) {
-      case 'active':
-        return <span className="px-3 py-1.5 inline-flex text-base font-medium rounded-md bg-emerald-100 text-emerald-800">Active</span>;
-      case 'inactive':
-        return <span className="px-3 py-1.5 inline-flex text-base font-medium rounded-md bg-gray-100 text-gray-800">Inactive</span>;
-      case 'pending':
-        return <span className="px-3 py-1.5 inline-flex text-base font-medium rounded-md bg-amber-100 text-amber-800">Pending</span>;
-      default:
-        return <span className="px-3 py-1.5 inline-flex text-base font-medium rounded-md bg-gray-100 text-gray-800">Unknown</span>;
-    }
-  };
-
-  // Get filter label
-  const getFilterLabel = () => {
-    switch (statusFilter) {
-      case 'all':
-        return 'All Statuses';
-      case 'active':
-        return 'Active Only';
-      case 'inactive':
-        return 'Inactive Only';
-      case 'pending':
-        return 'Pending Only';
-      default:
-        return 'All Statuses';
-    }
-  };
 
   // Handle opening/closing menu
   const toggleMenu = (id) => {
@@ -239,29 +223,160 @@ const ManageCentre = () => {
   };
   
   // Handle saving edited centre
-  const handleSaveCentre = (updatedCentre) => {
-    console.log('Saving updated centre:', updatedCentre);
+  const handleSaveCentre = async (updatedCentre) => {
+    try {
+      setError(null);
+      // Start loading state for edit operation
+      setTableLoading(true);
+      
+      // Call the API to update the centre
+      await apiService.centres.updateCentre(updatedCentre.id, {
+        name: updatedCentre.name,
+        region: updatedCentre.region,
+        municipalities: updatedCentre.municipalities,
+        subdivision: updatedCentre.subdivision,
+        department: updatedCentre.department,
+        description: updatedCentre.description,
+        contact_number: updatedCentre.contact_number,
+        wait_time: updatedCentre.wait_time,
+        accessibility: updatedCentre.accessibility,
+        opening_time: updatedCentre.opening_time
+      });
+      
+      // Update the centres array in state
     setCentres(centres.map(centre => 
       centre.id === updatedCentre.id ? updatedCentre : centre
     ));
+      
+      // Show success message
+      showSuccessMessage(`Centre "${updatedCentre.name}" has been updated successfully.`);
+      
+      // Stop loading
+      setTableLoading(false);
+    } catch (error) {
+      console.error('Error updating centre:', error);
+      // Handle the error
+      const errorMsg = error.message || 'Failed to update centre';
+      setError(errorMsg);
+      scrollToTop(); // Scroll to top so user can see the error
+      setTableLoading(false);
+    }
   };
 
   // Handle delete centre
   const handleDeleteCentre = (centre) => {
     setCentreToDelete(centre);
     setShowDeleteConfirmation(true);
+    setError(null); // Clear any previous errors
+  };
+
+  // Scroll to top utility function
+  const scrollToTop = () => {
+    window.scrollTo({
+      top: 0,
+      behavior: 'smooth'
+    });
+  };
+
+  // Show success message with auto-dismiss
+  const showSuccessMessage = (message) => {
+    setSuccessMessage(message);
+    scrollToTop(); // Scroll to top so user can see the message
+    
+    // Auto-dismiss after 5 seconds
+    setTimeout(() => {
+      setSuccessMessage(null);
+    }, 5000);
+  };
+
+  // Direct delete without view modal - for row delete buttons
+  const handleDirectDelete = async (centreId, centreName) => {
+    try {
+      // Don't set loading state to avoid showing loader
+      setError(null);
+      
+      // Use the specific delete endpoint format with correct path
+      await api.delete(`/centre/delete-centre/${centreId}`);
+      
+      // Remove the deleted centre from the state
+      setCentres(prevCentres => prevCentres.filter(c => c.id !== centreId));
+      
+      // Update pagination if needed (if this was the last item on a page)
+      const newTotalCount = pagination.total - 1;
+      const newTotalPages = Math.ceil(newTotalCount / pagination.limit);
+      
+      // Just update the pagination state, don't reload the data
+      setPagination(prev => ({
+        ...prev,
+        total: newTotalCount,
+        pages: newTotalPages
+      }));
+      
+      // Only fetch if actually needed, and with the tableLoading indicator
+      if ((pagination.page > newTotalPages && newTotalPages > 0) || 
+          (newTotalCount === 0) || 
+          (filteredCentres.length === 1 && pagination.page > 1)) {
+        // If we're on a page that no longer exists, go to the last page (but with minimal loading)
+        if (pagination.page > newTotalPages && newTotalPages > 0) {
+          fetchCentres(newTotalPages);
+        } else if (newTotalCount === 0) {
+          // If no items left, reset to page 1
+          fetchCentres(1);
+        } else if (filteredCentres.length === 1 && pagination.page > 1) {
+          // If this was the last item on this page (and not page 1), go to previous page
+          fetchCentres(pagination.page - 1);
+        }
+      }
+      
+      // Show success message and scroll to top
+      showSuccessMessage(`Centre "${centreName}" has been deleted successfully.`);
+    } catch (error) {
+      console.error('Error deleting centre:', error);
+      // Handle the specific API error response format
+      const errorMsg = error.response?.data?.message || 'Failed to delete centre';
+      setError(errorMsg);
+      scrollToTop(); // Scroll to top so user can see the error
+    }
   };
   
   // Confirm delete centre
   const confirmDeleteCentre = async () => {
     try {
-      await apiService.centres.deleteCentre(centreToDelete.id);
+      setError(null);
+      const centreName = centreToDelete.name || 'Unknown';
+      
+      // Use the specific delete endpoint format with correct path
+      await api.delete(`/centre/delete-centre/${centreToDelete.id}`);
       
       // Remove the deleted centre from the state
       setCentres(centres.filter(c => c.id !== centreToDelete.id));
       
-      // Show success message
-      // You can add a toast notification here
+      // Update pagination if needed
+      const newTotalCount = pagination.total - 1;
+      const newTotalPages = Math.ceil(newTotalCount / pagination.limit);
+      
+      // Just update the pagination state, don't reload the data
+      setPagination(prev => ({
+        ...prev,
+        total: newTotalCount,
+        pages: newTotalPages
+      }));
+      
+      // Only fetch if actually needed, and with the tableLoading indicator
+      if ((pagination.page > newTotalPages && newTotalPages > 0) || 
+          (newTotalCount === 0) || 
+          (filteredCentres.length === 1 && pagination.page > 1)) {
+        // If we're on a page that no longer exists, go to the last page (but with minimal loading)
+        if (pagination.page > newTotalPages && newTotalPages > 0) {
+          fetchCentres(newTotalPages);
+        } else if (newTotalCount === 0) {
+          // If no items left, reset to page 1
+          fetchCentres(1);
+        } else if (filteredCentres.length === 1 && pagination.page > 1) {
+          // If this was the last item on this page (and not page 1), go to previous page
+          fetchCentres(pagination.page - 1);
+        }
+      }
       
       // Close the delete confirmation
       setShowDeleteConfirmation(false);
@@ -269,10 +384,15 @@ const ManageCentre = () => {
       
       // Close the view modal if it's open
       setIsViewModalOpen(false);
+      
+      // Show success message and scroll to top
+      showSuccessMessage(`Centre "${centreName}" has been deleted successfully.`);
     } catch (error) {
       console.error('Error deleting centre:', error);
-      // Handle error - show error message
-      // You can add a toast notification here
+      // Handle the specific API error response format
+      const errorMsg = error.response?.data?.message || 'Failed to delete centre';
+      setError(errorMsg);
+      scrollToTop();
     }
   };
   
@@ -283,32 +403,16 @@ const ManageCentre = () => {
   };
 
   return (
-    <div className="w-full">
+    <div className="py-6 px-4 sm:px-6 lg:px-8 bg-gray-50">
       <div className="mb-6">
         <h1 className="text-3xl font-bold text-gray-900">Manage Centres</h1>
         <div className="w-32 h-0.5 bg-emerald-600 rounded-sm mt-2"></div>
-        <p className="text-base text-gray-600 mt-1">View and manage polling centres across all regions</p>
+        <p className="text-base text-gray-600 mt-3">View and manage polling centres across all regions</p>
       </div>
       
-      {/* Error display */}
-      {error && (
-        <div className="mb-6 p-4 bg-red-50 border-l-4 border-red-500 text-red-700">
-          <div className="flex">
-            <div className="flex-shrink-0">
-              <svg className="h-5 w-5 text-red-400" fill="currentColor" viewBox="0 0 20 20">
-                <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
-              </svg>
-            </div>
-            <div className="ml-3">
-              <p className="text-sm font-medium">{error}</p>
-            </div>
-          </div>
-        </div>
-      )}
-      
       {/* Search and filters */}
-      <div className="flex flex-col md:flex-row justify-between gap-4 mb-6">
-        <div className="w-full md:w-1/2 relative">
+      <div className="flex flex-col md:flex-row justify-between items-center gap-4 mb-6 overflow-x-auto -mx-4 sm:-mx-6 lg:-mx-8 px-4 sm:px-6 lg:px-8">
+        <div className="w-full md:w-10/12 lg:w-11/12 relative">
           <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
             <svg className="h-5 w-5 text-gray-500" viewBox="0 0 20 20" fill="currentColor">
               <path fillRule="evenodd" d="M8 4a4 4 0 100 8 4 4 0 000-8zM2 8a6 6 0 1110.89 3.476l4.817 4.817a1 1 0 01-1.414 1.414l-4.816-4.816A6 6 0 012 8z" clipRule="evenodd" />
@@ -318,134 +422,190 @@ const ManageCentre = () => {
             type="text"
             name="search"
             id="search"
-            className="block w-full pl-10 py-2 sm:py-3 text-sm sm:text-base border border-gray-300 rounded-md focus:outline-none focus:ring-emerald-500 focus:border-emerald-500"
+            className="block w-full pl-10 py-3 text-base border border-gray-300 rounded-md focus:outline-none focus:ring-emerald-500 focus:border-emerald-500 shadow-sm"
             placeholder="Search centres by name, region, municipality or location"
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
           />
         </div>
         
-        <div className="flex flex-row items-center justify-end space-x-2 sm:space-x-4">
-          <div className="relative" ref={dropdownRef}>
-            <button
-              type="button"
-              className="inline-flex justify-between items-center w-36 sm:w-48 px-3 sm:px-4 py-2 sm:py-3 text-sm sm:text-base font-medium bg-white border border-gray-300 rounded-md hover:bg-gray-50 focus:outline-none"
-              id="filter-menu"
-              aria-haspopup="true"
-              aria-expanded={isDropdownOpen}
-              onClick={() => setIsDropdownOpen(!isDropdownOpen)}
-            >
-              {getFilterLabel()}
-              <svg className={`-mr-1 ml-1 sm:ml-2 h-4 w-4 sm:h-5 sm:w-5 text-gray-500 transition-transform duration-200 ${isDropdownOpen ? 'transform rotate-180' : ''}`} xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
-                <path fillRule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clipRule="evenodd" />
-              </svg>
-            </button>
-            
-            {isDropdownOpen && (
-              <div className="absolute right-0 mt-1 w-48 rounded-md shadow-lg bg-white border border-gray-200 z-20">
-                <div className="py-1" role="menu" aria-orientation="vertical" aria-labelledby="filter-menu">
-                  <button
-                    onClick={() => {
-                      setStatusFilter('all');
-                      setIsDropdownOpen(false);
-                    }}
-                    className={`${statusFilter === 'all' ? 'bg-emerald-600 text-white' : 'text-gray-700'} block w-full text-left px-4 py-2 text-sm hover:bg-gray-50`}
-                    role="menuitem"
-                  >
-                    All Statuses
-                  </button>
-                  <button
-                    onClick={() => {
-                      setStatusFilter('active');
-                      setIsDropdownOpen(false);
-                    }}
-                    className={`${statusFilter === 'active' ? 'bg-emerald-600 text-white' : 'text-gray-700'} block w-full text-left px-4 py-2 text-sm hover:bg-gray-50`}
-                    role="menuitem"
-                  >
-                    Active Only
-                  </button>
-                  <button
-                    onClick={() => {
-                      setStatusFilter('inactive');
-                      setIsDropdownOpen(false);
-                    }}
-                    className={`${statusFilter === 'inactive' ? 'bg-emerald-600 text-white' : 'text-gray-700'} block w-full text-left px-4 py-2 text-sm hover:bg-gray-50`}
-                    role="menuitem"
-                  >
-                    Inactive Only
-                  </button>
-                  <button
-                    onClick={() => {
-                      setStatusFilter('pending');
-                      setIsDropdownOpen(false);
-                    }}
-                    className={`${statusFilter === 'pending' ? 'bg-emerald-600 text-white' : 'text-gray-700'} block w-full text-left px-4 py-2 text-sm hover:bg-gray-50`}
-                    role="menuitem"
-                  >
-                    Pending Only
-                  </button>
-                </div>
-              </div>
-            )}
-          </div>
-          
-          <button
-            type="button"
-            className="inline-flex items-center px-3 sm:px-4 py-2 sm:py-3 text-sm sm:text-base font-medium rounded-md text-white bg-emerald-600 hover:bg-emerald-700 focus:outline-none"
+        <div className="w-full md:w-auto flex shrink-0">
+          <a 
+            href="/app/centres/register" 
+            className="ml-auto hidden md:inline-flex items-center px-4 py-3 border border-transparent rounded-md shadow-sm text-base font-medium text-white bg-gradient-to-r from-emerald-500 to-emerald-600 hover:from-emerald-600 hover:to-emerald-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-emerald-500"
           >
-            <svg className="-ml-0.5 sm:-ml-1 mr-1 sm:mr-2 h-4 w-4 sm:h-5 sm:w-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
-              <path fillRule="evenodd" d="M10 3a1 1 0 011 1v5h5a1 1 0 110 2h-5v5a1 1 0 11-2 0v-5H4a1 1 0 110-2h5V4a1 1 0 011-1z" clipRule="evenodd" />
-            </svg>
-            <span className="hidden xs:inline">Add</span><span className="hidden sm:inline"> New Centre</span>
-          </button>
+            <svg className="-ml-1 mr-2 h-5 w-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+              <path fillRule="evenodd" d="M10 5a1 1 0 011 1v3h3a1 1 0 110 2h-3v3a1 1 0 11-2 0v-3H6a1 1 0 110-2h3V6a1 1 0 011-1z" clipRule="evenodd" />
+              </svg>
+            Add New Centre
+          </a>
         </div>
       </div>
       
-      {/* Loading indicator */}
-      {loading && (
-        <div className="w-full py-10 flex justify-center">
-          <div className="flex flex-col items-center">
-            <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-emerald-500"></div>
-            <p className="mt-3 text-gray-700">Loading centres...</p>
+      {/* Mobile Add Button */}
+      <div className="md:hidden mb-4 overflow-x-auto -mx-4 sm:-mx-6 lg:-mx-8 px-4 sm:px-6 lg:px-8">
+        <a 
+          href="/app/centres/register" 
+          className="w-full flex items-center justify-center px-4 py-3 border border-transparent rounded-md shadow-sm text-base font-medium text-white bg-gradient-to-r from-emerald-500 to-emerald-600 hover:from-emerald-600 hover:to-emerald-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-emerald-500"
+        >
+          <svg className="-ml-1 mr-2 h-5 w-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+            <path fillRule="evenodd" d="M10 5a1 1 0 011 1v3h3a1 1 0 110 2h-3v3a1 1 0 11-2 0v-3H6a1 1 0 110-2h3V6a1 1 0 011-1z" clipRule="evenodd" />
+          </svg>
+          Add New Centre
+        </a>
+      </div>
+      
+      {/* Error display */}
+      {error && (
+        <div className="mb-6 mx-0 sm:mx-0 overflow-x-auto -mx-4 sm:-mx-6 lg:-mx-8 px-4 sm:px-6 lg:px-8">
+          <div className="p-4 bg-red-50 border-l-4 border-red-500 text-red-700">
+            <div className="flex">
+              <div className="flex-shrink-0">
+                <svg className="h-5 w-5 text-red-400" fill="currentColor" viewBox="0 0 20 20">
+                  <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
+                </svg>
+              </div>
+              <div className="ml-3">
+                <p className="text-sm font-medium">{error}</p>
+              </div>
+            </div>
           </div>
         </div>
       )}
       
-      {/* Data table */}
-      {!loading && (
-        <div className="overflow-x-auto -mx-4 sm:mx-0">
-          <div className="inline-block min-w-full align-middle">
-            <div className="overflow-hidden border border-gray-200 rounded-lg">
-              <table className="min-w-full divide-y divide-gray-200">
+      {/* Success message display */}
+      {successMessage && (
+        <div className="mb-6 mx-0 sm:mx-0 overflow-x-auto -mx-4 sm:-mx-6 lg:-mx-8 px-4 sm:px-6 lg:px-8">
+          <div className="p-4 bg-green-50 border-l-4 border-green-500 text-green-700">
+            <div className="flex">
+              <div className="flex-shrink-0">
+                <svg className="h-5 w-5 text-green-400" fill="currentColor" viewBox="0 0 20 20">
+                  <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                </svg>
+              </div>
+              <div className="ml-3">
+                <p className="text-sm font-medium">{successMessage}</p>
+              </div>
+              <div className="ml-auto pl-3">
+                <div className="-mx-1.5 -my-1.5">
+                  <button
+                    onClick={() => setSuccessMessage(null)}
+                    className="inline-flex bg-green-50 rounded-md p-1.5 text-green-500 hover:bg-green-100 focus:outline-none"
+                  >
+                    <span className="sr-only">Dismiss</span>
+                    <svg className="h-5 w-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                      <path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd" />
+                    </svg>
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+      
+      {/* Table Skeleton Loader - shown during initial load */}
+      {initialLoading && (
+        <div className="overflow-x-auto -mx-4 sm:-mx-6 lg:-mx-8 w-auto">
+          <div className="w-full max-w-none align-middle">
+            <div className="overflow-hidden border border-gray-200 rounded-lg shadow">
+              <table className="w-full table-fixed divide-y divide-gray-200">
                 <thead className="bg-gray-50">
                   <tr>
-                    <th scope="col" className="px-2 sm:px-6 py-3 text-left text-xs sm:text-sm font-medium text-gray-700">#</th>
-                    <th scope="col" className="px-2 sm:px-6 py-3 text-left text-xs sm:text-sm font-medium text-gray-700">Centre Name</th>
-                    <th scope="col" className="hidden md:table-cell px-6 py-3 text-left text-xs sm:text-sm font-medium text-gray-700">Region</th>
-                    <th scope="col" className="hidden md:table-cell px-6 py-3 text-left text-xs sm:text-sm font-medium text-gray-700">Municipality</th>
-                    <th scope="col" className="hidden lg:table-cell px-6 py-3 text-left text-xs sm:text-sm font-medium text-gray-700">Subdivision</th>
-                    <th scope="col" className="hidden sm:table-cell px-6 py-3 text-center text-xs sm:text-sm font-medium text-gray-700">Stations</th>
-                    <th scope="col" className="hidden xl:table-cell px-6 py-3 text-center text-xs sm:text-sm font-medium text-gray-700">Wait Time</th>
-                    <th scope="col" className="px-2 sm:px-6 py-3 text-center text-xs sm:text-sm font-medium text-gray-700">Status</th>
-                    <th scope="col" className="px-2 sm:px-6 py-3 text-right text-xs sm:text-sm font-medium text-gray-700">Actions</th>
+                    <th scope="col" className="pl-4 sm:pl-5 pr-2 sm:pr-3 py-4 text-center text-sm sm:text-base font-bold text-gray-800 w-10">#</th>
+                    <th scope="col" className="pl-5 sm:pl-6 pr-3 sm:pr-4 py-4 text-left text-sm sm:text-base font-bold text-gray-800">Region/Description</th>
+                    <th scope="col" className="hidden md:table-cell px-6 py-4 text-left text-sm sm:text-base font-bold text-gray-800">Municipality</th>
+                    <th scope="col" className="hidden lg:table-cell px-6 py-4 text-left text-sm sm:text-base font-bold text-gray-800">Subdivision</th>
+                    <th scope="col" className="hidden xl:table-cell px-6 py-4 text-center text-sm sm:text-base font-bold text-gray-800">Wait Time</th>
+                    <th scope="col" className="px-2 sm:px-6 py-4 text-right text-sm sm:text-base font-bold text-gray-800">Actions</th>
+                  </tr>
+                </thead>
+                <tbody className="bg-white divide-y divide-gray-100">
+                  {/* Skeleton rows */}
+                  {[...Array(5)].map((_, index) => (
+                    <tr key={index} className="animate-pulse">
+                      <td className="pl-4 sm:pl-5 pr-2 sm:pr-3 py-4 text-center w-10">
+                        <div className="h-4 w-4 bg-gray-200 rounded mx-auto"></div>
+                      </td>
+                      <td className="pl-5 sm:pl-6 pr-3 sm:pr-4 py-4">
+                        <div className="h-4 bg-gray-200 rounded w-24 mb-2"></div>
+                        <div className="h-3 bg-gray-200 rounded w-32"></div>
+                      </td>
+                      <td className="hidden md:table-cell px-6 py-4">
+                        <div className="h-4 bg-gray-200 rounded w-24"></div>
+                      </td>
+                      <td className="hidden lg:table-cell px-6 py-4">
+                        <div className="h-4 bg-gray-200 rounded w-28"></div>
+                      </td>
+                      <td className="hidden xl:table-cell px-6 py-4 text-center">
+                        <div className="h-4 bg-gray-200 rounded w-12 mx-auto"></div>
+                      </td>
+                      <td className="px-2 sm:px-6 py-4 text-right">
+                        <div className="flex justify-end space-x-2">
+                          <div className="h-6 w-6 bg-gray-200 rounded-full"></div>
+                          <div className="h-6 w-6 bg-gray-200 rounded-full"></div>
+                          <div className="h-6 w-6 bg-gray-200 rounded-full"></div>
+                        </div>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+              {/* Skeleton pagination */}
+              <div className="bg-gray-50 px-3 sm:px-6 py-4 flex items-center justify-between border-t border-gray-200">
+                <div className="flex justify-between w-full">
+                  <div className="h-4 bg-gray-200 rounded w-40"></div>
+                  <div className="flex space-x-1">
+                    <div className="h-8 w-8 bg-gray-200 rounded"></div>
+                    <div className="h-8 w-8 bg-gray-200 rounded"></div>
+                    <div className="h-8 w-8 bg-gray-200 rounded"></div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+      
+      {/* Data table with subtle loading for subsequent loads */}
+      {!initialLoading && (
+        <div className="overflow-x-auto -mx-4 sm:-mx-6 lg:-mx-8 w-auto relative">
+          <div className="w-full max-w-none align-middle">
+            <div className="overflow-hidden border border-gray-200 rounded-lg shadow">
+              {/* Semi-transparent overlay only when actively loading */}
+              {tableLoading && (
+                <div className="absolute inset-0 bg-gray-50 bg-opacity-40 z-10 pointer-events-none">
+                  {/* We don't need any content here, just a subtle overlay */}
+                </div>
+              )}
+              
+              <table className={`w-full table-fixed divide-y divide-gray-200 ${tableLoading ? 'opacity-70' : ''}`}>
+                <thead className="bg-gray-50">
+                  <tr>
+                    <th scope="col" className="pl-4 sm:pl-5 pr-2 sm:pr-3 py-4 text-center text-sm sm:text-base font-bold text-gray-800 w-10">#</th>
+                    <th scope="col" className="pl-5 sm:pl-6 pr-3 sm:pr-4 py-4 text-left text-sm sm:text-base font-bold text-gray-800">Region/Description</th>
+                    <th scope="col" className="hidden md:table-cell px-6 py-4 text-left text-sm sm:text-base font-bold text-gray-800">Municipality</th>
+                    <th scope="col" className="hidden lg:table-cell px-6 py-4 text-left text-sm sm:text-base font-bold text-gray-800">Subdivision</th>
+                    <th scope="col" className="hidden xl:table-cell px-6 py-4 text-center text-sm sm:text-base font-bold text-gray-800">Wait Time</th>
+                    <th scope="col" className="px-2 sm:px-6 py-4 text-right text-sm sm:text-base font-bold text-gray-800">Actions</th>
                   </tr>
                 </thead>
                 <tbody className="bg-white divide-y divide-gray-100">
                   {filteredCentres.length > 0 ? (
                     filteredCentres.map((centre, index) => (
                       <tr key={centre.id} className="hover:bg-gray-50 transition-colors">
-                        <td className="px-2 sm:px-6 py-3 sm:py-5 whitespace-nowrap text-xs sm:text-sm text-gray-500">
+                        <td className="pl-4 sm:pl-5 pr-2 sm:pr-3 py-3 sm:py-5 text-center text-sm sm:text-base font-semibold text-gray-700 w-10">
                           {(pagination.page - 1) * pagination.limit + index + 1}
                         </td>
-                        <td className="px-2 sm:px-6 py-3 sm:py-5">
-                          <div className="text-xs sm:text-sm font-medium text-gray-900 truncate max-w-[120px] sm:max-w-none">{centre.name}</div>
+                        <td className="pl-5 sm:pl-6 pr-3 sm:pr-4 py-3 sm:py-5">
+                          <div className="text-xs sm:text-sm font-medium text-gray-900">{centre.region}</div>
+                          <div className="text-xs sm:text-sm text-gray-500 mt-1 line-clamp-2">
+                            {centre.description}
+                          </div>
                           <div className="text-xs sm:text-sm text-gray-500 mt-1 sm:hidden">
                             {/* Show important info that's hidden in mobile */}
-                            <span>{centre.region}</span> · {centre.municipalities}
+                            <span>{centre.municipalities}</span>
                           </div>
-                        </td>
-                        <td className="hidden md:table-cell px-6 py-3 sm:py-5">
-                          <div className="text-xs sm:text-sm text-gray-900">{centre.region}</div>
                         </td>
                         <td className="hidden md:table-cell px-6 py-3 sm:py-5">
                           <div className="text-xs sm:text-sm text-gray-900">{centre.municipalities}</div>
@@ -453,23 +613,8 @@ const ManageCentre = () => {
                         <td className="hidden lg:table-cell px-6 py-3 sm:py-5">
                           <div className="text-xs sm:text-sm text-gray-900">{centre.subdivision}</div>
                         </td>
-                        <td className="hidden sm:table-cell px-6 py-3 sm:py-5 whitespace-nowrap text-center">
-                          <span className="text-xs sm:text-sm font-medium text-gray-900">{centre.stations}</span>
-                        </td>
                         <td className="hidden xl:table-cell px-6 py-3 sm:py-5 whitespace-nowrap text-center">
                           <span className="text-xs sm:text-sm font-medium text-gray-900">{centre.wait_time}</span>
-                        </td>
-                        <td className="px-2 sm:px-6 py-3 sm:py-5 whitespace-nowrap text-center">
-                          {/* Make status badges responsive */}
-                          {centre.status === 'active' ? (
-                            <span className="px-2 sm:px-3 py-1 sm:py-1.5 inline-flex text-xs sm:text-sm font-medium rounded-md bg-emerald-100 text-emerald-800">Active</span>
-                          ) : centre.status === 'inactive' ? (
-                            <span className="px-2 sm:px-3 py-1 sm:py-1.5 inline-flex text-xs sm:text-sm font-medium rounded-md bg-gray-100 text-gray-800">Inactive</span>
-                          ) : centre.status === 'pending' ? (
-                            <span className="px-2 sm:px-3 py-1 sm:py-1.5 inline-flex text-xs sm:text-sm font-medium rounded-md bg-amber-100 text-amber-800">Pending</span>
-                          ) : (
-                            <span className="px-2 sm:px-3 py-1 sm:py-1.5 inline-flex text-xs sm:text-sm font-medium rounded-md bg-gray-100 text-gray-800">Unknown</span>
-                          )}
                         </td>
                         <td className="px-2 sm:px-6 py-3 sm:py-5 whitespace-nowrap text-right">
                           <div className="flex justify-end space-x-2">
@@ -493,7 +638,7 @@ const ManageCentre = () => {
                               </svg>
                             </button>
                             <button
-                              onClick={() => handleDeleteCentre(centre)}
+                              onClick={() => handleDirectDelete(centre.id, centre.name)}
                               className="p-1.5 rounded-full bg-gray-100 text-red-600 hover:bg-red-100"
                               title="Delete Centre"
                             >
@@ -550,10 +695,78 @@ const ManageCentre = () => {
                         </svg>
                       </button>
                       
-                      {/* Show current page number */}
-                      <button aria-current="page" className="relative inline-flex items-center px-3 sm:px-4 py-1.5 sm:py-2 border border-emerald-500 bg-emerald-50 text-xs sm:text-sm font-medium text-emerald-600">
-                        {pagination.page}
-                      </button>
+                      {/* Generate page buttons with ellipsis for large ranges */}
+                      {(() => {
+                        // Function to generate page number buttons
+                        const renderPageButton = (pageNum) => (
+                          <button
+                            key={pageNum}
+                            onClick={() => handlePageChange(pageNum)}
+                            className={`relative inline-flex items-center px-3 sm:px-4 py-1.5 sm:py-2 border ${
+                              pagination.page === pageNum
+                                ? 'border-emerald-500 bg-emerald-50 text-emerald-600'
+                                : 'border-gray-300 bg-white text-gray-700 hover:bg-gray-50'
+                            } text-xs sm:text-sm font-medium`}
+                          >
+                            {pageNum}
+                          </button>
+                        );
+                        
+                        // Calculate which page buttons to show
+                        const pageButtons = [];
+                        
+                        if (pagination.pages <= 7) {
+                          // If 7 or fewer pages, show all
+                          for (let i = 1; i <= pagination.pages; i++) {
+                            pageButtons.push(renderPageButton(i));
+                          }
+                        } else {
+                          // Always show first page
+                          pageButtons.push(renderPageButton(1));
+                          
+                          // Show dots if current page is > 3
+                          if (pagination.page > 3) {
+                            pageButtons.push(
+                              <span key="ellipsis1" className="relative inline-flex items-center px-3 sm:px-4 py-1.5 sm:py-2 border border-gray-300 bg-white">
+                                ...
+                              </span>
+                            );
+                          }
+                          
+                          // Calculate start and end of middle pages
+                          let startPage = Math.max(2, pagination.page - 1);
+                          let endPage = Math.min(pagination.pages - 1, pagination.page + 1);
+                          
+                          // Adjust if at the beginning
+                          if (pagination.page <= 3) {
+                            endPage = Math.min(5, pagination.pages - 1);
+                          }
+                          
+                          // Adjust if at the end
+                          if (pagination.page >= pagination.pages - 2) {
+                            startPage = Math.max(2, pagination.pages - 4);
+                          }
+                          
+                          // Add middle page buttons
+                          for (let i = startPage; i <= endPage; i++) {
+                            pageButtons.push(renderPageButton(i));
+                          }
+                          
+                          // Show dots if current page is < (pages - 2)
+                          if (pagination.page < pagination.pages - 2) {
+                            pageButtons.push(
+                              <span key="ellipsis2" className="relative inline-flex items-center px-3 sm:px-4 py-1.5 sm:py-2 border border-gray-300 bg-white">
+                                ...
+                              </span>
+                            );
+                          }
+                          
+                          // Always show last page
+                          pageButtons.push(renderPageButton(pagination.pages));
+                        }
+                        
+                        return pageButtons;
+                      })()}
                       
                       <button 
                         disabled={pagination.page === pagination.pages}
@@ -584,6 +797,14 @@ const ManageCentre = () => {
           isOpen={isViewModalOpen}
           onClose={handleCloseViewModal}
           centre={selectedCentre}
+          onCentreDeleted={(deletedId, centreName) => {
+            // Update the centres list by removing the deleted centre
+            setCentres(prevCentres => prevCentres.filter(c => c.id !== deletedId));
+            // Show success message
+            showSuccessMessage(`Centre "${centreName || 'Unknown'}" has been deleted successfully.`);
+            // Close the modal
+            setIsViewModalOpen(false);
+          }}
         />
       )}
       
