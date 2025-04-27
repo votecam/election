@@ -186,6 +186,88 @@ const apiService = {
     // register, refreshToken, etc.
   },
   
+  // Feedback endpoints
+  feedback: {
+    getAllFeedback: async (page = 1, limit = 10) => {
+      try {
+        const response = await api.get(`/feedback/get-all-feedback?page=${page}&limit=${limit}`);
+        
+        // Check if response is successful
+        if (response.data && response.data.status === 'success') {
+          return response.data;
+        } else {
+          throw new Error('Failed to fetch feedback data');
+        }
+      } catch (error) {
+        console.error('Error fetching feedback:', error);
+        throw new Error(
+          error.response?.data?.message || 
+          'Failed to load feedback. Please try again later.'
+        );
+      }
+    }
+  },
+  
+  // Notifications endpoints
+  notifications: {
+    getAll: async (page = 1, limit = 10) => {
+      try {
+        const response = await api.get(`/notification/get-all-notifications?page=${page}&limit=${limit}`);
+        
+        if (response.data && response.data.status === 'success') {
+          return response.data;
+        } else {
+          throw new Error('Failed to fetch notifications');
+        }
+      } catch (error) {
+        console.error('Error fetching notifications:', error);
+        throw new Error(
+          error.response?.data?.message || 
+          'Failed to load notifications. Please try again later.'
+        );
+      }
+    },
+    
+    create: async (notificationData) => {
+      try {
+        const response = await api.post('/notification/add-notification', {
+          title: notificationData.title,
+          body: notificationData.message
+        });
+        
+        if (response.data && response.data.status === 'success') {
+          return response.data;
+        } else {
+          throw new Error('Failed to create notification');
+        }
+      } catch (error) {
+        console.error('Error creating notification:', error);
+        throw new Error(
+          error.response?.data?.message || 
+          'Failed to create notification. Please try again later.'
+        );
+      }
+    },
+    
+    delete: async (id) => {
+      try {
+        const response = await api.delete(`/notification/delete-notification/${id}`);
+        
+        if (response.data && response.data.status === 'success') {
+          return response.data;
+        } else {
+          throw new Error('Failed to delete notification');
+        }
+      } catch (error) {
+        console.error('Error deleting notification:', error);
+        throw new Error(
+          error.response?.data?.message || 
+          'Failed to delete notification. Please try again later.'
+        );
+      }
+    }
+  },
+  
   // User endpoints
   users: {
     getProfile: async () => {
@@ -624,6 +706,90 @@ const apiService = {
       }
     }
     // Add more party endpoints as needed
+  },
+  
+  // Guides endpoints
+  guides: {
+    uploadGuide: async (formData) => {
+      try {
+        // Log what we're sending
+        console.log('Calling guide/add-guide endpoint');
+        
+        // Log form data contents
+        console.log('FormData contents:');
+        for (let pair of formData.entries()) {
+          if (pair[0] === 'file') {
+            console.log(pair[0], 'File object:', pair[1].name, pair[1].type, pair[1].size);
+          } else {
+            console.log(pair[0], pair[1]);
+          }
+        }
+        
+        const response = await api.post('/guide/add-guide', formData, {
+          headers: {
+            'Content-Type': 'multipart/form-data'
+          }
+        });
+        
+        // Log the response
+        console.log('API response:', response.data);
+        
+        // Check if response is successful
+        if (response.data && response.data.status === 'success') {
+          return response.data;
+        } else if (response.data && response.data.status === 'fail') {
+          throw new Error(response.data.message || 'Failed to upload guide');
+        } else {
+          throw new Error('Failed to upload guide');
+        }
+      } catch (error) {
+        console.error('Guide upload error:', error);
+        // Log detailed error information
+        if (error.response) {
+          console.error('Error response status:', error.response.status);
+          console.error('Error response data:', error.response.data);
+          console.error('Error response headers:', error.response.headers);
+        } else if (error.request) {
+          console.error('No response received:', error.request);
+        } else {
+          console.error('Error setting up request:', error.message);
+        }
+        
+        if (error.response && error.response.data) {
+          throw new Error(error.response.data.message || 'Failed to upload guide. Please try again.');
+        }
+        throw new Error(error.message || 'Failed to upload guide. Please try again.');
+      }
+    },
+    
+    // Get all guides
+    getGuides: async (page = 1, limit = 10) => {
+      try {
+        console.log('Fetching guides from API, page:', page, 'limit:', limit);
+        const response = await api.get(`/guide/get-guides?page=${page}&limit=${limit}`);
+        
+        // Log the response
+        console.log('API response:', response.data);
+        
+        // Check if response is successful
+        if (response.data && response.data.status === 'success') {
+          return response.data;
+        } else {
+          throw new Error('Failed to fetch guides');
+        }
+      } catch (error) {
+        console.error('Error fetching guides:', error);
+        if (error.response) {
+          console.error('Error response status:', error.response.status);
+          console.error('Error response data:', error.response.data);
+        }
+        
+        if (error.response && error.response.data) {
+          throw new Error(error.response.data.message || 'Failed to fetch guides. Please try again.');
+        }
+        throw new Error(error.message || 'Failed to fetch guides. Please try again.');
+      }
+    }
   },
   
   // Analytics endpoints

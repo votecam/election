@@ -491,9 +491,9 @@ const Analytics = () => {
                 <span className="text-sm text-gray-500">Source: National Electoral Commission</span>
                 <div className="flex items-center space-x-4">
                   <span className="text-sm font-medium text-gray-700">Total Centres: {totalCentres}</span>
-                  <button className="px-3 py-1 bg-emerald-50 text-emerald-600 text-sm font-medium rounded-md border border-emerald-100 hover:bg-emerald-100 transition-colors duration-300">
+                  {/* <button className="px-3 py-1 bg-emerald-50 text-emerald-600 text-sm font-medium rounded-md border border-emerald-100 hover:bg-emerald-100 transition-colors duration-300">
                     View Details
-                  </button>
+                  </button> */}
                 </div>
               </div>
             </div>

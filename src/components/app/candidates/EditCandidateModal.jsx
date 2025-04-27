@@ -238,11 +238,6 @@ const EditCandidateModal = ({ isOpen, onClose, candidate, onCandidateUpdated }) 
       isValid = false;
     }
     
-    if (!formData.region.trim()) {
-      newErrors.region = 'Region is required';
-      isValid = false;
-    }
-    
     if (!formData.election_type?.trim()) {
       newErrors.election_type = 'Election type is required';
       isValid = false;
@@ -258,6 +253,7 @@ const EditCandidateModal = ({ isOpen, onClose, candidate, onCandidateUpdated }) 
     e.preventDefault();
     setIsSubmitting(true);
     setSubmitError(null);
+    setSuccessMessage(null);
     
     // Validate form
     if (!validateForm()) {
@@ -271,11 +267,10 @@ const EditCandidateModal = ({ isOpen, onClose, candidate, onCandidateUpdated }) 
     // Append all form fields to the FormData
     data.append('name', formData.name);
     data.append('position', formData.position);
-    data.append('region', formData.region);
     data.append('election_type', formData.election_type);
     
     // Only append party_id if it exists and has a value
-      if (formData.party_id) {
+    if (formData.party_id) {
       data.append('party_id', formData.party_id);
     }
     
@@ -288,24 +283,38 @@ const EditCandidateModal = ({ isOpen, onClose, candidate, onCandidateUpdated }) 
     }
     
     try {
-      // Use apiService to update the candidate
-      const updatedCandidate = await apiService.candidates.updateCandidate(candidate.id, data);
+      // Make direct API call to the correct endpoint
+      const response = await api.put(
+        `/candidate/update-candidate/${candidate.id}`,
+        data,
+        {
+          headers: {
+            'Content-Type': 'multipart/form-data'
+          }
+        }
+      );
       
-      // Handle success
-      setSuccessMessage('Candidate updated successfully');
-      
-      // Notify parent component about the update
-      if (typeof onCandidateUpdated === 'function') {
-        onCandidateUpdated(updatedCandidate);
+      // Check if response is successful
+      if (response.data && response.data.status === 'success') {
+        // Handle success
+        setSuccessMessage('Candidate updated successfully! Your changes have been saved.');
+        
+        // Notify parent component about the update
+        if (typeof onCandidateUpdated === 'function') {
+          onCandidateUpdated(response.data.data);
+        }
+        
+        // Close modal after a short delay to show the success message
+        setTimeout(() => {
+          onClose(true); // Close modal and indicate refresh needed
+        }, 1500);
+      } else {
+        // Handle error in response
+        throw new Error(response.data?.message || 'Failed to update candidate');
       }
-      
-      // Close modal after a short delay to show the success message
-      setTimeout(() => {
-        onClose(true); // Close modal and indicate refresh needed
-      }, 1500);
     } catch (error) {
       console.error('Error updating candidate:', error);
-      setSubmitError(error.message || 'Failed to update candidate. Please try again.');
+      setSubmitError(error.message || 'Unable to update candidate. Please check your information and try again.');
     } finally {
       setIsSubmitting(false);
     }
@@ -403,6 +412,7 @@ const EditCandidateModal = ({ isOpen, onClose, candidate, onCandidateUpdated }) 
                   </div>
                   <div className="ml-3">
                     <p className="text-sm font-medium">{submitError}</p>
+                    <p className="text-sm mt-1">Please check your information and try again.</p>
                   </div>
                 </div>
               </div>
@@ -557,44 +567,11 @@ const EditCandidateModal = ({ isOpen, onClose, candidate, onCandidateUpdated }) 
               </h3>
               
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            {/* Region */}
-                <div>
-                  <label htmlFor="region" className="block text-base font-semibold text-gray-700 mb-1">
-                Region <span className="text-red-600">*</span>
-              </label>
-                  <div className="relative">
-                    <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="h-6 w-6 text-gray-600">
-                        <path d="M12 20.9l4.95-4.95a7 7 0 1 0-9.9 0L12 20.9zm0 2.828l-6.364-6.364a9 9 0 1 1 12.728 0L12 23.728zM12 13a2 2 0 1 0 0-4 2 2 0 0 0 0 4zm0 2a4 4 0 1 1 0-8 4 4 0 0 1 0 8z"/>
-                      </svg>
-                    </div>
-                    
-                    {/* Vertical separator line */}
-                    <div className="absolute inset-y-2 left-12 w-px bg-gray-300"></div>
-                    
-              <input
-                type="text"
-                id="region"
-                name="region"
-                value={formData.region}
-                onChange={handleChange}
-                      placeholder="E.g. Bioko Norte"
-                      className={`pl-16 w-full px-4 py-3 border ${
-                        errors.region ? 'border-red-300 focus:ring-red-500 focus:border-red-500' : 'border-gray-300 focus:ring-emerald-500 focus:border-emerald-500'
-                      } rounded-none text-base font-medium bg-white focus:outline-none focus:ring-1 transition-all duration-200 ease-in-out`}
-                      required
-                    />
-                  </div>
-              {errors.region && (
-                <p className="mt-1 text-sm text-red-600">{errors.region}</p>
-              )}
-            </div>
-
-                {/* Party */}
+            {/* Party */}
                 <div>
                   <label htmlFor="party_id" className="block text-base font-semibold text-gray-700 mb-1">
                     Party
-              </label>
+                  </label>
                   <div className="relative" ref={partyDropdownRef}>
                     <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                       <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="h-6 w-6 text-gray-600">
@@ -882,9 +859,9 @@ const EditCandidateModal = ({ isOpen, onClose, candidate, onCandidateUpdated }) 
                         <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
                         <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                       </svg>
-                      Updating...
+                      Saving Changes...
                   </span>
-                ) : 'Update Candidate'}
+                ) : 'Save Changes'}
                 </button>
             </div>
           </form>

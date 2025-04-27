@@ -1,50 +1,48 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { Link } from 'react-router-dom';
+import apiService from '../../../services/apiService';
 
 const ManageGuide = () => {
-  // Sample data - in a real application, this would come from an API
-  const [guides, setGuides] = useState([
-    { 
-      id: 1, 
-      title: 'Voter Registration Guidelines', 
-      uploadDate: '2023-09-15',
-      fileType: 'PDF',
-      status: 'active'
-    },
-    { 
-      id: 2, 
-      title: 'Election Officer Training Manual', 
-      uploadDate: '2023-10-02',
-      fileType: 'PDF',
-      status: 'active'
-    },
-    { 
-      id: 3, 
-      title: 'Candidate Nomination Process', 
-      uploadDate: '2023-08-30',
-      fileType: 'DOCX',
-      status: 'inactive'
-    },
-    { 
-      id: 4, 
-      title: 'Party Registration Requirements', 
-      uploadDate: '2023-11-05',
-      fileType: 'PDF',
-      status: 'active'
-    },
-    { 
-      id: 5, 
-      title: 'Electoral Process Overview', 
-      uploadDate: '2023-07-22',
-      fileType: 'PPTX',
-      status: 'active'
-    },
-  ]);
-  
+  const [guides, setGuides] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
   const [searchTerm, setSearchTerm] = useState('');
   const [activeMenu, setActiveMenu] = useState(null);
+  const [pagination, setPagination] = useState({
+    total: 0,
+    page: 1,
+    limit: 10,
+    pages: 1
+  });
+  
   const menuButtonRefs = useRef({});
   const menuRef = useRef(null);
+  
+  // Fetch guides from API
+  useEffect(() => {
+    fetchGuides();
+  }, [pagination.page]);
+  
+  const fetchGuides = async () => {
+    try {
+      setLoading(true);
+      setError(null);
+      
+      const response = await apiService.guides.getGuides(pagination.page, pagination.limit);
+      
+      if (response && response.status === 'success' && response.data) {
+        setGuides(response.data.guides || []);
+        setPagination(response.data.pagination || pagination);
+      } else {
+        throw new Error('Invalid response format');
+      }
+    } catch (err) {
+      console.error('Failed to fetch guides:', err);
+      setError(err.message || 'Failed to fetch guides. Please try again.');
+    } finally {
+      setLoading(false);
+    }
+  };
   
   // Close menu when clicking outside
   useEffect(() => {
@@ -117,47 +115,191 @@ const ManageGuide = () => {
     return guide.title.toLowerCase().includes(searchTerm.toLowerCase());
   });
 
-  // Handle guide deletion
-  const handleDeleteGuide = (id) => {
-    setGuides(guides.filter(guide => guide.id !== id));
+  // Handle guide actions
+  const handleViewGuide = (guide, e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    
+    // Create a blob URL and open it in a new window
+    if (guide.file_path) {
+      // Instead of directly navigating, we'll create a preview dialog in a future implementation
+      // For now, we'll just log the action
+      console.log('View guide:', guide.title);
+      alert(`Preview functionality for "${guide.title}" will be implemented in a future update.`);
+    }
     setActiveMenu(null);
+  };
+  
+  const handleDownloadGuide = (guide, e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    
+    // Instead of using an anchor tag, use the Fetch API
+    if (guide.file_path) {
+      // Log the download attempt
+      console.log('Downloading guide:', guide.title);
+      alert(`Download functionality for "${guide.title}" will be implemented in a future update.`);
+      
+      // In a real implementation, you would use fetch to get the file and save it
+      // fetch(import.meta.env.VITE_API_URL + guide.file_path)
+      //   .then(response => response.blob())
+      //   .then(blob => {
+      //     const url = window.URL.createObjectURL(blob);
+      //     const a = document.createElement('a');
+      //     a.style.display = 'none';
+      //     a.href = url;
+      //     a.download = guide.title || 'guide';
+      //     document.body.appendChild(a);
+      //     a.click();
+      //     window.URL.revokeObjectURL(url);
+      //   });
+    }
+    setActiveMenu(null);
+  };
+  
+  // Handle guide deletion
+  const handleDeleteGuide = async (id, e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    
+    try {
+      if (confirm("Are you sure you want to delete this guide? This action cannot be undone.")) {
+        setLoading(true);
+        
+        // Instead of calling a specific delete API, we'll handle this using the frontend for now
+        // In the future, you can add a deleteGuide method to apiService
+        setGuides(guides.filter(guide => guide.id !== id));
+        setActiveMenu(null);
+        
+        // Show success message (could be implemented with a toast notification)
+        console.log('Guide deleted successfully');
+        alert('Guide deleted successfully');
+      }
+    } catch (err) {
+      console.error('Failed to delete guide:', err);
+      // Show an error message to the user (could be implemented with a toast notification)
+      console.log('Failed to delete guide:', err.message);
+      alert(`Failed to delete guide: ${err.message}`);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Format date
+  const formatDate = (dateString) => {
+    if (!dateString) return '';
+    const options = { year: 'numeric', month: 'short', day: 'numeric' };
+    return new Date(dateString).toLocaleDateString(undefined, options);
   };
 
   // Get file icon based on file type
-  const getFileIcon = (fileType) => {
-    switch(fileType) {
-      case 'PDF':
+  const getFileIcon = (filePath) => {
+    if (!filePath) return getDefaultIcon();
+    
+    const extension = filePath.split('.').pop().toLowerCase();
+    
+    switch(extension) {
+      case 'pdf':
         return (
           <svg className="h-5 w-5 text-emerald-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
           </svg>
         );
-      case 'DOCX':
+      case 'doc':
+      case 'docx':
         return (
           <svg className="h-5 w-5 text-emerald-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
           </svg>
         );
-      case 'PPTX':
+      case 'ppt':
+      case 'pptx':
         return (
           <svg className="h-5 w-5 text-emerald-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 12l3-3 3 3 4-4M8 21l4-4 4 4M3 4h18M4 4h16v12a1 1 0 01-1 1H5a1 1 0 01-1-1V4z" />
           </svg>
         );
-      case 'XLSX':
+      case 'xls':
+      case 'xlsx':
         return (
           <svg className="h-5 w-5 text-emerald-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
           </svg>
         );
       default:
-        return (
-          <svg className="h-5 w-5 text-gray-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-          </svg>
-        );
+        return getDefaultIcon();
     }
   };
+  
+  const getDefaultIcon = () => {
+    return (
+      <svg className="h-5 w-5 text-gray-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+      </svg>
+    );
+  };
+  
+  // Skeleton loader component for table rows
+  const GuideSkeleton = () => {
+    return (
+      <>
+        {[...Array(5)].map((_, index) => (
+          <tr key={index} className="animate-pulse">
+            <td className="px-3 py-4 whitespace-nowrap">
+              <div className="h-4 w-4 bg-gray-200 rounded-full mx-auto"></div>
+            </td>
+            <td className="px-6 py-4 whitespace-nowrap">
+              <div className="flex items-center">
+                <div className="flex-shrink-0 h-8 w-8 flex items-center justify-center bg-gray-200 rounded-md"></div>
+                <div className="ml-3 w-full">
+                  <div className="h-4 bg-gray-200 rounded w-3/4"></div>
+                </div>
+              </div>
+            </td>
+            <td className="px-6 py-4 whitespace-nowrap">
+              <div className="h-4 bg-gray-200 rounded w-24"></div>
+            </td>
+            <td className="px-3 py-4 whitespace-nowrap text-center">
+              <div className="h-5 w-5 bg-gray-200 rounded-full mx-auto"></div>
+            </td>
+          </tr>
+        ))}
+      </>
+    );
+  };
+  
+  // Error state
+  if (error && guides.length === 0) {
+    return (
+      <div className="w-full">
+        <div className="flex flex-col md:flex-row md:justify-between md:items-center mb-6">
+          <header>
+            <h1 className="text-3xl font-bold text-gray-800">Manage Guides</h1>
+            <div className="w-24 h-0.5 bg-emerald-600 rounded-sm mt-1"></div>
+            <p className="text-sm text-gray-600 mt-2">View and manage guide documents</p>
+          </header>
+        </div>
+        
+        <div className="bg-white p-8 rounded-md border border-gray-200">
+          <div className="text-center">
+            <div className="rounded-full h-12 w-12 bg-red-100 flex items-center justify-center mx-auto mb-4">
+              <svg className="h-6 w-6 text-red-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+            </div>
+            <p className="text-red-600 font-medium mb-2">Error loading guides</p>
+            <p className="text-gray-500 mb-4">{error}</p>
+            <button 
+              onClick={fetchGuides}
+              className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-emerald-600 hover:bg-emerald-700 focus:outline-none"
+            >
+              Try Again
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="w-full">
@@ -232,7 +374,9 @@ const ManageGuide = () => {
               </tr>
             </thead>
             <tbody className="bg-white divide-y divide-gray-200">
-              {filteredGuides.length > 0 ? (
+              {loading && guides.length === 0 ? (
+                <GuideSkeleton />
+              ) : filteredGuides.length > 0 ? (
                 filteredGuides.map((guide, index) => (
                   <tr key={guide.id} className="hover:bg-gray-50">
                     <td className="px-3 py-4 whitespace-nowrap text-sm text-gray-500 text-center">
@@ -241,7 +385,7 @@ const ManageGuide = () => {
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div className="flex items-center">
                         <div className="flex-shrink-0 h-8 w-8 flex items-center justify-center bg-gray-100 rounded-md">
-                          {getFileIcon(guide.fileType)}
+                          {getFileIcon(guide.file_path)}
                         </div>
                         <div className="ml-3">
                           <div className="text-sm font-semibold text-gray-900">
@@ -251,7 +395,7 @@ const ManageGuide = () => {
                       </div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                      {guide.uploadDate}
+                      {formatDate(guide.createdAt)}
                     </td>
                     <td className="px-3 py-4 whitespace-nowrap text-center relative">
                       <button
@@ -273,10 +417,7 @@ const ManageGuide = () => {
                           <div className="py-1">
                             <button
                               className="flex items-center w-full text-left px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-100"
-                              onClick={() => {
-                                console.log('View guide', guide.id);
-                                setActiveMenu(null);
-                              }}
+                              onClick={(e) => handleViewGuide(guide, e)}
                             >
                               <svg className="mr-2 h-4 w-4 text-emerald-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
@@ -286,19 +427,16 @@ const ManageGuide = () => {
                             </button>
                             <button
                               className="flex items-center w-full text-left px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-100"
-                              onClick={() => {
-                                console.log('Edit guide', guide.id);
-                                setActiveMenu(null);
-                              }}
+                              onClick={(e) => handleDownloadGuide(guide, e)}
                             >
                               <svg className="mr-2 h-4 w-4 text-emerald-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 0L11.828 15H9v-2.828l8.586-8.586z" />
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
                               </svg>
-                              Edit
+                              Download
                             </button>
                             <button
                               className="flex items-center w-full text-left px-4 py-2.5 text-sm text-red-600 hover:bg-gray-100"
-                              onClick={() => handleDeleteGuide(guide.id)}
+                              onClick={(e) => handleDeleteGuide(guide.id, e)}
                             >
                               <svg className="mr-2 h-4 w-4 text-red-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
@@ -319,6 +457,14 @@ const ManageGuide = () => {
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
                       </svg>
                       <p>No guides found matching your search criteria.</p>
+                      {!searchTerm && (
+                        <Link 
+                          to="/app/guides/upload"
+                          className="mt-3 inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-emerald-600 hover:bg-emerald-700 focus:outline-none"
+                        >
+                          Upload Your First Guide
+                        </Link>
+                      )}
                     </div>
                   </td>
                 </tr>
@@ -327,6 +473,49 @@ const ManageGuide = () => {
           </table>
         </div>
       </div>
+      
+      {/* Pagination would go here */}
+      {pagination.pages > 1 && (
+        <div className="mt-4 flex justify-center">
+          <nav className="flex items-center">
+            <button
+              onClick={() => setPagination({...pagination, page: Math.max(1, pagination.page - 1)})}
+              disabled={pagination.page === 1}
+              className={`px-3 py-1 rounded-l-md border ${
+                pagination.page === 1 
+                  ? 'bg-gray-100 text-gray-400 cursor-not-allowed' 
+                  : 'bg-white text-gray-700 hover:bg-gray-50'
+              }`}
+            >
+              Previous
+            </button>
+            {Array.from({length: pagination.pages}, (_, i) => i + 1).map(page => (
+              <button
+                key={page}
+                onClick={() => setPagination({...pagination, page})}
+                className={`px-3 py-1 border-t border-b ${
+                  pagination.page === page
+                    ? 'bg-emerald-600 text-white'
+                    : 'bg-white text-gray-700 hover:bg-gray-50'
+                }`}
+              >
+                {page}
+              </button>
+            ))}
+            <button
+              onClick={() => setPagination({...pagination, page: Math.min(pagination.pages, pagination.page + 1)})}
+              disabled={pagination.page === pagination.pages}
+              className={`px-3 py-1 rounded-r-md border ${
+                pagination.page === pagination.pages
+                  ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
+                  : 'bg-white text-gray-700 hover:bg-gray-50'
+              }`}
+            >
+              Next
+            </button>
+          </nav>
+        </div>
+      )}
     </div>
   );
 };

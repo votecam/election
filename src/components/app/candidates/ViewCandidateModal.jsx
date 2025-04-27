@@ -239,8 +239,6 @@ const ViewCandidateModal = ({ isOpen, onClose, candidate, onCandidateDeleted }) 
               ) : candidateData.party_id !== 'N/A' ? (
                 <p className="text-base text-gray-600 mt-2">Party ID: {candidateData.party_id}</p>
               ) : null}
-
-              <p className="text-sm text-gray-500 mt-2">Region: {candidateData.region}</p>
             </div>
           </div>
 
@@ -271,11 +269,6 @@ const ViewCandidateModal = ({ isOpen, onClose, candidate, onCandidateDeleted }) 
               </div>
               
               <div className="space-y-2">
-                <div>
-                  <p className="text-sm text-gray-500">Region</p>
-                  <p className="text-base font-medium">{candidateData.region}</p>
-                </div>
-                
                 <div>
                   <p className="text-sm text-gray-500">Registered On</p>
                   <p className="text-base font-medium">{formatDate(candidateData.createdAt)}</p>

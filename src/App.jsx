@@ -19,6 +19,8 @@ import UploadGuide from './components/app/guides/UploadGuide'
 import ManageGuide from './components/app/guides/ManageGuide'
 import Settings from './components/app/settings/Settings'
 import Administrator from './components/app/administrator/Administrator'
+import CreateNotification from './components/app/notifications/CreateNotification'
+import AllNotifications from './components/app/notifications/AllNotifications'
 import { AuthProvider } from './context/AuthContext'
 
 function App() {
@@ -78,6 +80,13 @@ function App() {
                 <Route index element={<Navigate to="/app/guides/upload" replace />} />
                 <Route path="upload" element={<UploadGuide />} />
                 <Route path="manage" element={<ManageGuide />} />
+              </Route>
+              
+              {/* Notifications Routes */}
+              <Route path="notifications">
+                <Route index element={<Navigate to="/app/notifications/all" replace />} />
+                <Route path="create" element={<CreateNotification />} />
+                <Route path="all" element={<AllNotifications />} />
               </Route>
               
               {/* Feedback Route */}

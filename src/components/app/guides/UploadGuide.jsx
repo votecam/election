@@ -1,4 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
+import apiService from '../../../services/apiService';
 
 const UploadGuide = () => {
   const [title, setTitle] = useState('');
@@ -6,6 +7,7 @@ const UploadGuide = () => {
   const [filePreview, setFilePreview] = useState(null);
   const [submitting, setSubmitting] = useState(false);
   const [submitSuccess, setSubmitSuccess] = useState(false);
+  const [errorMessage, setErrorMessage] = useState('');
   
   const topRef = useRef(null);
   
@@ -22,6 +24,8 @@ const UploadGuide = () => {
       setSelectedFile(file);
       // Show filename as preview
       setFilePreview(file.name);
+      // Clear any error message when a new file is selected
+      setErrorMessage('');
     }
   };
   
@@ -29,32 +33,79 @@ const UploadGuide = () => {
     window.scrollTo({ top: 0, behavior: 'auto' });
   };
   
-  const handleSubmit = (e) => {
+  const resetForm = () => {
+    setTitle('');
+    setSelectedFile(null);
+    setFilePreview(null);
+    // Reset the file input field
+    const fileInput = document.getElementById('file-upload');
+    if (fileInput) {
+      fileInput.value = '';
+    }
+  };
+  
+  const handleSubmit = async (e) => {
     e.preventDefault();
     
     // Immediately scroll to top when upload button is clicked
     scrollToTop();
     
-    setSubmitting(true);
+    if (!title.trim()) {
+      setErrorMessage('Please enter a title for the guide');
+      return;
+    }
     
-    // Simulate API call
-    setTimeout(() => {
+    if (!selectedFile) {
+      setErrorMessage('Please select a file to upload');
+      return;
+    }
+    
+    setSubmitting(true);
+    setErrorMessage('');
+    
+    // Create form data for file upload
+    const formData = new FormData();
+    formData.append('title', title);
+    // The server expects the file field to be named 'file', not 'guide'
+    formData.append('file', selectedFile);
+    
+    // Log for debugging
+    console.log('Submitting form with:', {
+      title,
+      fileName: selectedFile.name,
+      fileSize: selectedFile.size,
+      fileType: selectedFile.type
+    });
+    
+    try {
+      // Call API to upload guide
+      const response = await apiService.guides.uploadGuide(formData);
+      
+      // Log success response
+      console.log('Upload success:', response);
+      
       setSubmitting(false);
       setSubmitSuccess(true);
       
-      // Scroll to top again after success (in case page has scrolled)
-      scrollToTop();
-      
       // Reset form after successful submission
-      setTitle('');
-      setSelectedFile(null);
-      setFilePreview(null);
+      resetForm();
       
       // Auto-clear success message after 5 seconds
       setTimeout(() => {
         setSubmitSuccess(false);
       }, 5000);
-    }, 1500);
+      
+    } catch (error) {
+      // Log error details
+      console.error('Upload error:', error);
+      if (error.response) {
+        console.error('Error response:', error.response.data);
+        console.error('Status code:', error.response.status);
+      }
+      
+      setSubmitting(false);
+      setErrorMessage(error.message || 'Failed to upload guide. Please try again.');
+    }
   };
 
   return (
@@ -79,6 +130,24 @@ const UploadGuide = () => {
             <div className="ml-3">
               <p className="text-base font-medium text-emerald-800">
                 Guide was successfully uploaded!
+              </p>
+            </div>
+          </div>
+        </div>
+      )}
+      
+      {/* Error Message */}
+      {errorMessage && (
+        <div className="mb-6 p-4 bg-red-50 border-l-4 border-red-500 rounded-md">
+          <div className="flex">
+            <div className="flex-shrink-0">
+              <svg className="h-5 w-5 text-red-500" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-11a1 1 0 10-2 0v4a1 1 0 102 0V7zm0 8a1 1 0 10-2 0 1 1 0 102 0z" clipRule="evenodd" />
+              </svg>
+            </div>
+            <div className="ml-3">
+              <p className="text-base font-medium text-red-800">
+                {errorMessage}
               </p>
             </div>
           </div>
@@ -115,6 +184,7 @@ const UploadGuide = () => {
                 value={title}
                 onChange={(e) => setTitle(e.target.value)}
                 required
+                disabled={submitting}
               />
             </div>
           </div>

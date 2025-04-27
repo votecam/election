@@ -1,68 +1,98 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import apiService from '../../../services/apiService';
+
+// Skeleton feedback item component
+const SkeletonFeedbackItem = () => {
+  return (
+    <div className="border-l-2 border-gray-200 bg-white">
+      <div className="px-5 py-4">
+        {/* Header row with name, date and rating */}
+        <div className="flex justify-between items-start mb-2">
+          <div className="flex items-start">
+            {/* Name with avatar skeleton */}
+            <div className="flex items-center">
+              <div className="w-9 h-9 flex-shrink-0 bg-gray-200 animate-pulse mr-3 rounded"></div>
+              <div>
+                <div className="h-4 bg-gray-200 animate-pulse rounded w-24 mb-2"></div>
+                <div className="flex items-center mt-1 space-x-1">
+                  {[...Array(5)].map((_, i) => (
+                    <div key={i} className="w-4 h-4 bg-gray-200 animate-pulse rounded"></div>
+                  ))}
+                  <div className="w-8 h-3 bg-gray-200 animate-pulse rounded ml-2"></div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div className="w-16 h-3 bg-gray-200 animate-pulse rounded"></div>
+        </div>
+        
+        {/* Feedback content skeleton */}
+        <div className="mt-3 pl-12">
+          <div className="h-4 bg-gray-200 animate-pulse rounded w-full mb-2"></div>
+          <div className="h-4 bg-gray-200 animate-pulse rounded w-5/6 mb-2"></div>
+          <div className="h-4 bg-gray-200 animate-pulse rounded w-4/6"></div>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+// Skeleton pagination component
+const SkeletonPagination = () => {
+  return (
+    <div className="bg-gray-50 px-6 py-3 border-t border-gray-200 flex items-center justify-between">
+      <div className="hidden sm:flex-1 sm:flex sm:items-center sm:justify-between">
+        <div>
+          <div className="h-4 bg-gray-200 animate-pulse rounded w-48"></div>
+        </div>
+        <div>
+          <div className="flex space-x-1">
+            {[...Array(5)].map((_, i) => (
+              <div key={i} className="w-8 h-8 bg-gray-200 animate-pulse rounded"></div>
+            ))}
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
 
 const Feedback = () => {
   const [sortOption, setSortOption] = useState('date');
   const [searchTerm, setSearchTerm] = useState('');
-  
-  // Sample previous feedback - in a real app this would come from an API
-  const [previousFeedback] = useState([
-    {
-      id: 1,
-      type: 'issue',
-      user: 'John Smith',
-      content: 'The polling centre search is very slow when there are many results.',
-      date: '2023-11-20',
-      rating: 3
-    },
-    {
-      id: 2,
-      type: 'suggestion',
-      user: 'Maria Garcia',
-      content: 'It would be helpful to have a map view for polling centres.',
-      date: '2023-11-18',
-      rating: 4
-    },
-    {
-      id: 3,
-      type: 'compliment',
-      user: 'David Johnson',
-      content: 'The new dashboard design looks great and is much easier to use!',
-      date: '2023-11-15',
-      rating: 5
-    },
-    {
-      id: 4,
-      type: 'issue',
-      user: 'Sarah Wilson',
-      content: 'When exporting data to CSV, some special characters appear corrupted.',
-      date: '2023-11-12',
-      rating: 2
-    },
-    {
-      id: 5,
-      type: 'suggestion',
-      user: 'Michael Brown',
-      content: 'Please add a dark mode option for the dashboard.',
-      date: '2023-11-10',
-      rating: 4
-    },
-    {
-      id: 6,
-      type: 'compliment',
-      user: 'Jennifer Lee',
-      content: 'The mobile responsiveness is excellent, works perfectly on my phone!',
-      date: '2023-11-07',
-      rating: 5
-    },
-    {
-      id: 7,
-      type: 'issue',
-      user: 'Robert Taylor',
-      content: 'I get an error when trying to upload images larger than 2MB.',
-      date: '2023-11-05',
-      rating: 2
-    }
-  ]);
+  const [feedbacks, setFeedbacks] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+  const [pagination, setPagination] = useState({
+    total: 0,
+    page: 1,
+    limit: 10,
+    pages: 1
+  });
+
+  // Fetch feedback data from API
+  useEffect(() => {
+    const fetchFeedbacks = async () => {
+      try {
+        setLoading(true);
+        const response = await apiService.feedback.getAllFeedback(pagination.page, pagination.limit);
+        
+        if (response.status === 'success' && response.data) {
+          setFeedbacks(response.data.feedbacks);
+          setPagination(response.data.pagination);
+        } else {
+          throw new Error('Failed to fetch feedback');
+        }
+      } catch (error) {
+        console.error('Error fetching feedback:', error);
+        setError('Unable to load feedback. Please try again later.');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchFeedbacks();
+  }, [pagination.page, pagination.limit]);
 
   // Render star rating
   const renderStars = (rating) => {
@@ -71,7 +101,7 @@ const Feedback = () => {
       stars.push(
         <svg 
           key={i} 
-          className={`w-5 h-5 ${i <= rating ? 'text-yellow-400' : 'text-gray-300'}`}
+          className={`w-4 h-4 ${i <= rating ? 'text-yellow-500' : 'text-gray-200'}`}
           xmlns="http://www.w3.org/2000/svg" 
           viewBox="0 0 20 20" 
           fill="currentColor"
@@ -81,19 +111,29 @@ const Feedback = () => {
       );
     }
     return (
-      <div className="flex">{stars}</div>
+      <div className="flex space-x-0.5">{stars}</div>
     );
   };
 
+  // Format date for display
+  const formatDate = (dateString) => {
+    const date = new Date(dateString);
+    return date.toLocaleDateString('en-GB', { 
+      day: '2-digit', 
+      month: 'short', 
+      year: 'numeric' 
+    });
+  };
+
   // Filter and sort feedback
-  const filteredFeedback = previousFeedback
+  const filteredFeedback = feedbacks
     .filter(feedback => {
       // Search term filter
       if (searchTerm) {
         const searchLower = searchTerm.toLowerCase();
         return (
-          feedback.content.toLowerCase().includes(searchLower) ||
-          feedback.user.toLowerCase().includes(searchLower)
+          feedback.body.toLowerCase().includes(searchLower) ||
+          feedback.name.toLowerCase().includes(searchLower)
         );
       }
       
@@ -103,9 +143,9 @@ const Feedback = () => {
       // Sort by selected option
       switch (sortOption) {
         case 'date':
-          return new Date(b.date) - new Date(a.date); // Recent first
+          return new Date(b.createdAt) - new Date(a.createdAt); // Recent first
         case 'dateAsc':
-          return new Date(a.date) - new Date(b.date); // Oldest first
+          return new Date(a.createdAt) - new Date(b.createdAt); // Oldest first
         case 'rating':
           return b.rating - a.rating; // Highest rating first
         case 'ratingAsc':
@@ -115,18 +155,28 @@ const Feedback = () => {
       }
     });
 
+  // Handle page change
+  const handlePageChange = (newPage) => {
+    if (newPage > 0 && newPage <= pagination.pages) {
+      setPagination({
+        ...pagination,
+        page: newPage
+      });
+    }
+  };
+
   return (
-    <div className="w-full">
+    <div className="w-full max-w-7xl mx-auto">
       {/* Header with emerald underline */}
-      <header className="mb-6">
+      <header className="mb-8">
         <h1 className="text-3xl font-bold text-gray-800">User Feedback</h1>
-        <div className="w-32 h-0.5 bg-emerald-600 rounded-sm mt-2"></div>
-        <p className="text-gray-600 text-lg mt-1">View user feedback about the application</p>
+        <div className="w-40 h-0.5 bg-emerald-600 mt-2 mb-3"></div>
+        <p className="text-gray-600">What our users are saying about the platform</p>
       </header>
       
-      <div className="bg-white rounded-md border border-gray-200 overflow-hidden">
+      <div className="bg-white border-t border-b border-gray-200 md:border md:shadow-sm">
         <div className="px-6 py-4 bg-gray-50 border-b border-gray-200 flex justify-between items-center flex-wrap gap-4">
-          <h2 className="text-xl font-semibold text-gray-800">User Feedback List</h2>
+          <h2 className="text-xl font-semibold text-gray-800">Feedback</h2>
           
           {/* Search and filter controls */}
           <div className="flex flex-wrap gap-3 items-center">
@@ -142,12 +192,7 @@ const Feedback = () => {
                 placeholder="Search feedback..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className="pl-10 py-2 pr-3 border border-gray-300 rounded-none text-base focus:outline-none focus:ring-1 focus:border-emerald-600 transition-shadow duration-300"
-                style={{ 
-                  "--tw-ring-color": "#00694B",
-                  "--tw-border-opacity": 1,
-                  "--tw-border-color": "rgba(0, 105, 75, var(--tw-border-opacity))"
-                }}
+                className="pl-10 py-2 pr-3 border border-gray-300 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
               />
             </div>
             
@@ -155,12 +200,7 @@ const Feedback = () => {
             <select
               value={sortOption}
               onChange={(e) => setSortOption(e.target.value)}
-              className="py-2 px-3 border border-gray-300 bg-white rounded-none text-base focus:outline-none focus:ring-1 focus:border-emerald-600 transition-shadow duration-300"
-              style={{ 
-                "--tw-ring-color": "#00694B",
-                "--tw-border-opacity": 1,
-                "--tw-border-color": "rgba(0, 105, 75, var(--tw-border-opacity))"
-              }}
+              className="py-2 px-3 border border-gray-300 bg-white text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
             >
               <option value="date">Newest First</option>
               <option value="dateAsc">Oldest First</option>
@@ -170,38 +210,97 @@ const Feedback = () => {
           </div>
         </div>
         
-        {filteredFeedback.length > 0 ? (
-          <div className="p-6">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        {/* Loading state with skeleton UI */}
+        {loading && (
+          <>
+            <div className="p-4 grid grid-cols-1 md:grid-cols-2 gap-4">
+              {[...Array(6)].map((_, index) => (
+                <SkeletonFeedbackItem key={index} />
+              ))}
+            </div>
+            <SkeletonPagination />
+          </>
+        )}
+        
+        {/* Error state */}
+        {error && !loading && (
+          <div className="p-8 text-center">
+            <svg 
+              className="mx-auto h-10 w-10 text-red-500"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+              strokeWidth="1.5"
+            >
+              <circle cx="12" cy="12" r="10" />
+              <line x1="12" y1="8" x2="12" y2="12" />
+              <line x1="12" y1="16" x2="12.01" y2="16" />
+            </svg>
+            <p className="mt-3 text-red-500 font-medium">{error}</p>
+            <p className="text-sm text-gray-500 mt-1">Please try again later</p>
+          </div>
+        )}
+        
+        {/* Feedback list - Modern design with two columns and emerald outline */}
+        {!loading && !error && filteredFeedback.length > 0 ? (
+          <div className="p-4 grid grid-cols-1 md:grid-cols-2 gap-4">
               {filteredFeedback.map((feedback) => (
-                <div key={feedback.id} className="border border-gray-200 rounded-none shadow-sm hover:shadow-md transition-shadow duration-300">
-                  <div className="p-5">
-                    <div className="flex justify-between items-start mb-3">
-                      <div className="flex flex-col">
-                        <span className="font-medium text-gray-900 text-lg">{feedback.user}</span>
-                        <div className="flex items-center mt-1">
+              <div 
+                key={feedback.id} 
+                className="border-l-2 border-emerald-600 bg-white hover:bg-gray-50 transition-colors duration-150"
+              >
+                <div className="px-5 py-4">
+                  {/* Header row with name, date and rating */}
+                  <div className="flex justify-between items-start mb-2">
+                    <div className="flex items-start">
+                      {/* Name with first letter avatar */}
+                      <div className="flex items-center">
+                        <div className="w-9 h-9 flex-shrink-0 bg-emerald-50 text-emerald-700 font-semibold flex items-center justify-center mr-3">
+                          {feedback.name.charAt(0).toUpperCase()}
+                        </div>
+                        <div>
+                          <h3 className="font-medium text-gray-900">{feedback.name}</h3>
+                          <div className="flex items-center mt-1 space-x-2">
                           {renderStars(feedback.rating)}
+                            <span className="text-xs text-gray-500 font-medium">{feedback.rating}/5</span>
+                          </div>
                         </div>
                       </div>
-                      <span className="text-base text-gray-500 whitespace-nowrap">{feedback.date}</span>
                     </div>
+                    <span className="text-xs text-gray-500 font-medium">{formatDate(feedback.createdAt)}</span>
+                  </div>
+                  
+                  {/* Feedback content */}
+                  <div className="mt-3 pl-12">
+                    <p className="text-gray-700">{feedback.body}</p>
                     
-                    <p className="text-gray-700 mt-3 text-base">{feedback.content}</p>
+                    {/* Admin response - if any */}
+                    {feedback.reply && (
+                      <div className="mt-3 pt-3 border-t border-gray-100">
+                        <div className="flex items-start">
+                          <div className="w-7 h-7 flex-shrink-0 bg-blue-50 text-blue-600 font-semibold text-xs flex items-center justify-center mr-2">
+                            A
+                          </div>
+                          <div>
+                            <h4 className="text-xs font-medium text-blue-700">Admin Response</h4>
+                            <p className="text-sm text-gray-600 mt-1">{feedback.reply}</p>
+                          </div>
+                        </div>
+                      </div>
+                    )}
+                  </div>
                   </div>
                 </div>
               ))}
             </div>
-          </div>
-        ) : (
+        ) : !loading && !error ? (
           <div className="p-8 text-center">
             <svg 
-              className="mx-auto h-14 w-14 text-emerald-600"
+              className="mx-auto h-10 w-10 text-gray-400"
               fill="none"
               viewBox="0 0 24 24"
               stroke="currentColor"
-              strokeWidth="1"
-              strokeLinecap="round"
-              strokeLinejoin="round"
+              strokeWidth="1.5"
             >
               <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
               <polyline points="14 2 14 8 20 8" />
@@ -209,14 +308,95 @@ const Feedback = () => {
               <line x1="16" y1="17" x2="8" y2="17" />
               <line x1="10" y1="9" x2="8" y2="9" />
             </svg>
-            <p className="mt-4 text-gray-500 text-lg">No feedback matching your filters</p>
-            <p className="text-base text-gray-400 mt-1">Try adjusting your search criteria</p>
+            <p className="mt-3 text-gray-500 font-medium">No feedback matching your filters</p>
+            <p className="text-sm text-gray-400 mt-1">Try adjusting your search criteria</p>
+          </div>
+        ) : null}
+        
+        {/* Pagination */}
+        {!loading && !error && pagination.pages > 1 && (
+          <div className="bg-gray-50 px-6 py-3 border-t border-gray-200 flex items-center justify-between">
+            <div className="flex-1 flex justify-between sm:hidden">
+              <button
+                onClick={() => handlePageChange(pagination.page - 1)}
+                disabled={pagination.page === 1}
+                className={`relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium ${
+                  pagination.page === 1 ? 'bg-gray-100 text-gray-400 cursor-not-allowed' : 'bg-white text-gray-700 hover:bg-gray-50'
+                }`}
+              >
+                Previous
+              </button>
+              <button
+                onClick={() => handlePageChange(pagination.page + 1)}
+                disabled={pagination.page === pagination.pages}
+                className={`ml-3 relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium ${
+                  pagination.page === pagination.pages ? 'bg-gray-100 text-gray-400 cursor-not-allowed' : 'bg-white text-gray-700 hover:bg-gray-50'
+                }`}
+              >
+                Next
+              </button>
+            </div>
+            <div className="hidden sm:flex-1 sm:flex sm:items-center sm:justify-between">
+              <div>
+                <p className="text-sm text-gray-700">
+                  Showing <span className="font-medium">{(pagination.page - 1) * pagination.limit + 1}</span> to{' '}
+                  <span className="font-medium">
+                    {Math.min(pagination.page * pagination.limit, pagination.total)}
+                  </span> of{' '}
+                  <span className="font-medium">{pagination.total}</span> results
+                </p>
+              </div>
+              <div>
+                <nav className="relative z-0 inline-flex -space-x-px" aria-label="Pagination">
+                  <button
+                    onClick={() => handlePageChange(pagination.page - 1)}
+                    disabled={pagination.page === 1}
+                    className={`relative inline-flex items-center px-2 py-2 border border-gray-300 bg-white text-sm font-medium ${
+                      pagination.page === 1 ? 'text-gray-300 cursor-not-allowed' : 'text-gray-500 hover:bg-gray-50'
+                    }`}
+                  >
+                    <span className="sr-only">Previous</span>
+                    <svg className="h-5 w-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+                      <path fillRule="evenodd" d="M12.707 5.293a1 1 0 010 1.414L9.414 10l3.293 3.293a1 1 0 01-1.414 1.414l-4-4a1 1 0 010-1.414l4-4a1 1 0 011.414 0z" clipRule="evenodd" />
+                    </svg>
+                  </button>
+                  
+                  {/* Page numbers */}
+                  {[...Array(pagination.pages).keys()].map(page => (
+                    <button
+                      key={page + 1}
+                      onClick={() => handlePageChange(page + 1)}
+                      className={`relative inline-flex items-center px-4 py-2 border ${
+                        pagination.page === page + 1
+                          ? 'z-10 bg-emerald-50 border-emerald-500 text-emerald-600'
+                          : 'bg-white border-gray-300 text-gray-500 hover:bg-gray-50'
+                      } text-sm font-medium`}
+                    >
+                      {page + 1}
+                    </button>
+                  ))}
+                  
+                  <button
+                    onClick={() => handlePageChange(pagination.page + 1)}
+                    disabled={pagination.page === pagination.pages}
+                    className={`relative inline-flex items-center px-2 py-2 border border-gray-300 bg-white text-sm font-medium ${
+                      pagination.page === pagination.pages ? 'text-gray-300 cursor-not-allowed' : 'text-gray-500 hover:bg-gray-50'
+                    }`}
+                  >
+                    <span className="sr-only">Next</span>
+                    <svg className="h-5 w-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+                      <path fillRule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clipRule="evenodd" />
+                    </svg>
+                  </button>
+                </nav>
+              </div>
+            </div>
           </div>
         )}
         
-        {filteredFeedback.length > 0 && (
-          <div className="bg-gray-50 px-6 py-3 border-t border-gray-200 text-base text-gray-500">
-            Showing {filteredFeedback.length} of {previousFeedback.length} feedback items
+        {!loading && !error && filteredFeedback.length > 0 && pagination.pages <= 1 && (
+          <div className="bg-gray-50 px-6 py-3 border-t border-gray-200 text-sm text-gray-500">
+            Showing {filteredFeedback.length} of {pagination.total} feedback items
           </div>
         )}
       </div>

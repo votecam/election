@@ -10,7 +10,8 @@ const Sidebar = ({ isOpen, toggleSidebar }) => {
     elections: false,
     voters: false,
     reports: false,
-    settings: false
+    settings: false,
+    notifications: false
   });
 
   const toggleMenu = (menu) => {
@@ -53,6 +54,11 @@ const Sidebar = ({ isOpen, toggleSidebar }) => {
     // Special case for settings
     if (path === '/settings' || path === '/app/settings') {
       return location.pathname === '/app/settings';
+    }
+
+    // Special case for notifications
+    if (path === '/notifications' || path === '/app/notifications') {
+      return location.pathname === '/app/notifications';
     }
     
     // Special case for guides upload as default
@@ -100,6 +106,11 @@ const Sidebar = ({ isOpen, toggleSidebar }) => {
              isActive('/app/guides/manage');
     }
     
+    if (parentPath === '/app/notifications') {
+      return isActive('/app/notifications/create') ||
+             isActive('/app/notifications/all');
+    }
+    
     return false;
   };
   
@@ -118,6 +129,11 @@ const Sidebar = ({ isOpen, toggleSidebar }) => {
     // Check if we're on a guides route
     if (location.pathname.includes('/app/guides/')) {
       setExpandedMenus(prev => ({ ...prev, guides: true }));
+    }
+
+    // Check if we're on a notifications route
+    if (location.pathname.includes('/app/notifications/')) {
+      setExpandedMenus(prev => ({ ...prev, notifications: true }));
     }
   }, [location.pathname]);
   
@@ -761,6 +777,116 @@ const Sidebar = ({ isOpen, toggleSidebar }) => {
                 </Link>
               </li>
               
+              {/* Notifications - New Item */}
+              <li>
+                <div className="space-y-1">
+                  <button
+                    onClick={() => toggleMenu('notifications')}
+                    className={`w-full flex items-center justify-between px-3 py-3 transition-all duration-200 group focus-visible-only ${
+                      isMenuActive('/app/notifications') 
+                        ? 'bg-white text-gray-800 font-medium shadow-sm' 
+                        : 'text-white hover:bg-white/10'
+                    } rounded-lg focus:outline-none`}
+                    aria-expanded={expandedMenus.notifications}
+                    aria-controls="notifications-menu"
+                  >
+                    <div className="flex items-center">
+                      <div className={`flex items-center justify-center w-9 h-9 ${isMenuActive('/app/notifications') ? 'text-gray-800' : 'text-white group-hover:text-white'}`}>
+                        <svg 
+                          xmlns="http://www.w3.org/2000/svg" 
+                          viewBox="0 0 24 24" 
+                          fill="none"
+                          stroke="currentColor"
+                          strokeWidth="2"
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          className="w-7 h-7"
+                        >
+                          <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path>
+                          <path d="M13.73 21a2 2 0 0 1-3.46 0"></path>
+                        </svg>
+                      </div>
+                      <span className="ml-3 font-medium text-xl whitespace-nowrap">Notifications</span>
+                    </div>
+                    <svg 
+                      xmlns="http://www.w3.org/2000/svg" 
+                      className={`h-5 w-5 transition-transform duration-200 ${
+                        expandedMenus.notifications ? 'transform rotate-180' : ''
+                      }`} 
+                      fill="none" 
+                      viewBox="0 0 24 24" 
+                      stroke="currentColor"
+                      aria-hidden="true"
+                    >
+                      <path 
+                        strokeLinecap="round" 
+                        strokeLinejoin="round" 
+                        strokeWidth={2} 
+                        d="M19 9l-7 7-7-7" 
+                      />
+                    </svg>
+                  </button>
+                  
+                  {expandedMenus.notifications && (
+                    <ul id="notifications-menu" className="mt-1 pl-10 space-y-1">
+                      <li>
+                        <Link 
+                          to="/app/notifications/create"
+                          onClick={handleMenuItemClick}
+                          className={`flex items-center px-3 py-2.5 focus-visible-only ${
+                            isActive('/app/notifications/create') 
+                              ? 'bg-white/80 text-gray-800 font-medium' 
+                              : 'text-white hover:bg-white/10'
+                          } transition-colors duration-200 rounded-lg focus:outline-none`}
+                          aria-current={isActive('/app/notifications/create') ? 'page' : undefined}
+                        >
+                          <svg 
+                            className="h-5 w-5 mr-2"
+                            viewBox="0 0 24 24"
+                            fill="none"
+                            stroke="currentColor"
+                            strokeWidth="2"
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                          >
+                            <rect width="18" height="18" x="3" y="3" rx="2" />
+                            <path d="M12 8v8" />
+                            <path d="M8 12h8" />
+                          </svg>
+                          <span className="text-lg">Create Notification</span>
+                        </Link>
+                      </li>
+                      <li>
+                        <Link 
+                          to="/app/notifications/all"
+                          onClick={handleMenuItemClick}
+                          className={`flex items-center px-3 py-2.5 focus-visible-only ${
+                            isActive('/app/notifications/all') 
+                              ? 'bg-white/80 text-gray-800 font-medium' 
+                              : 'text-white hover:bg-white/10'
+                          } transition-colors duration-200 rounded-lg focus:outline-none`}
+                          aria-current={isActive('/app/notifications/all') ? 'page' : undefined}
+                        >
+                          <svg 
+                            className="h-5 w-5 mr-2"
+                            viewBox="0 0 24 24"
+                            fill="none"
+                            stroke="currentColor"
+                            strokeWidth="2"
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                          >
+                            <path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z" />
+                            <path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z" />
+                          </svg>
+                          <span className="text-lg">All Notifications</span>
+                        </Link>
+                      </li>
+                    </ul>
+                  )}
+                </div>
+              </li>
+              
               {/* Settings */}
               <li>
                 <Link 
@@ -798,20 +924,7 @@ const Sidebar = ({ isOpen, toggleSidebar }) => {
           </nav>
           
           {/* Footer area with user info */}
-          <div className="mt-auto p-4 border-t border-white/20">
-            <div className="flex items-center">
-              <div className="flex-shrink-0">
-                <div className="w-10 h-8 rounded-full bg-white/20 flex items-center justify-center text-white font-bold text-lg">
-                  {getUserInitials()}
-                </div>
-              </div>
-              <div className="ml-3">
-                <p className="text-base font-medium text-white">{user?.name || 'Admin User'}</p>
-                <p className="text-sm text-white/80">{getDisplayRole()}</p>
-              </div>
-            </div>
-           
-          </div>
+          
         </div>
       </div>
     </div>

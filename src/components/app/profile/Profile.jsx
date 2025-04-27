@@ -1,20 +1,173 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import ChangePasswordModal from './ChangePasswordModal';
+import apiService from '../../../services/apiService';
 
 const Profile = () => {
-  // Static user data
-  const user = {
-    name: 'Admin User',
-    email: 'admin@example.com',
-    role: 'Administrator',
-    joinDate: '10 Jan 2023',
-    avatar: 'AU'
-  };
-  
+  const [user, setUser] = useState({
+    name: '',
+    email: '',
+    role: '',
+    createdAt: '',
+    updatedAt: ''
+  });
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
 
   const openModal = () => setIsModalOpen(true);
   const closeModal = () => setIsModalOpen(false);
+  
+  // Fetch user data
+  useEffect(() => {
+    const fetchUserData = async () => {
+      try {
+        setLoading(true);
+        setError(null);
+        
+        // Get the logged in user's email from localStorage
+        const userData = JSON.parse(localStorage.getItem('user') || '{}');
+        const userEmail = userData.email;
+        
+        if (!userEmail) {
+          throw new Error('No user email found. Please log in again.');
+        }
+        
+        const response = await apiService.users.getUserByEmail(userEmail);
+        
+        if (response) {
+          setUser(response);
+        } else {
+          throw new Error('Failed to load user data');
+        }
+      } catch (err) {
+        console.error('Error fetching user data:', err);
+        setError(err.message || 'Failed to load user data. Please try again.');
+      } finally {
+        setLoading(false);
+      }
+    };
+    
+    fetchUserData();
+  }, []);
+  
+  // Format the date
+  const formatDate = (dateString) => {
+    if (!dateString) return '';
+    const date = new Date(dateString);
+    return date.toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' });
+  };
+  
+  // Get user initials for avatar
+  const getUserInitials = () => {
+    if (!user.name) return '';
+    return user.name
+      .split(' ')
+      .map(name => name[0])
+      .join('')
+      .toUpperCase()
+      .substring(0, 2);
+  };
+  
+  // Loading skeleton
+  if (loading) {
+    return (
+      <div className="w-full">
+        <header className="mb-6">
+          <div className="h-8 bg-gray-200 rounded w-1/3 animate-pulse"></div>
+          <div className="w-32 h-0.5 bg-emerald-600 rounded-sm mt-2"></div>
+          <div className="h-6 bg-gray-200 rounded w-1/2 mt-2 animate-pulse"></div>
+        </header>
+
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          <div className="lg:col-span-1">
+            <div className="bg-white rounded-md border border-gray-200 overflow-hidden">
+              <div className="px-6 py-4 bg-gray-50 border-b border-gray-200">
+                <div className="h-6 bg-gray-200 rounded w-1/2 animate-pulse"></div>
+              </div>
+              <div className="p-6 flex flex-col items-center text-center">
+                <div className="h-24 w-24 rounded-full bg-gray-200 animate-pulse mb-4"></div>
+                <div className="h-6 bg-gray-200 rounded w-1/2 animate-pulse mb-2"></div>
+                <div className="h-6 bg-gray-200 rounded w-1/4 animate-pulse mb-4"></div>
+                
+                <div className="mt-4 w-full">
+                  <div className="flex justify-between items-center py-3 border-b border-gray-100">
+                    <div className="h-4 bg-gray-200 rounded w-1/3 animate-pulse"></div>
+                    <div className="h-4 bg-gray-200 rounded w-1/4 animate-pulse"></div>
+                  </div>
+                  <div className="flex justify-between items-center py-3">
+                    <div className="h-4 bg-gray-200 rounded w-1/3 animate-pulse"></div>
+                    <div className="h-4 bg-gray-200 rounded w-1/4 animate-pulse"></div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div className="lg:col-span-2">
+            <div className="bg-white rounded-md border border-gray-200 overflow-hidden animate-pulse">
+              <div className="px-6 py-4 bg-gray-50 border-b border-gray-200">
+                <div className="h-6 bg-gray-200 rounded w-1/3"></div>
+              </div>
+              <div className="p-6 space-y-6">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  {[1, 2].map((i) => (
+                    <div key={i}>
+                      <div className="h-5 bg-gray-200 rounded w-1/3 mb-2"></div>
+                      <div className="h-12 bg-gray-200 rounded w-full"></div>
+                    </div>
+                  ))}
+                </div>
+                <div>
+                  <div className="h-5 bg-gray-200 rounded w-1/3 mb-2"></div>
+                  <div className="h-12 bg-gray-200 rounded w-full"></div>
+                </div>
+              </div>
+            </div>
+            
+            <div className="bg-white rounded-md border border-gray-200 overflow-hidden mt-6 animate-pulse">
+              <div className="px-6 py-4 bg-gray-50 border-b border-gray-200">
+                <div className="h-6 bg-gray-200 rounded w-1/4"></div>
+              </div>
+              <div className="p-6">
+                <div className="h-10 bg-gray-200 rounded w-40"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+  
+  // Error state
+  if (error) {
+    return (
+      <div className="w-full">
+        <header className="mb-6">
+          <h1 className="text-3xl font-bold text-gray-800">Your Profile</h1>
+          <div className="w-32 h-0.5 bg-emerald-600 rounded-sm mt-2"></div>
+          <p className="text-gray-600 text-lg mt-1">Manage your account information</p>
+        </header>
+        
+        <div className="bg-white p-8 rounded-md border border-gray-200">
+          <div className="text-center">
+            <div className="rounded-full h-12 w-12 bg-red-100 flex items-center justify-center mx-auto mb-4">
+              <svg className="h-6 w-6 text-red-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+            </div>
+            <p className="text-red-600 font-medium mb-2">Error loading profile</p>
+            <p className="text-gray-500 mb-4">{error}</p>
+            <button 
+              onClick={() => window.location.reload()}
+              className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-emerald-600 hover:bg-emerald-700 focus:outline-none"
+            >
+              Try Again
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="w-full">
@@ -33,7 +186,7 @@ const Profile = () => {
             </div>
             <div className="p-6 flex flex-col items-center text-center">
               <div className="h-24 w-24 rounded-full bg-emerald-50 flex items-center justify-center ring-2 ring-emerald-500 text-gray-700 text-2xl font-semibold mb-4">
-                {user.avatar}
+                {getUserInitials()}
               </div>
               <h3 className="text-lg font-semibold text-gray-900">{user.name}</h3>
               <span className="inline-flex items-center px-2.5 py-0.5 rounded-none text-sm font-medium bg-emerald-100 text-emerald-800 my-2">
@@ -43,11 +196,11 @@ const Profile = () => {
               <div className="mt-4 w-full">
                 <div className="flex justify-between items-center py-3 border-b border-gray-100">
                   <span className="text-sm text-gray-500">Member Since</span>
-                  <span className="font-medium text-gray-900">{user.joinDate}</span>
+                  <span className="font-medium text-gray-900">{formatDate(user.createdAt)}</span>
                 </div>
                 <div className="flex justify-between items-center py-3">
-                  <span className="text-sm text-gray-500">Last Login</span>
-                  <span className="font-medium text-gray-900">Today</span>
+                  <span className="text-sm text-gray-500">Last Updated</span>
+                  <span className="font-medium text-gray-900">{formatDate(user.updatedAt)}</span>
                 </div>
               </div>
             </div>
@@ -136,7 +289,7 @@ const Profile = () => {
                       "--tw-border-opacity": 1,
                       "--tw-border-color": "rgba(0, 105, 75, var(--tw-border-opacity))"
                     }}
-                    value={user.role}
+                    value={user.role ? user.role.charAt(0).toUpperCase() + user.role.slice(1) : ''}
                     readOnly
                   />
                 </div>

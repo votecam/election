@@ -49,6 +49,7 @@ const ManageCandidate = () => {
   const [selectedCandidate, setSelectedCandidate] = useState(null);
   const [showDeleteConfirmation, setShowDeleteConfirmation] = useState(false);
   const [submitError, setSubmitError] = useState(null);
+  const [successMessage, setSuccessMessage] = useState(null);
   
   // Fetch all parties when component mounts
   useEffect(() => {
@@ -343,6 +344,58 @@ const ManageCandidate = () => {
     setSelectedCandidate(null);
   };
 
+  // Skeleton loader component for table rows
+  const SkeletonTableRow = () => (
+    <tr className="animate-pulse">
+      <td className="px-6 py-5 whitespace-nowrap">
+        <div className="h-4 w-8 bg-gray-200 rounded"></div>
+      </td>
+      <td className="px-6 py-4 whitespace-nowrap">
+        <div className="h-12 w-12 rounded-full bg-gray-200"></div>
+      </td>
+      <td className="px-6 py-5">
+        <div className="h-5 w-36 bg-gray-200 rounded"></div>
+      </td>
+      <td className="px-6 py-5 whitespace-nowrap">
+        <div className="flex items-center space-x-2">
+          <div className="w-6 h-6 rounded-full bg-gray-200"></div>
+          <div className="h-4 w-24 bg-gray-200 rounded"></div>
+        </div>
+      </td>
+      <td className="px-6 py-5">
+        <div className="h-4 w-20 bg-gray-200 rounded"></div>
+      </td>
+      <td className="px-6 py-5">
+        <div className="h-4 w-24 bg-gray-200 rounded"></div>
+      </td>
+      <td className="px-6 py-5 whitespace-nowrap text-right">
+        <div className="flex justify-end">
+          <div className="w-8 h-8 rounded-full bg-gray-200"></div>
+        </div>
+      </td>
+    </tr>
+  );
+
+  // Skeleton loader for pagination
+  const SkeletonPagination = () => (
+    <div className="bg-white px-4 py-3 flex items-center justify-between border-t border-gray-200 sm:px-6 mt-4 rounded-lg animate-pulse">
+      <div className="hidden sm:flex-1 sm:flex sm:items-center sm:justify-between">
+        <div>
+          <div className="h-5 w-64 bg-gray-200 rounded"></div>
+        </div>
+        <div>
+          <nav className="relative z-0 inline-flex rounded-md shadow-sm -space-x-px" aria-label="Pagination">
+            <div className="relative inline-flex items-center px-2 py-2 rounded-l-md border border-gray-300 bg-gray-200 h-10 w-10"></div>
+            {[...Array(5)].map((_, i) => (
+              <div key={i} className="relative inline-flex items-center px-4 py-2 border border-gray-300 bg-gray-200 h-10 w-10 mx-1"></div>
+            ))}
+            <div className="relative inline-flex items-center px-2 py-2 rounded-r-md border border-gray-300 bg-gray-200 h-10 w-10"></div>
+          </nav>
+        </div>
+      </div>
+    </div>
+  );
+
   return (
     <div className="w-full">
       <div className="mb-6">
@@ -353,7 +406,7 @@ const ManageCandidate = () => {
       
       {/* Search and filters */}
       <div className="flex flex-col md:flex-row justify-between gap-4 mb-6">
-        <div className="w-full md:w-1/2 relative">
+        <div className="w-full md:w-3/4 relative">
           <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
             <svg className="h-5 w-5 text-gray-500" viewBox="0 0 20 20" fill="currentColor">
               <path fillRule="evenodd" d="M8 4a4 4 0 100 8 4 4 0 000-8zM2 8a6 6 0 1110.89 3.476l4.817 4.817a1 1 0 01-1.414 1.414l-4.816-4.816A6 6 0 012 8z" clipRule="evenodd" />
@@ -371,60 +424,9 @@ const ManageCandidate = () => {
         </div>
         
         <div className="w-full md:w-auto flex">
-          <div className="relative inline-block text-left w-full md:w-60" ref={dropdownRef}>
-            <div>
-              <button
-                type="button"
-                className="inline-flex justify-between w-full rounded-md border border-gray-300 shadow-sm px-4 py-3 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-emerald-500 focus:border-emerald-500"
-                id="status-filter-menu"
-                onClick={() => setIsDropdownOpen(!isDropdownOpen)}
-              >
-                {getFilterLabel()}
-                <svg className="-mr-1 ml-2 h-5 w-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
-                  <path fillRule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clipRule="evenodd" />
-                </svg>
-              </button>
-            </div>
-            
-            {isDropdownOpen && (
-              <div className="origin-top-right absolute right-0 mt-2 w-full rounded-md shadow-lg bg-white focus:outline-none z-50">
-                <div className="py-1 border border-gray-200 rounded-md" role="menu" aria-orientation="vertical" aria-labelledby="status-filter-menu">
-                  <button
-                    className={`w-full text-left px-4 py-2 text-base ${statusFilter === 'all' ? 'bg-gray-50 text-gray-900' : 'text-gray-700'} hover:bg-gray-50`}
-                    role="menuitem"
-                    onClick={() => setStatusFilter('all')}
-                  >
-                    All Statuses
-                  </button>
-                  <button
-                    className={`w-full text-left px-4 py-2 text-base ${statusFilter === 'active' ? 'bg-gray-50 text-gray-900' : 'text-gray-700'} hover:bg-gray-50`}
-                    role="menuitem"
-                    onClick={() => setStatusFilter('active')}
-                  >
-                    Active Only
-                  </button>
-                  <button
-                    className={`w-full text-left px-4 py-2 text-base ${statusFilter === 'inactive' ? 'bg-gray-50 text-gray-900' : 'text-gray-700'} hover:bg-gray-50`}
-                    role="menuitem"
-                    onClick={() => setStatusFilter('inactive')}
-                  >
-                    Inactive Only
-                  </button>
-                  <button
-                    className={`w-full text-left px-4 py-2 text-base ${statusFilter === 'pending' ? 'bg-gray-50 text-gray-900' : 'text-gray-700'} hover:bg-gray-50`}
-                    role="menuitem"
-                    onClick={() => setStatusFilter('pending')}
-                  >
-                    Pending Only
-                  </button>
-                </div>
-              </div>
-            )}
-          </div>
-          
           <a 
             href="/app/candidates/register" 
-            className="ml-4 hidden md:inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-base font-medium text-white bg-gradient-to-r from-emerald-500 to-emerald-600 hover:from-emerald-600 hover:to-emerald-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-emerald-500"
+            className="w-full md:inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-base font-medium text-white bg-gradient-to-r from-emerald-500 to-emerald-600 hover:from-emerald-600 hover:to-emerald-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-emerald-500"
           >
             <svg className="-ml-1 mr-2 h-5 w-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
               <path fillRule="evenodd" d="M10 5a1 1 0 011 1v3h3a1 1 0 110 2h-3v3a1 1 0 11-2 0v-3H6a1 1 0 110-2h3V6a1 1 0 011-1z" clipRule="evenodd" />
@@ -434,23 +436,76 @@ const ManageCandidate = () => {
         </div>
       </div>
       
-      {/* Mobile Add Button */}
-      <div className="md:hidden mb-4">
-        <a 
-          href="/app/candidates/register" 
-          className="w-full flex items-center justify-center px-4 py-2 border border-transparent rounded-md shadow-sm text-base font-medium text-white bg-gradient-to-r from-emerald-500 to-emerald-600 hover:from-emerald-600 hover:to-emerald-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-emerald-500"
-        >
-          <svg className="-ml-1 mr-2 h-5 w-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
-            <path fillRule="evenodd" d="M10 5a1 1 0 011 1v3h3a1 1 0 110 2h-3v3a1 1 0 11-2 0v-3H6a1 1 0 110-2h3V6a1 1 0 011-1z" clipRule="evenodd" />
-          </svg>
-          Add Candidate
-        </a>
-      </div>
+      {/* Success Message */}
+      {successMessage && (
+        <div className="mb-6 p-4 bg-emerald-50 border-l-4 border-emerald-500 text-emerald-700 relative">
+          <div className="flex">
+            <div className="flex-shrink-0">
+              <svg className="h-5 w-5 text-emerald-400" fill="currentColor" viewBox="0 0 20 20">
+                <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+              </svg>
+            </div>
+            <div className="ml-3">
+              <p className="text-sm font-medium">{successMessage}</p>
+            </div>
+          </div>
+          <button 
+            className="absolute top-4 right-4 text-emerald-600 hover:text-emerald-800"
+            onClick={() => setSuccessMessage(null)}
+          >
+            <svg className="h-5 w-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+              <path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd" />
+            </svg>
+          </button>
+        </div>
+      )}
       
-      {/* Loading state */}
+      {/* Error Message */}
+      {submitError && (
+        <div className="mb-6 p-4 bg-red-50 border-l-4 border-red-500 text-red-700 relative">
+          <div className="flex">
+            <div className="flex-shrink-0">
+              <svg className="h-5 w-5 text-red-400" fill="currentColor" viewBox="0 0 20 20">
+                <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
+              </svg>
+            </div>
+            <div className="ml-3">
+              <p className="text-sm text-red-600">{submitError}</p>
+            </div>
+          </div>
+          <button 
+            className="absolute top-4 right-4 text-red-600 hover:text-red-800"
+            onClick={() => setSubmitError(null)}
+          >
+            <svg className="h-5 w-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+              <path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd" />
+          </svg>
+          </button>
+      </div>
+      )}
+      
+      {/* Skeleton Table */}
       {loading && (
-        <div className="flex justify-center my-12">
-          <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-emerald-500"></div>
+        <div className="overflow-hidden border border-gray-200 rounded-lg">
+          <table className="min-w-full divide-y divide-gray-200">
+            <thead className="bg-gray-50">
+              <tr>
+                <th scope="col" className="px-6 py-4 text-left text-base font-medium text-gray-700">#</th>
+                <th scope="col" className="px-6 py-4 text-left text-base font-medium text-gray-700">Photo</th>
+                <th scope="col" className="px-6 py-4 text-left text-base font-medium text-gray-700">Candidate Name</th>
+                <th scope="col" className="px-6 py-4 text-left text-base font-medium text-gray-700">Party</th>
+                <th scope="col" className="px-6 py-4 text-left text-base font-medium text-gray-700">Position</th>
+                <th scope="col" className="px-6 py-4 text-left text-base font-medium text-gray-700">Election Type</th>
+                <th scope="col" className="px-6 py-4 text-right text-base font-medium text-gray-700">Actions</th>
+              </tr>
+            </thead>
+            <tbody className="bg-white divide-y divide-gray-200">
+              {[...Array(5)].map((_, index) => (
+                <SkeletonTableRow key={index} />
+              ))}
+            </tbody>
+          </table>
+          <SkeletonPagination />
         </div>
       )}
       

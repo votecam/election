@@ -109,6 +109,26 @@ const Navbar = ({ toggleSidebar, sidebarOpen }) => {
       else if (relevantParts[0] === 'settings') {
         breadcrumbs.push({ name: 'Settings', path: '/app/settings', current: true });
       }
+      else if (relevantParts[0] === 'notifications') {
+        breadcrumbs.push({ name: 'Notifications', path: '/app/notifications', current: relevantParts.length === 1 });
+        
+        if (relevantParts.length > 1) {
+          const action = relevantParts[1];
+          if (action === 'create') {
+            breadcrumbs.push({ name: 'Create Notification', path: '/app/notifications/create', current: true });
+          } else if (action === 'all') {
+            breadcrumbs.push({ name: 'All Notifications', path: '/app/notifications/all', current: true });
+          } else {
+            // Format other actions
+            const formattedAction = action.charAt(0).toUpperCase() + action.slice(1).replace(/-/g, ' ');
+            breadcrumbs.push({ 
+              name: `${formattedAction} Notification`, 
+              path: `/app/notifications/${action}`, 
+              current: true 
+            });
+          }
+        }
+      }
       else if (relevantParts[0] !== 'dashboard') {
         // For any other routes not specifically handled
         relevantParts.forEach((part, index) => {
