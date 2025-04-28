@@ -517,7 +517,7 @@ const Navbar = ({ toggleSidebar, sidebarOpen }) => {
                   {getUserInitials()}
                 </div>
               </button>
-
+             
               {/* Profile Dropdown Menu - Simple and clean */}
               {dropdownOpen && (
                 <div 
