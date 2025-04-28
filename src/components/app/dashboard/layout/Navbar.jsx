@@ -161,6 +161,7 @@ const Navbar = ({ toggleSidebar, sidebarOpen }) => {
     { code: 'fr', name: 'Français', flag: '/images/cameroonflag.png' },
   ];
 
+  // Find current language
   const [currentLanguage, setCurrentLanguage] = useState(languages[0]);
 
   const closeAllDropdowns = () => {

@@ -1,3 +1,4 @@
+import React from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom'
 import Login from './components/app/auth/Login'
 import ForgotPassword from './components/app/auth/ForgotPassword'
@@ -22,6 +23,7 @@ import Administrator from './components/app/administrator/Administrator'
 import CreateNotification from './components/app/notifications/CreateNotification'
 import AllNotifications from './components/app/notifications/AllNotifications'
 import { AuthProvider } from './context/AuthContext'
+import ManageSettings from './components/app/settings/ManageSettings'
 
 function App() {
   return (
@@ -50,15 +52,13 @@ function App() {
               <Route path="profile" element={<Profile />} />
               
               {/* Settings Route */}
-              <Route path="settings" element={<Settings />} />
+              <Route path="settings">
+                <Route index element={<Settings />} />
+                <Route path="manage" element={<ManageSettings />} />
+              </Route>
               
               {/* Administrator Route */}
               <Route path="administrator" element={<Administrator />} />
-              
-              {/* Auth Routes (Protected) */}
-              <Route path="auth">
-                {/* Removed profile route from here */}
-              </Route>
               
               {/* Centres Routes */}
               <Route path="centres">

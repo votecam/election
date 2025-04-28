@@ -1,31 +1,33 @@
 import React, { useState, useRef, useEffect } from 'react';
+import { Link } from 'react-router-dom';
+import apiService from '../../../services/apiService';
 
 const Settings = () => {
-  // State for different settings
-  const [notifications, setNotifications] = useState({
-    email: true,
-    browser: true,
-    reports: false
+  // State for settings data
+  const [settings, setSettings] = useState({
+    electionDate: '',
+    displayYear: '',
+    countdownEnabled: false,
+    electionCategory: '',
+    notifications: {
+      email: true,
+      browser: true,
+      reports: false
+    },
+    appearance: {
+      sidebarCollapsed: false,
+      highContrast: false
+    },
+    privacy: {
+      shareData: false,
+      activityLog: true
+    }
   });
-  
-  const [appearance, setAppearance] = useState({
-    sidebarCollapsed: false,
-    highContrast: false
-  });
-  
-  const [privacy, setPrivacy] = useState({
-    shareData: false,
-    activityLog: true
-  });
-  
-  // New state for election settings
-  const [electionSettings, setElectionSettings] = useState({
-    electionDate: '2024-11-05',
-    displayYear: '2024',
-    countdownEnabled: true,
-    electionCategory: 'presidential'
-  });
-  
+
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+  const [successMessage, setSuccessMessage] = useState('');
+
   // State for custom dropdowns
   const [categoryOpen, setCategoryOpen] = useState(false);
   const [yearOpen, setYearOpen] = useState(false);
@@ -51,72 +53,147 @@ const Settings = () => {
     };
   }, []);
 
-  // Handlers for toggling settings
-  const toggleNotification = (type) => {
-    setNotifications(prev => ({
-      ...prev,
-      [type]: !prev[type]
-    }));
+  // Fetch settings on component mount
+  useEffect(() => {
+    fetchSettings();
+  }, []);
+
+  // Function to fetch settings
+  const fetchSettings = async () => {
+    try {
+      setLoading(true);
+      const response = await apiService.settings.getAllSettings();
+      if (response.status === 'success' && response.data.settings.length > 0) {
+        const setting = response.data.settings[0];
+        setSettings(prev => ({
+          ...prev,
+          electionDate: new Date(setting.date).toISOString().split('T')[0],
+          displayYear: setting.year.toString(),
+          electionCategory: setting.election_category.toLowerCase(),
+          countdownEnabled: true
+        }));
+      }
+      setError(null);
+    } catch (err) {
+      // Only show error for actual API failures, not for no settings found
+      if (err.response?.status === 500 || err.response?.status === 404) {
+        setError('Failed to fetch settings. Please try again later.');
+        console.error('Error fetching settings:', err);
+      }
+    } finally {
+      setLoading(false);
+    }
   };
-  
-  const toggleAppearance = (type) => {
-    setAppearance(prev => ({
-      ...prev,
-      [type]: !prev[type]
-    }));
+
+  // Function to add settings
+  const addSettings = async () => {
+    try {
+      setLoading(true);
+      setError(null);
+      
+      // First check if settings already exist
+      const existingSettings = await apiService.settings.getAllSettings();
+      
+      // Check if there's already a setting with the same year and category
+      const settingExists = existingSettings.data.settings.some(setting => 
+        setting.year === parseInt(settings.displayYear) && 
+        setting.election_category.toLowerCase() === settings.electionCategory.toLowerCase()
+      );
+
+      if (settingExists) {
+        setError(`Settings for ${settings.displayYear} ${settings.electionCategory} election already exist.`);
+        return;
+      }
+      
+      const settingData = {
+        year: parseInt(settings.displayYear),
+        election_category: settings.electionCategory.charAt(0).toUpperCase() + settings.electionCategory.slice(1),
+        date: new Date(settings.electionDate).toISOString()
+      };
+      
+      const response = await apiService.settings.addSetting(settingData);
+      
+      if (response.status === 'success') {
+        setSuccessMessage('Settings added successfully!');
+        setError(null);
+        // Clear success message after 3 seconds
+        setTimeout(() => setSuccessMessage(''), 3000);
+      } else {
+        setError(response.message || 'Failed to add settings');
+      }
+    } catch (err) {
+      if (err.response?.data?.message) {
+        setError(err.response.data.message);
+      } else {
+        setError('Failed to add settings. Please try again later.');
+      }
+      console.error('Error adding settings:', err);
+    } finally {
+      setLoading(false);
+    }
   };
-  
-  const togglePrivacy = (type) => {
-    setPrivacy(prev => ({
-      ...prev,
-      [type]: !prev[type]
-    }));
-  };
-  
-  // New handlers for election settings
+
+  // Handlers for updating settings
   const handleElectionDateChange = (e) => {
-    setElectionSettings(prev => ({
+    setSettings(prev => ({
       ...prev,
       electionDate: e.target.value
     }));
   };
-  
+
   const handleCategorySelect = (value) => {
-    setElectionSettings(prev => ({
+    setSettings(prev => ({
       ...prev,
       electionCategory: value
     }));
     setCategoryOpen(false);
   };
-  
+
   const handleYearSelect = (value) => {
-    setElectionSettings(prev => ({
+    setSettings(prev => ({
       ...prev,
       displayYear: value
     }));
     setYearOpen(false);
   };
-  
+
   const toggleCountdown = () => {
-    setElectionSettings({
-      ...electionSettings,
-      countdownEnabled: !electionSettings.countdownEnabled
-    });
+    setSettings(prev => ({
+      ...prev,
+      countdownEnabled: !prev.countdownEnabled
+    }));
   };
-  
-  // Save settings function
-  const saveSettings = () => {
-    // Here you would typically make an API call to save the settings
-    // For example:
-    // apiService.settings.saveSettings(electionSettings);
-    
-    // Show success message
-    alert('Settings saved successfully!');
-    
-    // In a real application, you might use a toast notification instead:
-    // toast.success('Settings saved successfully!');
+
+  const toggleNotification = (type) => {
+    setSettings(prev => ({
+      ...prev,
+      notifications: {
+        ...prev.notifications,
+        [type]: !prev.notifications[type]
+      }
+    }));
   };
-  
+
+  const toggleAppearance = (type) => {
+    setSettings(prev => ({
+      ...prev,
+      appearance: {
+        ...prev.appearance,
+        [type]: !prev.appearance[type]
+      }
+    }));
+  };
+
+  const togglePrivacy = (type) => {
+    setSettings(prev => ({
+      ...prev,
+      privacy: {
+        ...prev.privacy,
+        [type]: !prev.privacy[type]
+      }
+    }));
+  };
+
   // Reusable toggle switch component
   const ToggleSwitch = ({ enabled, onChange, label }) => (
     <div className="flex items-center justify-between">
@@ -196,16 +273,84 @@ const Settings = () => {
     }
   };
 
+  if (loading) {
+    return (
+      <div className="w-full">
+        <header className="mb-6">
+          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+            <div>
+              <div className="h-8 w-48 bg-gray-200 rounded animate-pulse"></div>
+              <div className="h-0.5 w-32 bg-gray-200 rounded-sm mt-2 animate-pulse"></div>
+              <div className="h-4 w-64 bg-gray-200 rounded mt-1 animate-pulse"></div>
+            </div>
+            <div className="h-10 w-32 bg-gray-200 rounded animate-pulse"></div>
+          </div>
+        </header>
+
+        <div className="grid grid-cols-1 gap-6">
+          <div className="bg-white rounded-md border border-gray-200">
+            <div className="px-6 py-4 bg-gray-50 border-b border-gray-200">
+              <div className="h-6 w-32 bg-gray-200 rounded animate-pulse"></div>
+            </div>
+            <div className="p-6 space-y-4">
+              <div>
+                <div className="h-4 w-24 bg-gray-200 rounded animate-pulse mb-1"></div>
+                <div className="h-10 w-full bg-gray-200 rounded animate-pulse"></div>
+                <div className="h-3 w-64 bg-gray-200 rounded mt-1 animate-pulse"></div>
+              </div>
+              <div>
+                <div className="h-4 w-32 bg-gray-200 rounded animate-pulse mb-1"></div>
+                <div className="h-10 w-full bg-gray-200 rounded animate-pulse"></div>
+                <div className="h-3 w-64 bg-gray-200 rounded mt-1 animate-pulse"></div>
+              </div>
+              <div>
+                <div className="h-4 w-24 bg-gray-200 rounded animate-pulse mb-1"></div>
+                <div className="h-10 w-full bg-gray-200 rounded animate-pulse"></div>
+                <div className="h-3 w-64 bg-gray-200 rounded mt-1 animate-pulse"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="w-full">
       {/* Include the animation keyframes */}
       <style>{dropdownAnimationStyle}</style>
       
       <header className="mb-6">
-        <h1 className="text-3xl font-bold text-gray-800">System Settings</h1>
-        <div className="w-32 h-0.5 bg-emerald-600 rounded-sm mt-2"></div>
-        <p className="text-gray-600 text-lg mt-1">Manage application preferences and configurations</p>
+        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+          <div>
+            <h1 className="text-2xl sm:text-3xl font-bold text-gray-800">System Settings</h1>
+            <div className="w-32 h-0.5 bg-emerald-600 rounded-sm mt-2"></div>
+            <p className="text-gray-600 text-base sm:text-lg mt-1">Manage application preferences and configurations</p>
+          </div>
+          <Link
+            to="/app/settings/manage"
+            className="w-full sm:w-auto px-4 sm:px-6 py-2.5 border border-transparent text-sm font-medium rounded-none shadow-sm text-white focus:outline-none focus:ring-1 focus:ring-offset-1 transition-all duration-300 text-center"
+            style={{ 
+              background: "linear-gradient(to right, #00694B, #005941)",
+              "--tw-ring-color": "#00694B" 
+            }}
+          >
+            Manage Settings
+          </Link>
+        </div>
       </header>
+
+      {error && (
+        <div className="mb-4 p-4 bg-red-50 border border-red-200 rounded-md">
+          <p className="text-red-600">{error}</p>
+        </div>
+      )}
+
+      {successMessage && (
+        <div className="mb-4 p-4 bg-green-50 border border-green-200 rounded-md">
+          <p className="text-green-600">{successMessage}</p>
+        </div>
+      )}
       
       <div className="grid grid-cols-1 gap-6">
         {/* Election Settings - New Section */}
@@ -234,7 +379,7 @@ const Settings = () => {
                     "--tw-border-opacity": 1,
                     "--tw-border-color": "rgba(0, 105, 75, var(--tw-border-opacity))"
                   }}
-                  value={electionSettings.electionDate}
+                  value={settings.electionDate}
                   onChange={handleElectionDateChange}
                 />
               </div>
@@ -265,11 +410,11 @@ const Settings = () => {
                     setCategoryOpen, 
                     handleCategorySelect, 
                     [
-                      { id: 'presidential', label: 'Presidential' },
-                      { id: 'municipal', label: 'Municipal' },
-                      { id: 'parliamentary', label: 'Parliamentary' }
+                      { id: 'presidential', label: 'presidential' },
+                      { id: 'municipal', label: 'municipal' },
+                      { id: 'parliamentary', label: 'parliamentary' }
                     ],
-                    electionSettings.electionCategory
+                    settings.electionCategory
                   )}
                   tabIndex={0}
                   role="combobox"
@@ -277,10 +422,10 @@ const Settings = () => {
                   aria-haspopup="listbox"
                   aria-labelledby="election-category-label"
                 >
-                  <span className={electionSettings.electionCategory ? "text-gray-900 font-medium" : "text-gray-500"}>
-                    {electionSettings.electionCategory === 'presidential' ? 'Presidential' : 
-                     electionSettings.electionCategory === 'municipal' ? 'Municipal' : 
-                     electionSettings.electionCategory === 'parliamentary' ? 'Parliamentary' : 
+                  <span className={settings.electionCategory ? "text-gray-900 font-medium" : "text-gray-500"}>
+                    {settings.electionCategory === 'presidential' ? 'presidential' : 
+                     settings.electionCategory === 'municipal' ? 'municipal' : 
+                     settings.electionCategory === 'parliamentary' ? 'parliamentary' : 
                      'Select Category'}
                   </span>
                   <svg 
@@ -300,7 +445,7 @@ const Settings = () => {
                         className="px-4 py-2.5 hover:bg-gray-50 cursor-pointer text-gray-500 border-b border-gray-100 flex items-center transition-colors duration-150"
                         onClick={() => handleCategorySelect("")}
                         role="option"
-                        aria-selected={electionSettings.electionCategory === ""}
+                        aria-selected={settings.electionCategory === ""}
                       >
                         <span className="text-gray-400 mr-2">
                           <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
@@ -317,17 +462,17 @@ const Settings = () => {
                         <div 
                           key={category.id}
                           className={`px-4 py-2.5 cursor-pointer flex items-center justify-between hover:bg-emerald-50 transition-colors duration-150 ${
-                            electionSettings.electionCategory === category.id 
+                            settings.electionCategory === category.id 
                               ? "text-emerald-700 font-medium bg-emerald-50" 
                               : "text-gray-700"
                           }`}
                           onClick={() => handleCategorySelect(category.id)}
                           role="option"
-                          aria-selected={electionSettings.electionCategory === category.id}
+                          aria-selected={settings.electionCategory === category.id}
                         >
                           <div className="flex items-center">
-                            <span className={`flex items-center justify-center h-5 w-5 rounded-full mr-3 ${electionSettings.electionCategory === category.id ? 'bg-emerald-100 text-emerald-600' : 'bg-gray-100 text-gray-500'}`}>
-                              {electionSettings.electionCategory === category.id ? (
+                            <span className={`flex items-center justify-center h-5 w-5 rounded-full mr-3 ${settings.electionCategory === category.id ? 'bg-emerald-100 text-emerald-600' : 'bg-gray-100 text-gray-500'}`}>
+                              {settings.electionCategory === category.id ? (
                                 <svg xmlns="http://www.w3.org/2000/svg" className="h-3.5 w-3.5" viewBox="0 0 20 20" fill="currentColor">
                                   <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
                                 </svg>
@@ -370,7 +515,7 @@ const Settings = () => {
                     setYearOpen,
                     handleYearSelect,
                     ["2024", "2025", "2026", "2027", "2028"].map(year => ({ id: year, label: year })),
-                    electionSettings.displayYear
+                    settings.displayYear
                   )}
                   tabIndex={0}
                   role="combobox"
@@ -378,8 +523,8 @@ const Settings = () => {
                   aria-haspopup="listbox"
                   aria-labelledby="display-year-label"
                 >
-                  <span className={electionSettings.displayYear ? "text-gray-900 font-medium" : "text-gray-500"}>
-                    {electionSettings.displayYear || "Select Year"}
+                  <span className={settings.displayYear ? "text-gray-900 font-medium" : "text-gray-500"}>
+                    {settings.displayYear || "Select Year"}
                   </span>
                   <svg 
                     className={`h-5 w-5 text-emerald-600 transition-transform duration-200 ${yearOpen ? 'transform rotate-180' : ''}`} 
@@ -398,7 +543,7 @@ const Settings = () => {
                         className="px-4 py-2.5 hover:bg-gray-50 cursor-pointer text-gray-500 border-b border-gray-100 flex items-center transition-colors duration-150"
                         onClick={() => handleYearSelect("")}
                         role="option"
-                        aria-selected={electionSettings.displayYear === ""}
+                        aria-selected={settings.displayYear === ""}
                       >
                         <span className="text-gray-400 mr-2">
                           <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
@@ -407,21 +552,21 @@ const Settings = () => {
                         </span>
                         Select Year
                       </div>
-                      {["2024", "2025", "2026", "2027", "2028"].map((year) => (
+                      {["2024", "2025", "2026", "2027", "2028", "2029", "2030"].map((year) => (
                         <div 
                           key={year}
                           className={`px-4 py-2.5 cursor-pointer flex items-center justify-between hover:bg-emerald-50 transition-colors duration-150 ${
-                            electionSettings.displayYear === year 
+                            settings.displayYear === year 
                               ? "text-emerald-700 font-medium bg-emerald-50" 
                               : "text-gray-700"
                           }`}
                           onClick={() => handleYearSelect(year)}
                           role="option"
-                          aria-selected={electionSettings.displayYear === year}
+                          aria-selected={settings.displayYear === year}
                         >
                           <div className="flex items-center">
-                            <span className={`flex items-center justify-center h-5 w-5 rounded-full mr-3 ${electionSettings.displayYear === year ? 'bg-emerald-100 text-emerald-600' : 'bg-gray-100 text-gray-500'}`}>
-                              {electionSettings.displayYear === year ? (
+                            <span className={`flex items-center justify-center h-5 w-5 rounded-full mr-3 ${settings.displayYear === year ? 'bg-emerald-100 text-emerald-600' : 'bg-gray-100 text-gray-500'}`}>
+                              {settings.displayYear === year ? (
                                 <svg xmlns="http://www.w3.org/2000/svg" className="h-3.5 w-3.5" viewBox="0 0 20 20" fill="currentColor">
                                   <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
                                 </svg>
@@ -439,15 +584,7 @@ const Settings = () => {
               </div>
               <p className="mt-1 text-sm text-gray-500">Select the year to display in the application.</p>
             </div>
-            
-            <ToggleSwitch
-              enabled={electionSettings.countdownEnabled}
-              onChange={toggleCountdown}
-              label="Show Countdown on Dashboard"
-            />
-            <div className="ml-6 pl-2 border-l-2 border-gray-100 text-sm text-gray-500 mb-6">
-              Display a countdown timer to the election date on the main dashboard.
-            </div>
+          
           </div>
         </div>
      
@@ -456,14 +593,14 @@ const Settings = () => {
         <div className="flex justify-end">
           <button
             type="button"
-            onClick={saveSettings}
+            onClick={addSettings}
             className="px-6 py-2.5 border border-transparent text-sm font-medium rounded-none shadow-sm text-white focus:outline-none focus:ring-1 focus:ring-offset-1 transition-all duration-300"
             style={{ 
               background: "linear-gradient(to right, #00694B, #005941)",
               "--tw-ring-color": "#00694B" 
             }}
           >
-            Save Settings
+            Add Settings
           </button>
         </div>
       </div>

@@ -850,6 +850,91 @@ const apiService = {
         throw new Error(error.message || 'Failed to fetch candidates by position. Please try again.');
       }
     }
+  },
+
+  // Settings endpoints
+  settings: {
+    addSetting: async (settingData) => {
+      try {
+        const response = await api.post('/setting/add-setting', settingData);
+        
+        if (response.data && response.data.status === 'success') {
+          return response.data;
+        } else {
+          throw new Error(response.data?.message || 'Failed to add setting');
+        }
+      } catch (error) {
+        console.error('Add setting error:', error);
+        if (error.response && error.response.data) {
+          throw new Error(error.response.data.message || 'Failed to add setting. Please try again.');
+        }
+        throw new Error(error.message || 'Failed to add setting. Please try again.');
+      }
+    },
+
+    getAllSettings: async (page = 1, limit = 10) => {
+      try {
+        const response = await api.get(`/setting/get-all-settings?page=${page}&limit=${limit}`);
+        
+        if (response.data && response.data.status === 'success') {
+          return response.data;
+        } else {
+          throw new Error(response.data?.message || 'Failed to fetch settings');
+        }
+      } catch (error) {
+        console.error('Get all settings error:', error);
+        if (error.response && error.response.data) {
+          throw new Error(error.response.data.message || 'Failed to fetch settings. Please try again.');
+        }
+        throw new Error(error.message || 'Failed to fetch settings. Please try again.');
+      }
+    },
+
+    getSettingById: async (id) => {
+      try {
+        const response = await api.get(`/setting/get-setting/${id}`);
+        
+        if (response.data && response.data.status === 'success') {
+          return response.data;
+        } else {
+          throw new Error(response.data?.message || 'Failed to fetch setting');
+        }
+      } catch (error) {
+        console.error('Get setting by ID error:', error);
+        if (error.response && error.response.data) {
+          throw new Error(error.response.data.message || 'Failed to fetch setting. Please try again.');
+        }
+        throw new Error(error.message || 'Failed to fetch setting. Please try again.');
+      }
+    },
+
+    updateSetting: async (id, data) => {
+      try {
+        const response = await api.put(`/setting/update-setting/${id}`, data);
+        if (response.data.status === 'success') {
+          return response.data;
+        } else {
+          throw new Error(response.data.message || 'Failed to update setting');
+        }
+      } catch (error) {
+        console.error('Error updating setting:', error);
+        throw error;
+      }
+    },
+
+    deleteSetting: async (id) => {
+      try {
+        const response = await api.delete(`/setting/delete-setting/${id}`);
+        if (response.data.status === 'success') {
+          return response.data;
+        } else {
+          throw new Error(response.data.message || 'Failed to delete setting');
+        }
+      } catch (error) {
+        console.error('Error deleting setting:', error);
+        throw error;
+      }
+    }
   }
 };
 
