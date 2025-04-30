@@ -1,86 +1,97 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
+import apiService from '../../../services/apiService';
 
 const RecentActivity = () => {
-  // Sample activity data - would be fetched from API in production
-  // Limiting to 5 visible activities
-  const activities = [
-    {
-      id: 1,
-      action: 'Added new polling center',
-      name: 'Central Community Hall',
-      date: 'Today at 9:30 AM',
-      type: 'create'
-    },
-    {
-      id: 2,
-      action: 'Registered new candidate',
-      name: 'Michael Thompson',
-      date: 'Yesterday',
-      type: 'create'
-    },
-    {
-      id: 3,
-      action: 'Uploaded voter data',
-      name: '1,250 voter records',
-      date: 'Yesterday',
-      type: 'upload'
-    },
-    {
-      id: 4,
-      action: 'Updated polling center',
-      name: 'Eastern Regional School',
-      date: 'May 13',
-      type: 'update'
-    },
-    {
-      id: 5,
-      action: 'System backup',
-      name: 'Database backup completed',
-      date: 'May 13',
-      type: 'system'
+  const [activities, setActivities] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+
+  const fetchActivities = async () => {
+    try {
+      const response = await apiService.activities.getAll();
+      // Sort activities by timestamp in descending order (newest first)
+      const sortedActivities = response.data
+        .map(activity => ({
+          ...activity,
+          timestamp: new Date(activity.timestamp)
+        }))
+        .sort((a, b) => b.timestamp - a.timestamp)
+        .slice(0, 5); // Take only the 5 most recent
+
+      console.log('Sorted activities:', sortedActivities.map(a => ({
+        type: a.type,
+        title: a.title,
+        timestamp: a.timestamp,
+        timeAgo: a.timeAgo
+      })));
+
+      setActivities(sortedActivities);
+      setLoading(false);
+    } catch (err) {
+      setError(err.message);
+      setLoading(false);
     }
-  ];
+  };
+
+  useEffect(() => {
+    // Initial fetch
+    fetchActivities();
+
+    // Set up interval to refresh every minute
+    const intervalId = setInterval(fetchActivities, 60000);
+
+    // Cleanup interval on component unmount
+    return () => clearInterval(intervalId);
+  }, []);
+
+  // Format time display
+  const formatTimeAgo = (timeAgo) => {
+    if (timeAgo === '0 seconds ago' || timeAgo === '0 second ago') {
+      return 'Just now';
+    }
+    return timeAgo;
+  };
 
   // Icon mapping for different activity types
   const getActivityIcon = (type) => {
     switch(type) {
-      case 'create':
+      case 'notification':
         return (
           <div className="p-1.5 sm:p-2 rounded-full bg-emerald-50 text-emerald-600">
             <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 sm:h-5 sm:w-5" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
-              <path fillRule="evenodd" d="M10 3a1 1 0 011 1v5h5a1 1 0 110 2h-5v5a1 1 0 11-2 0v-5H4a1 1 0 110-2h5V4a1 1 0 011-1z" clipRule="evenodd" />
+              <path d="M10 2a6 6 0 00-6 6v3.586l-.707.707A1 1 0 004 14h12a1 1 0 00.707-1.707L16 11.586V8a6 6 0 00-6-6zM10 18a3 3 0 01-3-3h6a3 3 0 01-3 3z" />
             </svg>
           </div>
         );
-      case 'update':
+      case 'setting':
         return (
           <div className="p-1.5 sm:p-2 rounded-full bg-blue-50 text-blue-600">
             <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 sm:h-5 sm:w-5" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
-              <path d="M13.586 3.586a2 2 0 112.828 2.828l-.793.793-2.828-2.828.793-.793zM11.379 5.793L3 14.172V17h2.828l8.38-8.379-2.83-2.828z" />
+              <path fillRule="evenodd" d="M11.49 3.17c-.38-1.56-2.6-1.56-2.98 0a1.532 1.532 0 01-2.286.948c-1.372-.836-2.942.734-2.106 2.106.54.886.061 2.042-.947 2.287-1.561.379-1.561 2.6 0 2.978a1.532 1.532 0 01.947 2.287c-.836 1.372.734 2.942 2.106 2.106a1.532 1.532 0 012.287.947c.379 1.561 2.6 1.561 2.978 0a1.533 1.533 0 012.287-.947c1.372.836 2.942-.734 2.106-2.106a1.533 1.533 0 01.947-2.287c1.561-.379 1.561-2.6 0-2.978a1.532 1.532 0 01-.947-2.287c.836-1.372-.734-2.942-2.106-2.106a1.532 1.532 0 01-2.287-.947zM10 13a3 3 0 100-6 3 3 0 000 6z" clipRule="evenodd" />
             </svg>
           </div>
         );
-      case 'upload':
+      case 'centre':
         return (
           <div className="p-1.5 sm:p-2 rounded-full bg-indigo-50 text-indigo-600">
             <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 sm:h-5 sm:w-5" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
-              <path fillRule="evenodd" d="M3 17a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zM6.293 6.707a1 1 0 010-1.414l3-3a1 1 0 011.414 0l3 3a1 1 0 01-1.414 1.414L11 5.414V13a1 1 0 11-2 0V5.414L7.707 6.707a1 1 0 01-1.414 0z" clipRule="evenodd" />
+              <path fillRule="evenodd" d="M4 4a2 2 0 012-2h8a2 2 0 012 2v12a1 1 0 01-1.581.814L12 14.197l-4.419 2.617A1 1 0 016 16V4z" clipRule="evenodd" />
             </svg>
           </div>
         );
-      case 'approve':
+      case 'candidate':
         return (
-          <div className="p-1.5 sm:p-2 rounded-full bg-green-50 text-green-600">
+          <div className="p-1.5 sm:p-2 rounded-full bg-purple-50 text-purple-600">
             <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 sm:h-5 sm:w-5" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
-              <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+              <path fillRule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clipRule="evenodd" />
             </svg>
           </div>
         );
-      case 'system':
+      case 'user':
         return (
           <div className="p-1.5 sm:p-2 rounded-full bg-amber-50 text-amber-600">
             <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 sm:h-5 sm:w-5" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
-              <path fillRule="evenodd" d="M2 5a2 2 0 012-2h12a2 2 0 012 2v10a2 2 0 01-2 2H4a2 2 0 01-2-2V5zm3.293 1.293a1 1 0 011.414 0l3 3a1 1 0 010 1.414l-3 3a1 1 0 01-1.414-1.414L7.586 10 5.293 7.707a1 1 0 010-1.414zM11 12a1 1 0 100 2h3a1 1 0 100-2h-3z" clipRule="evenodd" />
+              <path d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" />
             </svg>
           </div>
         );
@@ -94,6 +105,37 @@ const RecentActivity = () => {
         );
     }
   };
+
+  if (loading) {
+    return (
+      <div className="bg-white rounded-lg border border-gray-100 p-4">
+        <div className="animate-pulse space-y-4">
+          <div className="h-4 bg-gray-200 rounded w-1/4"></div>
+          <div className="space-y-3">
+            {[1, 2, 3, 4, 5].map((i) => (
+              <div key={i} className="flex items-center space-x-4">
+                <div className="h-8 w-8 bg-gray-200 rounded-full"></div>
+                <div className="flex-1 space-y-2">
+                  <div className="h-3 bg-gray-200 rounded w-3/4"></div>
+                  <div className="h-3 bg-gray-200 rounded w-1/2"></div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="bg-white rounded-lg border border-gray-100 p-4">
+        <div className="text-red-500 text-center">
+          {error}
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="bg-white rounded-lg border border-gray-100 relative overflow-hidden">
@@ -133,19 +175,16 @@ const RecentActivity = () => {
       {/* Content */}
       <div className="relative z-10 flex flex-col h-full">
         {/* Header */}
-        <div className="px-4 sm:px-6 py-3 sm:py-4 border-b border-gray-100 flex justify-between items-center">
+        <div className="px-4 sm:px-6 py-3 sm:py-4 border-b border-gray-100">
           <h3 className="text-xl sm:text-2xl font-semibold text-gray-900">Recent Activity</h3>
-          <div className="text-sm sm:text-base text-emerald-600 hover:text-emerald-700 font-medium cursor-pointer transition-colors">
-            View all
-          </div>
         </div>
         
         {/* Activity List - No scrolling */}
         <div className="flex-grow">
-          {activities.map((activity, index) => (
+          {activities.slice(0, 5).map((activity, index) => (
             <div 
-              key={activity.id} 
-              className={`px-4 sm:px-6 py-3 sm:py-4 ${index !== activities.length - 1 ? 'border-b border-gray-50' : ''} hover:bg-gray-50/50 transition-colors`}
+              key={index} 
+              className={`px-4 sm:px-6 py-3 sm:py-4 ${index !== Math.min(4, activities.length - 1) ? 'border-b border-gray-50' : ''} hover:bg-gray-50/50 transition-colors`}
             >
               <div className="flex items-start">
                 {/* Activity icon */}
@@ -155,29 +194,19 @@ const RecentActivity = () => {
                 
                 {/* Activity details */}
                 <div className="flex-1 min-w-0">
-                  <p className="text-base sm:text-lg font-medium text-gray-800 truncate">{activity.action}</p>
-                  <p className="text-sm sm:text-base text-gray-500 mt-0.5 truncate">{activity.name}</p>
+                  <p className="text-base sm:text-lg font-medium text-gray-800 truncate">{activity.title}</p>
+                  <p className="text-sm sm:text-base text-gray-500 mt-0.5 truncate">{activity.description}</p>
                 </div>
                 
                 {/* Date */}
                 <div className="ml-2 sm:ml-4 flex-shrink-0">
                   <span className="inline-flex items-center px-2 sm:px-3 py-0.5 rounded-full text-xs sm:text-sm font-medium bg-gray-50 text-gray-600">
-                    {activity.date}
+                    {formatTimeAgo(activity.timeAgo)}
                   </span>
                 </div>
               </div>
             </div>
           ))}
-        </div>
-        
-        {/* Footer with "View more" button */}
-        <div className="px-4 sm:px-6 py-3 sm:py-4 border-t border-gray-50 mt-auto">
-          <button className="w-full flex items-center justify-center text-sm sm:text-base font-medium text-emerald-600 hover:text-emerald-700 py-1.5 transition-colors">
-            View all activity
-            <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 sm:h-5 sm:w-5 ml-1 sm:ml-1.5" viewBox="0 0 20 20" fill="currentColor">
-              <path fillRule="evenodd" d="M12.293 5.293a1 1 0 011.414 0l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414-1.414L14.586 11H3a1 1 0 110-2h11.586l-2.293-2.293a1 1 0 010-1.414z" clipRule="evenodd" />
-            </svg>
-          </button>
         </div>
       </div>
     </div>

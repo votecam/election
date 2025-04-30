@@ -935,6 +935,30 @@ const apiService = {
         throw error;
       }
     }
+
+
+    
+  },
+
+  // Activities endpoints
+  activities: {
+    getAll: async () => {
+      try {
+        const response = await api.get('/activities');
+        
+        if (response.data && response.data.status === 'success') {
+          return response.data;
+        } else {
+          throw new Error('Failed to fetch activities');
+        }
+      } catch (error) {
+        console.error('Error fetching activities:', error);
+        throw new Error(
+          error.response?.data?.message || 
+          'Failed to load activities. Please try again later.'
+        );
+      }
+    }
   }
 };
 

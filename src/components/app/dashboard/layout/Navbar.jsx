@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, Link, useLocation } from 'react-router-dom';
 import { useAuth } from '../../../../context/AuthContext';
+import { initTranslator, translatePage, showTranslationLoading, hideTranslationLoading } from '../../translator';
 
 const Navbar = ({ toggleSidebar, sidebarOpen }) => {
   const [dropdownOpen, setDropdownOpen] = useState(false);
@@ -11,6 +12,22 @@ const Navbar = ({ toggleSidebar, sidebarOpen }) => {
   const [currentPath, setCurrentPath] = useState(location.pathname);
   const navigate = useNavigate();
   const { logout, user } = useAuth();
+
+  // Initialize translator on component mount
+  useEffect(() => {
+    initTranslator();
+  }, []);
+
+  // Load saved language preference
+  useEffect(() => {
+    const savedLanguage = localStorage.getItem('selectedLanguage');
+    if (savedLanguage) {
+      const lang = languages.find(l => l.code === savedLanguage);
+      if (lang) {
+        setCurrentLanguage(lang);
+      }
+    }
+  }, []);
 
   // Check if screen is mobile on resize
   useEffect(() => {
@@ -199,6 +216,54 @@ const Navbar = ({ toggleSidebar, sidebarOpen }) => {
 
   const changeLanguage = (language) => {
     setCurrentLanguage(language);
+    localStorage.setItem('selectedLanguage', language.code);
+    
+    // Show loading indicator
+    const loadingDiv = document.createElement('div');
+    loadingDiv.id = 'translation-loading';
+    loadingDiv.innerHTML = `
+      <div class="translation-loading-spinner">
+        <div class="spinner"></div>
+        <p>Translating content...</p>
+      </div>
+    `;
+    loadingDiv.style.cssText = `
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background-color: rgba(255, 255, 255, 0.7);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      z-index: 9999;
+    `;
+    document.body.appendChild(loadingDiv);
+
+    // If English is selected, reload the page to show original content
+    if (language.code === 'en') {
+      location.reload();
+      return;
+    }
+
+    // Use the existing translator
+    translatePage(language.code)
+      .then(() => {
+        // Hide loading indicator when translation is complete
+        const loadingDiv = document.getElementById('translation-loading');
+        if (loadingDiv) {
+          loadingDiv.remove();
+        }
+      })
+      .catch(err => {
+        console.error("Translation error:", err);
+        const loadingDiv = document.getElementById('translation-loading');
+        if (loadingDiv) {
+          loadingDiv.remove();
+        }
+      });
+
     closeAllDropdowns();
   };
 
