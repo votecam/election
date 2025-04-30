@@ -218,50 +218,24 @@ const Navbar = ({ toggleSidebar, sidebarOpen }) => {
     setCurrentLanguage(language);
     localStorage.setItem('selectedLanguage', language.code);
     
-    // Show loading indicator
-    const loadingDiv = document.createElement('div');
-    loadingDiv.id = 'translation-loading';
-    loadingDiv.innerHTML = `
-      <div class="translation-loading-spinner">
-        <div class="spinner"></div>
-        <p>Translating content...</p>
-      </div>
-    `;
-    loadingDiv.style.cssText = `
-      position: fixed;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
-      background-color: rgba(255, 255, 255, 0.7);
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      z-index: 9999;
-    `;
-    document.body.appendChild(loadingDiv);
-
-    // If English is selected, reload the page to show original content
+    // If English is selected, just reload the page to show original content
     if (language.code === 'en') {
-      location.reload();
+      window.location.reload();
       return;
     }
+
+    // Show loading indicator
+    showTranslationLoading();
 
     // Use the existing translator
     translatePage(language.code)
       .then(() => {
         // Hide loading indicator when translation is complete
-        const loadingDiv = document.getElementById('translation-loading');
-        if (loadingDiv) {
-          loadingDiv.remove();
-        }
+        hideTranslationLoading();
       })
       .catch(err => {
         console.error("Translation error:", err);
-        const loadingDiv = document.getElementById('translation-loading');
-        if (loadingDiv) {
-          loadingDiv.remove();
-        }
+        hideTranslationLoading();
       });
 
     closeAllDropdowns();

@@ -100,17 +100,9 @@ export const translationConfig = {
       const loadingDiv = document.createElement('div');
       loadingDiv.id = 'translation-loading';
       loadingDiv.innerHTML = `
-        <div class="translation-loading-container">
-          <div class="translation-loading-spinner">
-            <div class="spinner-ring"></div>
-            <div class="spinner-ring"></div>
-            <div class="spinner-ring"></div>
-            <div class="spinner-ring"></div>
-          </div>
-          <div class="translation-loading-text">
-            <p class="text-emerald-700 font-medium">Translating content...</p>
-            <p class="text-emerald-600 text-sm">Please wait while we translate the page</p>
-          </div>
+        <div class="translation-loading-spinner">
+          <div class="spinner"></div>
+          <p>Translating...</p>
         </div>
       `;
       loadingDiv.style.cssText = `
@@ -119,7 +111,7 @@ export const translationConfig = {
         left: 0;
         width: 100%;
         height: 100%;
-        background-color: rgba(255, 255, 255, 0.95);
+        background-color: rgba(255, 255, 255, 0.9);
         display: flex;
         justify-content: center;
         align-items: center;
@@ -130,49 +122,18 @@ export const translationConfig = {
       // Add spinner styles
       const style = document.createElement('style');
       style.textContent = `
-        .translation-loading-container {
-          text-align: center;
-          background: white;
-          padding: 2rem;
-          border-radius: 1rem;
-          box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
-          border: 1px solid rgba(16, 185, 129, 0.1);
-          min-width: 300px;
-        }
-        
         .translation-loading-spinner {
-          position: relative;
-          width: 80px;
-          height: 80px;
-          margin: 0 auto 1.5rem;
+          text-align: center;
         }
         
-        .spinner-ring {
-          position: absolute;
-          width: 100%;
-          height: 100%;
-          border: 4px solid transparent;
+        .spinner {
+          border: 3px solid rgba(16, 185, 129, 0.1);
           border-radius: 50%;
-          animation: spin 1.2s cubic-bezier(0.5, 0, 0.5, 1) infinite;
-        }
-        
-        .spinner-ring:nth-child(1) {
-          border-top-color: #059669;
-          animation-delay: -0.45s;
-        }
-        
-        .spinner-ring:nth-child(2) {
-          border-right-color: #10b981;
-          animation-delay: -0.3s;
-        }
-        
-        .spinner-ring:nth-child(3) {
-          border-bottom-color: #34d399;
-          animation-delay: -0.15s;
-        }
-        
-        .spinner-ring:nth-child(4) {
-          border-left-color: #6ee7b7;
+          border-top: 3px solid #059669;
+          width: 40px;
+          height: 40px;
+          margin: 0 auto 10px;
+          animation: spin 1s linear infinite;
         }
         
         @keyframes spin {
@@ -180,23 +141,19 @@ export const translationConfig = {
           100% { transform: rotate(360deg); }
         }
         
-        .translation-loading-text {
-          margin-top: 1rem;
-        }
-        
-        .translation-loading-text p {
-          margin: 0.25rem 0;
+        .translation-loading-spinner p {
+          color: #059669;
+          font-size: 14px;
+          margin: 0;
         }
       `;
       document.head.appendChild(style);
     }
     
-    // Always show the loading div
+    // Show the loading div
     const loadingDiv = document.getElementById('translation-loading');
     if (loadingDiv) {
       loadingDiv.style.display = 'flex';
-      loadingDiv.style.opacity = '1';
-      loadingDiv.style.visibility = 'visible';
     }
   }
   
@@ -207,8 +164,6 @@ export const translationConfig = {
     const loadingDiv = document.getElementById('translation-loading');
     if (loadingDiv) {
       loadingDiv.style.display = 'none';
-      loadingDiv.style.opacity = '0';
-      loadingDiv.style.visibility = 'hidden';
     }
   }
   
@@ -546,9 +501,30 @@ export function changeLanguage(language) {
   setCurrentLanguage(language);
   localStorage.setItem('selectedLanguage', language.code);
   
-  // If English is selected, just reload the page immediately
+  // If English is selected, just restore the original state immediately
   if (language.code === 'en') {
-    location.reload();
+    // Hide loading indicator first
+    hideTranslationLoading();
+    
+    // Remove any translated content
+    document.querySelectorAll('[data-translated]').forEach(el => {
+      el.removeAttribute('data-translated');
+      if (el.hasAttribute('data-original')) {
+        el.textContent = el.getAttribute('data-original');
+        el.removeAttribute('data-original');
+      }
+    });
+    // Restore original attributes
+    document.querySelectorAll('[data-original-placeholder]').forEach(el => {
+      el.setAttribute('placeholder', el.getAttribute('data-original-placeholder'));
+      el.removeAttribute('data-original-placeholder');
+    });
+    document.querySelectorAll('[data-original-title]').forEach(el => {
+      el.setAttribute('title', el.getAttribute('data-original-title'));
+      el.removeAttribute('data-original-title');
+    });
+    
+    closeAllDropdowns();
     return;
   }
 
@@ -560,8 +536,6 @@ export function changeLanguage(language) {
     .then(() => {
       // Hide loading indicator when translation is complete
       hideTranslationLoading();
-      // Reload the page after successful translation
-      location.reload();
     })
     .catch(err => {
       console.error("Translation error:", err);
