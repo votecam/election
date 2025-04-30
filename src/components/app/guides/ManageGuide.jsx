@@ -18,6 +18,11 @@ const ManageGuide = () => {
   const menuButtonRefs = useRef({});
   const menuRef = useRef(null);
   
+  const [showDeleteConfirmation, setShowDeleteConfirmation] = useState(false);
+  const [guideToDelete, setGuideToDelete] = useState(null);
+  const [submitError, setSubmitError] = useState(null);
+  const [successAlert, setSuccessAlert] = useState({ show: false, message: '' });
+  
   // Fetch guides from API
   useEffect(() => {
     fetchGuides();
@@ -158,31 +163,28 @@ const ManageGuide = () => {
   };
   
   // Handle guide deletion
-  const handleDeleteGuide = async (id, e) => {
-    e.preventDefault();
-    e.stopPropagation();
-    
+  const confirmDeleteGuide = async () => {
+    if (!guideToDelete) return;
     try {
-      if (confirm("Are you sure you want to delete this guide? This action cannot be undone.")) {
-        setLoading(true);
-        
-        // Instead of calling a specific delete API, we'll handle this using the frontend for now
-        // In the future, you can add a deleteGuide method to apiService
-        setGuides(guides.filter(guide => guide.id !== id));
-        setActiveMenu(null);
-        
-        // Show success message (could be implemented with a toast notification)
-        console.log('Guide deleted successfully');
-        alert('Guide deleted successfully');
-      }
+      setSubmitError(null);
+      setLoading(true);
+      await apiService.guides.deleteGuide(guideToDelete.id);
+      setGuides(guides.filter(g => g.id !== guideToDelete.id));
+      setShowDeleteConfirmation(false);
+      setGuideToDelete(null);
+      await fetchGuides();
+      setSuccessAlert({ show: true, message: `Guide "${guideToDelete.title}" deleted successfully.` });
+      setTimeout(() => setSuccessAlert({ show: false, message: '' }), 4000);
     } catch (err) {
-      console.error('Failed to delete guide:', err);
-      // Show an error message to the user (could be implemented with a toast notification)
-      console.log('Failed to delete guide:', err.message);
-      alert(`Failed to delete guide: ${err.message}`);
+      setSubmitError(err.message || 'Failed to delete guide');
     } finally {
       setLoading(false);
     }
+  };
+  const cancelDeleteGuide = () => {
+    setShowDeleteConfirmation(false);
+    setGuideToDelete(null);
+    setSubmitError(null);
   };
 
   // Format date
@@ -353,6 +355,23 @@ const ManageGuide = () => {
         </div>
       </div>
       
+      {successAlert.show && (
+        <div className="mb-6 p-4 bg-emerald-50 border-l-4 border-emerald-500">
+          <div className="flex">
+            <div className="flex-shrink-0">
+              <svg className="h-5 w-5 text-emerald-500" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+              </svg>
+            </div>
+            <div className="ml-3">
+              <p className="text-base font-medium text-emerald-800">
+                {successAlert.message}
+              </p>
+            </div>
+          </div>
+        </div>
+      )}
+      
       {/* Guides Table */}
       <div className="bg-white rounded-md border border-gray-200 overflow-hidden">
         <div className="overflow-x-auto">
@@ -416,18 +435,28 @@ const ManageGuide = () => {
                         >
                           <div className="py-1">
                             <button
-                              className="flex items-center w-full text-left px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-100"
-                              onClick={(e) => handleViewGuide(guide, e)}
-                            >
-                              <svg className="mr-2 h-4 w-4 text-emerald-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
-                              </svg>
-                              View
-                            </button>
-                            <button
-                              className="flex items-center w-full text-left px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-100"
-                              onClick={(e) => handleDownloadGuide(guide, e)}
+                              className="flex items-center w-full text-left px-4 py-2.5 text-sm text-emerald-600 hover:bg-gray-100"
+                              onClick={async () => {
+                                if (guide.file_path) {
+                                  try {
+                                    const response = await fetch(guide.file_path, { method: 'GET' });
+                                    if (!response.ok) throw new Error('Failed to download file');
+                                    const blob = await response.blob();
+                                    let filename = guide.file_path.split('/').pop() || guide.title || 'guide';
+                                    const url = window.URL.createObjectURL(blob);
+                                    const a = document.createElement('a');
+                                    a.style.display = 'none';
+                                    a.href = url;
+                                    a.download = filename;
+                                    document.body.appendChild(a);
+                                    a.click();
+                                    window.URL.revokeObjectURL(url);
+                                    document.body.removeChild(a);
+                                  } catch (err) {
+                                    alert('Failed to download file.');
+                                  }
+                                }
+                              }}
                             >
                               <svg className="mr-2 h-4 w-4 text-emerald-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
@@ -436,7 +465,11 @@ const ManageGuide = () => {
                             </button>
                             <button
                               className="flex items-center w-full text-left px-4 py-2.5 text-sm text-red-600 hover:bg-gray-100"
-                              onClick={(e) => handleDeleteGuide(guide.id, e)}
+                              onClick={() => {
+                                setGuideToDelete(guide);
+                                setShowDeleteConfirmation(true);
+                                setActiveMenu(null);
+                              }}
                             >
                               <svg className="mr-2 h-4 w-4 text-red-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
@@ -514,6 +547,53 @@ const ManageGuide = () => {
               Next
             </button>
           </nav>
+        </div>
+      )}
+
+      {showDeleteConfirmation && guideToDelete && (
+        <div className="fixed inset-0 z-[1000] flex items-center justify-center" style={{ backgroundColor: 'rgba(0, 0, 0, 0.5)' }}>
+          <div className="bg-white rounded-lg shadow-xl w-full max-w-md mx-4 overflow-hidden" style={{ pointerEvents: 'auto' }}>
+            {/* Header */}
+            <div className="bg-white px-4 pt-5 pb-4 sm:p-6">
+              <div className="sm:flex sm:items-start">
+                <div className="mx-auto flex-shrink-0 flex items-center justify-center h-12 w-12 rounded-full bg-red-100 sm:mx-0 sm:h-10 sm:w-10">
+                  <svg className="h-6 w-6 text-red-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                  </svg>
+                </div>
+                <div className="mt-3 text-center sm:mt-0 sm:ml-4 sm:text-left">
+                  <h3 className="text-lg leading-6 font-medium text-gray-900">Delete Guide</h3>
+                  <div className="mt-2">
+                    <p className="text-sm text-gray-500">
+                      Are you sure you want to delete the guide "{guideToDelete.title}"? This action cannot be undone.
+                    </p>
+                    {submitError && (
+                      <div className="mt-3 p-2 bg-red-50 rounded border border-red-200">
+                        <p className="text-sm text-red-600">{submitError}</p>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </div>
+            </div>
+            {/* Footer */}
+            <div className="bg-gray-50 px-4 py-3 sm:px-6 sm:flex sm:flex-row-reverse">
+              <button 
+                type="button" 
+                className="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-red-600 text-base font-medium text-white hover:bg-red-700 focus:outline-none sm:ml-3 sm:w-auto sm:text-sm"
+                onClick={confirmDeleteGuide}
+              >
+                Delete
+              </button>
+              <button 
+                type="button" 
+                className="mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none sm:mt-0 sm:ml-3 sm:w-auto sm:text-sm"
+                onClick={cancelDeleteGuide}
+              >
+                Cancel
+              </button>
+            </div>
+          </div>
         </div>
       )}
     </div>

@@ -765,29 +765,30 @@ const apiService = {
     // Get all guides
     getGuides: async (page = 1, limit = 10) => {
       try {
-        console.log('Fetching guides from API, page:', page, 'limit:', limit);
         const response = await api.get(`/guide/get-guides?page=${page}&limit=${limit}`);
-        
-        // Log the response
-        console.log('API response:', response.data);
-        
-        // Check if response is successful
+        return response.data;
+      } catch (error) {
+        console.error('Error fetching guides:', error);
+        throw new Error(
+          error.response?.data?.message || 
+          'Failed to load guides. Please try again later.'
+        );
+      }
+    },
+    deleteGuide: async (id) => {
+      try {
+        const response = await api.delete(`/guide/delete-guide/${id}`);
         if (response.data && response.data.status === 'success') {
           return response.data;
         } else {
-          throw new Error('Failed to fetch guides');
+          throw new Error('Failed to delete guide');
         }
       } catch (error) {
-        console.error('Error fetching guides:', error);
-        if (error.response) {
-          console.error('Error response status:', error.response.status);
-          console.error('Error response data:', error.response.data);
-        }
-        
-        if (error.response && error.response.data) {
-          throw new Error(error.response.data.message || 'Failed to fetch guides. Please try again.');
-        }
-        throw new Error(error.message || 'Failed to fetch guides. Please try again.');
+        console.error('Error deleting guide:', error);
+        throw new Error(
+          error.response?.data?.message || 
+          'Failed to delete guide. Please try again later.'
+        );
       }
     }
   },
