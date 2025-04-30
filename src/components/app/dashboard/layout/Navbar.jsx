@@ -175,7 +175,7 @@ const Navbar = ({ toggleSidebar, sidebarOpen }) => {
 
   const languages = [
     { code: 'en', name: 'English', flag: '/images/usflag.png' },
-    { code: 'fr', name: 'Français', flag: '/images/cameroonflag.png' },
+    { code: 'fr', name: 'Français', flag: '/images/france.png' },
   ];
 
   // Find current language

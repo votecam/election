@@ -100,9 +100,17 @@ export const translationConfig = {
       const loadingDiv = document.createElement('div');
       loadingDiv.id = 'translation-loading';
       loadingDiv.innerHTML = `
-        <div class="translation-loading-spinner">
-          <div class="spinner"></div>
-          <p>Translating content...</p>
+        <div class="translation-loading-container">
+          <div class="translation-loading-spinner">
+            <div class="spinner-ring"></div>
+            <div class="spinner-ring"></div>
+            <div class="spinner-ring"></div>
+            <div class="spinner-ring"></div>
+          </div>
+          <div class="translation-loading-text">
+            <p class="text-emerald-700 font-medium">Translating content...</p>
+            <p class="text-emerald-600 text-sm">Please wait while we translate the page</p>
+          </div>
         </div>
       `;
       loadingDiv.style.cssText = `
@@ -111,7 +119,7 @@ export const translationConfig = {
         left: 0;
         width: 100%;
         height: 100%;
-        background-color: rgba(255, 255, 255, 0.7);
+        background-color: rgba(255, 255, 255, 0.95);
         display: flex;
         justify-content: center;
         align-items: center;
@@ -122,30 +130,73 @@ export const translationConfig = {
       // Add spinner styles
       const style = document.createElement('style');
       style.textContent = `
-        .translation-loading-spinner {
+        .translation-loading-container {
           text-align: center;
           background: white;
-          padding: 20px;
-          border-radius: 8px;
-          box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+          padding: 2rem;
+          border-radius: 1rem;
+          box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+          border: 1px solid rgba(16, 185, 129, 0.1);
+          min-width: 300px;
         }
-        .spinner {
-          border: 4px solid rgba(1, 146, 65, 0.3);
+        
+        .translation-loading-spinner {
+          position: relative;
+          width: 80px;
+          height: 80px;
+          margin: 0 auto 1.5rem;
+        }
+        
+        .spinner-ring {
+          position: absolute;
+          width: 100%;
+          height: 100%;
+          border: 4px solid transparent;
           border-radius: 50%;
-          border-top: 4px solid #019241;
-          width: 40px;
-          height: 40px;
-          margin: 0 auto 15px;
-          animation: spin 1s linear infinite;
+          animation: spin 1.2s cubic-bezier(0.5, 0, 0.5, 1) infinite;
         }
+        
+        .spinner-ring:nth-child(1) {
+          border-top-color: #059669;
+          animation-delay: -0.45s;
+        }
+        
+        .spinner-ring:nth-child(2) {
+          border-right-color: #10b981;
+          animation-delay: -0.3s;
+        }
+        
+        .spinner-ring:nth-child(3) {
+          border-bottom-color: #34d399;
+          animation-delay: -0.15s;
+        }
+        
+        .spinner-ring:nth-child(4) {
+          border-left-color: #6ee7b7;
+        }
+        
         @keyframes spin {
           0% { transform: rotate(0deg); }
           100% { transform: rotate(360deg); }
         }
+        
+        .translation-loading-text {
+          margin-top: 1rem;
+        }
+        
+        .translation-loading-text p {
+          margin: 0.25rem 0;
+        }
       `;
       document.head.appendChild(style);
-    } else {
-      document.getElementById('translation-loading').style.display = 'flex';
+    }
+    
+    // Always show the loading div
+    const loadingDiv = document.getElementById('translation-loading');
+    if (loadingDiv) {
+      loadingDiv.style.display = 'flex';
+      loadingDiv.style.opacity = '1';
+      loadingDiv.style.visibility = 'visible';
     }
   }
   
@@ -156,6 +207,8 @@ export const translationConfig = {
     const loadingDiv = document.getElementById('translation-loading');
     if (loadingDiv) {
       loadingDiv.style.display = 'none';
+      loadingDiv.style.opacity = '0';
+      loadingDiv.style.visibility = 'hidden';
     }
   }
   
@@ -488,3 +541,32 @@ export const translationConfig = {
       });
     }
   });
+
+export function changeLanguage(language) {
+  setCurrentLanguage(language);
+  localStorage.setItem('selectedLanguage', language.code);
+  
+  // If English is selected, just reload the page immediately
+  if (language.code === 'en') {
+    location.reload();
+    return;
+  }
+
+  // Show loading indicator
+  showTranslationLoading();
+
+  // Use the existing translator
+  translatePage(language.code)
+    .then(() => {
+      // Hide loading indicator when translation is complete
+      hideTranslationLoading();
+      // Reload the page after successful translation
+      location.reload();
+    })
+    .catch(err => {
+      console.error("Translation error:", err);
+      hideTranslationLoading();
+    });
+
+  closeAllDropdowns();
+}
