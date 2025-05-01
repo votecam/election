@@ -652,10 +652,12 @@ const RegisterCentre = () => {
             <div className="grid grid-cols-2 gap-3">
               {[
                 { id: 'Wheelchair Access', label: 'Wheelchair Access', icon: '♿' },
-              
+                { id: 'Hearing Loop', label: 'Hearing Loop', icon: '🎧' },
+                { id: 'Braille Signage', label: 'Braille Signage', icon: '👆' },
+                { id: 'Elevator', label: 'Elevator', icon: '🛗' },
+                { id: 'Accessible Toilet', label: 'Accessible Toilet', icon: '🚻' },
                 { id: 'Parking', label: 'Accessible Parking', icon: '🅿️' },
                 { id: 'Public Transport', label: 'Public Transport', icon: '🚌' },
-              
               ].map((feature) => (
                 <div key={feature.id} className="flex items-center">
                   <input
