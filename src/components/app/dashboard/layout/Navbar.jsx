@@ -224,9 +224,26 @@ const Navbar = ({ toggleSidebar, sidebarOpen }) => {
     setCurrentLanguage(language);
     localStorage.setItem('selectedLanguage', language.code);
     
-    // If English is selected, just reload the page to show original content
+    // If English is selected, restore original content without reload
     if (language.code === 'en') {
-      window.location.reload();
+      // Remove any translated content
+      document.querySelectorAll('[data-translated]').forEach(el => {
+        el.removeAttribute('data-translated');
+        if (el.hasAttribute('data-original')) {
+          el.textContent = el.getAttribute('data-original');
+          el.removeAttribute('data-original');
+        }
+      });
+      // Restore original attributes
+      document.querySelectorAll('[data-original-placeholder]').forEach(el => {
+        el.setAttribute('placeholder', el.getAttribute('data-original-placeholder'));
+        el.removeAttribute('data-original-placeholder');
+      });
+      document.querySelectorAll('[data-original-title]').forEach(el => {
+        el.setAttribute('title', el.getAttribute('data-original-title'));
+        el.removeAttribute('data-original-title');
+      });
+      closeAllDropdowns();
       return;
     }
 

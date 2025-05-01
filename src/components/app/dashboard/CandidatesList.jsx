@@ -244,31 +244,6 @@ const CandidatesList = () => {
           <div className="w-72 h-72 rounded-full bg-gradient-to-br from-gray-50 via-gray-100 to-transparent opacity-40"></div>
         </div>
         
-        {/* Center subtle pattern - Hidden on small screens */}
-        <div className="absolute inset-0 pointer-events-none z-0 flex items-center justify-center hidden sm:flex">
-          <div className="w-full h-full max-w-md max-h-md opacity-[0.03]">
-            <svg width="100%" height="100%" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
-              <defs>
-                <pattern id="candidate-grid" x="0" y="0" width="20" height="20" patternUnits="userSpaceOnUse">
-                  <path d="M 0,10 l 20,0" stroke="#333" strokeWidth="0.5" fill="none" />
-                  <path d="M 10,0 l 0,20" stroke="#333" strokeWidth="0.5" fill="none" />
-                </pattern>
-              </defs>
-              <rect x="0" y="0" width="100" height="100" fill="url(#candidate-grid)" />
-            </svg>
-          </div>
-        </div>
-        
-        {/* Additional decorative dot pattern - Hidden on small screens */}
-        <div className="absolute top-10 right-10 pointer-events-none z-0 hidden sm:block">
-          <svg width="80" height="80" viewBox="0 0 80 80" opacity="0.07">
-            <pattern id="candidate-dots" x="0" y="0" width="10" height="10" patternUnits="userSpaceOnUse">
-              <circle cx="2" cy="2" r="1" fill="currentColor" />
-            </pattern>
-            <rect x="0" y="0" width="100%" height="100%" fill="url(#candidate-dots)" />
-          </svg>
-        </div>
-        
         {/* Content */}
         <div className="relative z-10 flex flex-col h-full">
           <div className="px-4 sm:px-6 py-3 sm:py-4 border-b border-gray-100">
@@ -319,21 +294,6 @@ const CandidatesList = () => {
       </div>
       <div className="absolute -top-24 -left-24 pointer-events-none z-0 hidden sm:block">
         <div className="w-72 h-72 rounded-full bg-gradient-to-br from-gray-50 via-gray-100 to-transparent opacity-40"></div>
-      </div>
-      
-      {/* Center subtle pattern - Hidden on small screens */}
-      <div className="absolute inset-0 pointer-events-none z-0 flex items-center justify-center hidden sm:flex">
-        <div className="w-full h-full max-w-md max-h-md opacity-[0.03]">
-          <svg width="100%" height="100%" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
-            <defs>
-              <pattern id="candidate-grid" x="0" y="0" width="20" height="20" patternUnits="userSpaceOnUse">
-                <path d="M 0,10 l 20,0" stroke="#333" strokeWidth="0.5" fill="none" />
-                <path d="M 10,0 l 0,20" stroke="#333" strokeWidth="0.5" fill="none" />
-              </pattern>
-            </defs>
-            <rect x="0" y="0" width="100" height="100" fill="url(#candidate-grid)" />
-          </svg>
-        </div>
       </div>
       
       {/* Additional decorative dot pattern - Hidden on small screens */}

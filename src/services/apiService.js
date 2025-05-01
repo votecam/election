@@ -5,7 +5,7 @@ console.log('API URL:', import.meta.env.VITE_API_URL);
 
 // Create an axios instance with default config
 const api = axios.create({
-  baseURL: import.meta.env.VITE_API_URL, // Uses the base URL from environment
+  baseURL: import.meta.env.VITE_API_URL || 'https://api.votecam.org', // Ensure base URL is correct
   headers: {
     'Content-Type': 'application/json',
   },
@@ -63,6 +63,26 @@ const apiService = {
           error.response?.data?.message || 
           'Login failed. Please check your credentials and try again.'
         );
+      }
+    },
+    
+    // Add updatePassword endpoint
+    updatePassword: async (email, currentPassword, newPassword) => {
+      try {
+        const response = await api.put('user/update-password', { 
+          email, 
+          currentPassword, 
+          newPassword 
+        });
+        
+        if (response.data && response.data.status === 'success') {
+          return response.data;
+        } else {
+          throw new Error(response.data?.data?.message || 'Failed to update password');
+        }
+      } catch (error) {
+        console.error('Update password error:', error);
+        throw error;
       }
     },
     

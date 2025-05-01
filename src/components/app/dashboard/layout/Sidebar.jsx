@@ -205,7 +205,7 @@ const Sidebar = ({ isOpen, toggleSidebar }) => {
           opacity: 1
         }}>
           {/* Add subtle grid pattern overlay with extremely reduced visibility */}
-          <div className="absolute inset-0 opacity-[0.1]">
+          <div className="absolute inset-0 opacity-[0.01]">
             <div className="w-full h-full" style={{ 
               backgroundImage: 'linear-gradient(rgba(255, 255, 255, 0.3) 1px, transparent 1px), linear-gradient(90deg, rgba(255, 255, 255, 0.3) 1px, transparent 1px)',
               backgroundSize: '40px 40px'
