@@ -946,6 +946,7 @@ const apiService = {
     getAll: async () => {
       try {
         const response = await api.get('/activities');
+        console.log('Activities API Response:', response.data); // Add logging
         
         if (response.data && response.data.status === 'success') {
           return response.data;

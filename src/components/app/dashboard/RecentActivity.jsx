@@ -23,32 +23,24 @@ const RecentActivity = () => {
   const fetchActivities = async () => {
     try {
       const response = await apiService.activities.getAll();
-      // Sort activities by timestamp in descending order (newest first)
-      const sortedActivities = response.data
-        .map(activity => {
-          const timestamp = activity.timestamp ? new Date(activity.timestamp) : null;
-          const timeAgo = activity.timeAgo || (timestamp ? getTimeAgo(timestamp) : '');
-          return {
-            ...activity,
-            timestamp,
-            timeAgo
-          };
-        })
-        // Filter out activities with invalid timestamp or timeAgo
-        .filter(a => a.timestamp && !isNaN(a.timestamp) && a.timeAgo)
-        .sort((a, b) => b.timestamp - a.timestamp)
-        .slice(0, 5); // Take only the 5 most recent
+      console.log('Activities Response:', response); // Add logging
+      
+      if (response && response.data && Array.isArray(response.data)) {
+        const activities = response.data.map(activity => ({
+          ...activity,
+          timestamp: new Date()
+        }));
 
-      console.log('Sorted activities:', sortedActivities.map(a => ({
-        type: a.type,
-        title: a.title,
-        timestamp: a.timestamp,
-        timeAgo: a.timeAgo
-      })));
-
-      setActivities(sortedActivities);
+        console.log('Processed Activities:', activities);
+        setActivities(activities);
+      } else {
+        console.error('Invalid response structure:', response);
+        throw new Error('Invalid activities data received');
+      }
+      
       setLoading(false);
     } catch (err) {
+      console.error('Error fetching activities:', err);
       setError(err.message);
       setLoading(false);
     }

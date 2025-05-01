@@ -15,6 +15,9 @@ const Navbar = ({ toggleSidebar, sidebarOpen }) => {
   const { logout, user } = useAuth();
   const [feedbacks, setFeedbacks] = useState([]);
   const [unreadFeedbackCount, setUnreadFeedbackCount] = useState(0);
+  const [lastFeedbackViewTime, setLastFeedbackViewTime] = useState(
+    localStorage.getItem('lastFeedbackViewTime') || new Date().toISOString()
+  );
 
   // Initialize translator on component mount
   useEffect(() => {
@@ -254,36 +257,71 @@ const Navbar = ({ toggleSidebar, sidebarOpen }) => {
     }
   };
 
-  // Fetch feedbacks from API
+
+  // Fetch feedbacks from API here
   useEffect(() => {
     const fetchFeedbacks = async () => {
       try {
-        const response = await apiService.feedback.getAllFeedback(1, 50); // Fetch first 50 feedbacks
-        // console.log('Feedback API response:', response);
-        if (response && Array.isArray(response.data)) {
-          setFeedbacks(response.data);
-          setUnreadFeedbackCount(response.data.length); // Show total count
+        const response = await apiService.feedback.getAllFeedback(1, 10);
+        console.log('Feedback API Response:', response);
+        
+        if (response?.status === 'success' && response.data) {
+          const feedbacksArray = response.data.feedbacks || [];
+          
+          // Only count feedbacks that came after last view time
+          const lastViewTime = new Date(lastFeedbackViewTime);
+          const newFeedbacks = feedbacksArray.filter(fb => 
+            new Date(fb.createdAt) > lastViewTime
+          );
+          
+          setFeedbacks(feedbacksArray);
+          setUnreadFeedbackCount(newFeedbacks.length);
+          
+          console.log('New feedbacks since last view:', newFeedbacks.length);
+          console.log('Recent feedbacks:', feedbacksArray.slice(0, 2));
         } else {
+          console.log('No feedback data in response');
           setFeedbacks([]);
           setUnreadFeedbackCount(0);
         }
       } catch (err) {
+        console.error('Error fetching feedbacks:', err);
         setFeedbacks([]);
         setUnreadFeedbackCount(0);
       }
     };
+
     fetchFeedbacks();
-    // Optionally, poll every minute
+    // Poll every minute
     const intervalId = setInterval(fetchFeedbacks, 60000);
     return () => clearInterval(intervalId);
-  }, []);
+  }, [lastFeedbackViewTime]);
 
-  // Clear badge when on feedback page
+  // Update last view time when visiting feedback page
   useEffect(() => {
     if (location.pathname === '/app/feedback') {
+      const currentTime = new Date().toISOString();
+      setLastFeedbackViewTime(currentTime);
+      localStorage.setItem('lastFeedbackViewTime', currentTime);
       setUnreadFeedbackCount(0);
     }
   }, [location.pathname]);
+
+  // Get two most recent feedbacks
+  const recentFeedbacks = feedbacks.slice(0, 2);
+
+  // Helper function to format feedback time
+  const formatFeedbackTime = (dateString) => {
+    if (!dateString) return '';
+    const date = new Date(dateString);
+    const now = new Date();
+    const diffInMinutes = Math.floor((now - date) / (1000 * 60));
+    
+    if (diffInMinutes < 1) return 'Just now';
+    if (diffInMinutes < 60) return `${diffInMinutes}m ago`;
+    if (diffInMinutes < 1440) return `${Math.floor(diffInMinutes / 60)}h ago`;
+    return `${Math.floor(diffInMinutes / 1440)}d ago`;
+  };
 
   // Notification data
   const notifications = [
@@ -483,36 +521,31 @@ const Navbar = ({ toggleSidebar, sidebarOpen }) => {
                 aria-expanded={notificationsOpen ? 'true' : 'false'}
                 aria-haspopup="true"
               >
-                <span className="sr-only">View notifications</span>
-                {/* Feedback icon instead of bell icon */}
+                <span className="sr-only">View feedback</span>
                 <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                   <path strokeLinecap="round" strokeLinejoin="round" d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z" />
                 </svg>
                 {unreadFeedbackCount > 0 && (
-                  <span className="absolute top-0 right-0 block h-5 w-5 rounded-full bg-red-500 text-white text-xs font-medium flex items-center justify-center transform -translate-y-1/4 translate-x-1/4 mb-6 mt-2">
+                  <span className="absolute top-0 right-0 block h-5 w-5 rounded-full bg-red-500 text-white text-xs font-medium flex items-center justify-center transform -translate-y-1/4 translate-x-1/4">
                     {unreadFeedbackCount}
                   </span>
                 )}
               </button>
 
-              {/* Feedback Dropdown - FeedSnacks */}
+              {/* Feedback Dropdown */}
               {notificationsOpen && (
-                <div 
-                  className="dropdown-content absolute right-0 mt-1 w-72 rounded-md shadow-md bg-white z-50 border border-gray-200"
-                  role="menu"
-                  aria-orientation="vertical"
-                >
-                  <div className="bg-white">
+                <div className="dropdown-content absolute right-0 mt-1 w-72 rounded-md shadow-md bg-white z-50 border border-gray-200">
+                  <div className="bg-white rounded-md">
                     <div className="flex items-center justify-between px-3 py-2 border-b border-gray-200">
-                      <h3 className="text-sm font-medium text-gray-900">FeedSnacks</h3>
+                      <h3 className="text-sm font-medium text-gray-900">Recent Feedback</h3>
                       {unreadFeedbackCount > 0 && (
-                        <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
+                        <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800">
                           {unreadFeedbackCount} new
                         </span>
                       )}
                     </div>
                     <div className="max-h-72 overflow-y-auto">
-                      {feedbacks.length === 0 ? (
+                      {recentFeedbacks.length === 0 ? (
                         <div className="py-6 px-3 text-center">
                           <svg xmlns="http://www.w3.org/2000/svg" className="mx-auto h-8 w-8 text-gray-300" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z" />
@@ -521,12 +554,9 @@ const Navbar = ({ toggleSidebar, sidebarOpen }) => {
                         </div>
                       ) : (
                         <ul role="list" className="divide-y divide-gray-100">
-                          {feedbacks.slice(0, 5).map((fb) => (
+                          {recentFeedbacks.map((fb) => (
                             <li key={fb.id || fb._id} className="relative">
-                              <a 
-                                href="#" 
-                                className="block px-3 py-2 hover:bg-gray-50"
-                              >
+                              <div className="block px-3 py-2 hover:bg-gray-50">
                                 <div className="flex items-start">
                                   <div className="bg-emerald-50 p-1.5 rounded-full text-emerald-500">
                                     <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -535,20 +565,30 @@ const Navbar = ({ toggleSidebar, sidebarOpen }) => {
                                   </div>
                                   <div className="ml-3 flex-1">
                                     <div className="flex justify-between">
-                                      <p className="text-sm font-medium text-gray-900 truncate">{fb.message || fb.content || fb.feedback || 'Feedback'}</p>
-                                      <p className="text-xs text-gray-500">{fb.createdAt ? new Date(fb.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : ''}</p>
+                                      <p className="text-sm font-medium text-gray-900 truncate">{fb.message || fb.content || fb.body || 'Feedback'}</p>
+                                      <p className="text-xs text-gray-500">{formatFeedbackTime(fb.createdAt)}</p>
                                     </div>
                                     {fb.email && <p className="text-xs text-gray-500 mt-0.5">{fb.email}</p>}
                                   </div>
                                 </div>
-                              </a>
+                              </div>
                             </li>
                           ))}
                         </ul>
                       )}
                     </div>
                     <div className="border-t border-gray-200 px-3 py-2 text-center">
-                      <Link to="/app/feedback" className="inline-flex items-center text-xs font-medium text-emerald-600 hover:text-emerald-800">
+                      <Link 
+                        to="/app/feedback" 
+                        onClick={() => {
+                          const currentTime = new Date().toISOString();
+                          setLastFeedbackViewTime(currentTime);
+                          localStorage.setItem('lastFeedbackViewTime', currentTime);
+                          setUnreadFeedbackCount(0);
+                          setNotificationsOpen(false);
+                        }}
+                        className="inline-flex items-center text-xs font-medium text-emerald-600 hover:text-emerald-800"
+                      >
                         View all
                         <svg xmlns="http://www.w3.org/2000/svg" className="ml-1 h-3 w-3" viewBox="0 0 20 20" fill="currentColor">
                           <path fillRule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clipRule="evenodd" />
