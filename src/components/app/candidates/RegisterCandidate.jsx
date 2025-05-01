@@ -407,7 +407,7 @@ const RegisterCandidate = () => {
           Full Name <span className="text-red-600">*</span>
         </label>
         <div className="relative">
-          <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+          <div className="absolute inset-y-0 left-0 pl-3 pt-1 flex items-center pointer-events-none">
             <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="h-6 w-6 text-gray-600">
               <path d="M20 22h-2v-2a3 3 0 0 0-3-3H9a3 3 0 0 0-3 3v2H4v-2a5 5 0 0 1 5-5h6a5 5 0 0 1 5 5v2zm-8-9a6 6 0 1 1 0-12 6 6 0 0 1 0 12zm0-2a4 4 0 1 0 0-8 4 4 0 0 0 0 8z" />
             </svg>
@@ -439,13 +439,13 @@ const RegisterCandidate = () => {
           Region <span className="text-red-600">*</span>
         </label>
         <div className="relative">
-          <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+          <div className="absolute inset-y-0 left-0 pl-3 pt-1 flex items-center pointer-events-none">
             <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="h-6 w-6 text-gray-600">
               <path d="M15 21H9V12.6C8.72202 12.8454 8.38571 13 8 13C7.08954 13 6.30085 12.4174 6.07089 11.5914C6.02417 11.4422 6 11.2852 6 11.1213V6.97926C6 6.43125 6.2341 5.91622 6.63876 5.57443L11.1221 1.81944C11.6549 1.3616 12.3452 1.3616 12.878 1.81944L17.3613 5.57443C17.7659 5.91622 18 6.43125 18 6.97926V11.1213C18 11.2852 17.9759 11.4422 17.9292 11.5914C17.7566 12.1411 17.3535 12.5861 16.8325 12.8318C16.5897 12.9401 16.3258 13 16.0001 13C15.6144 13 15.278 12.8454 15 12.6V21ZM10.5 16.5C10.5 16.2239 10.7239 16 11 16H13C13.2761 16 13.5 16.2239 13.5 16.5V19.5C13.5 19.7761 13.2761 20 13 20H11C10.7239 20 10.5 19.7761 10.5 19.5V16.5Z" />
             </svg>
           </div>
           {/* Vertical separator line */}
-          <div className="absolute inset-y-2 left-12 w-px bg-gray-300"></div>
+          <div className="absolute inset-y-4 left-12 w-px bg-gray-300"></div>
           <input
             type="text"
             name="region"
@@ -471,13 +471,14 @@ const RegisterCandidate = () => {
           Political Party <span className="text-red-600">*</span>
         </label>
         <div className="relative" ref={partyRef}>
-          <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+          <div className="absolute inset-y-0 left-0 pl-3 pb-3 flex items-center pointer-events-none">
             <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="h-6 w-6 text-gray-600">
               <path d="M12 3L1 9l4 2.18v6L12 21l7-3.82v-6l2-1.09V17h2V9L12 3zm6.82 6L12 12.72 5.18 9 12 5.28 18.82 9zM17 15.99l-5 2.73-5-2.73v-3.72L12 15l5-2.73v3.72z"/>
             </svg>
           </div>
           {/* Vertical separator line */}
-          <div className="absolute inset-y-2 left-12 w-px bg-gray-300"></div>
+          
+{/*      */}
           <button
             type="button"
             className={`pl-16 w-full px-4 py-3 border border-gray-300 rounded-none text-left focus:outline-none focus:ring-1 focus:border-emerald-600 transition-shadow duration-300 text-base font-medium bg-white ${!formData.partyName && 'text-gray-500'}`}
@@ -628,13 +629,13 @@ const RegisterCandidate = () => {
           Position <span className="text-red-600">*</span>
         </label>
         <div className="relative" ref={positionRef}>
-          <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+          <div className="absolute inset-y-0 left-0 pl-3 pb-3 flex items-center pointer-events-none">
             <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="h-6 w-6 text-gray-600">
               <path d="M18 14H17V15H18V14Z M7 15H13C13.55 15 14 14.55 14 14C14 13.45 13.55 13 13 13H7C6.45 13 6 13.45 6 14C6 14.55 6.45 15 7 15Z M13 11H7C6.45 11 6 10.55 6 10C6 9.45 6.45 9 7 9H13C13.55 9 14 9.45 14 10C14 10.55 13.55 11 13 11Z M7 7H13C13.55 7 14 6.55 14 6C14 5.45 13.55 5 13 5H7C6.45 5 6 5.45 6 6C6 6.55 6.45 7 7 7Z M18 12H17V13H18V12Z M19 3H14.82C14.4 1.84 13.3 1 12 1C10.7 1 9.6 1.84 9.18 3H5C3.9 3 3 3.9 3 5V19C3 20.1 3.9 21 5 21H19C20.1 21 21 20.1 21 19V5C21 3.9 20.1 3 19 3Z M12 3C12.55 3 13 3.45 13 4C13 4.55 12.55 5 12 5C11.45 5 11 4.55 11 4C11 3.45 11.45 3 12 3Z M19 19H5V5H19V19Z M18 10H17V11H18V10Z" />
             </svg>
           </div>
           {/* Vertical separator line */}
-          <div className="absolute inset-y-2 left-12 w-px bg-gray-300"></div>
+    
           <button
             type="button"
             className={`pl-16 w-full px-4 py-3 border border-gray-300 rounded-none text-left focus:outline-none focus:ring-1 focus:border-emerald-600 transition-shadow duration-300 text-base font-medium bg-white ${!formData.position && 'text-gray-500'}`}
@@ -692,14 +693,13 @@ const RegisterCandidate = () => {
           Election Type <span className="text-red-600">*</span>
         </label>
         <div className="relative" ref={electionTypeRef}>
-          <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+          <div className="absolute inset-y-0 left-0 pl-3 pb-3 flex items-center pointer-events-none">
             <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="h-6 w-6 text-gray-600">
               <path d="M16.53 11.06L15.47 10l-4.88 4.88-2.12-2.12-1.06 1.06L10.59 17l5.94-5.94zM19 3h-1V1h-2v2H8V1H6v2H5c-1.11 0-1.99.9-1.99 2L3 19c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm0 16H5V8h14v11z"/>
             </svg>
           </div>
           {/* Vertical separator line */}
-          <div className="absolute inset-y-2 left-12 w-px bg-gray-300"></div>
-          <button
+             <button
             type="button"
             className={`pl-16 w-full px-4 py-3 border border-gray-300 rounded-none text-left focus:outline-none focus:ring-1 focus:border-emerald-600 transition-shadow duration-300 text-base font-medium bg-white ${!formData.election_type && 'text-gray-500'}`}
             style={{ 
