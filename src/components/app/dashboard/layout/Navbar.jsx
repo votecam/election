@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate, Link, useLocation } from 'react-router-dom';
 import { useAuth } from '../../../../context/AuthContext';
 import { initTranslator, translatePage, showTranslationLoading, hideTranslationLoading } from '../../translator';
+import apiService from '../../../../services/apiService';
 
 const Navbar = ({ toggleSidebar, sidebarOpen }) => {
   const [dropdownOpen, setDropdownOpen] = useState(false);
@@ -12,6 +13,8 @@ const Navbar = ({ toggleSidebar, sidebarOpen }) => {
   const [currentPath, setCurrentPath] = useState(location.pathname);
   const navigate = useNavigate();
   const { logout, user } = useAuth();
+  const [feedbacks, setFeedbacks] = useState([]);
+  const [unreadFeedbackCount, setUnreadFeedbackCount] = useState(0);
 
   // Initialize translator on component mount
   useEffect(() => {
@@ -251,6 +254,37 @@ const Navbar = ({ toggleSidebar, sidebarOpen }) => {
     }
   };
 
+  // Fetch feedbacks from API
+  useEffect(() => {
+    const fetchFeedbacks = async () => {
+      try {
+        const response = await apiService.feedback.getAllFeedback(1, 50); // Fetch first 50 feedbacks
+        // console.log('Feedback API response:', response);
+        if (response && Array.isArray(response.data)) {
+          setFeedbacks(response.data);
+          setUnreadFeedbackCount(response.data.length); // Show total count
+        } else {
+          setFeedbacks([]);
+          setUnreadFeedbackCount(0);
+        }
+      } catch (err) {
+        setFeedbacks([]);
+        setUnreadFeedbackCount(0);
+      }
+    };
+    fetchFeedbacks();
+    // Optionally, poll every minute
+    const intervalId = setInterval(fetchFeedbacks, 60000);
+    return () => clearInterval(intervalId);
+  }, []);
+
+  // Clear badge when on feedback page
+  useEffect(() => {
+    if (location.pathname === '/app/feedback') {
+      setUnreadFeedbackCount(0);
+    }
+  }, [location.pathname]);
+
   // Notification data
   const notifications = [
     {
@@ -316,9 +350,6 @@ const Navbar = ({ toggleSidebar, sidebarOpen }) => {
     return colorMap[color] || colorMap.emerald;
   };
 
-  // Count new notifications
-  const newNotificationsCount = notifications.filter(n => n.isNew).length;
-  
   // Helper function to get user initials
   const getUserInitials = () => {
     if (!user?.name) return 'U';
@@ -457,14 +488,14 @@ const Navbar = ({ toggleSidebar, sidebarOpen }) => {
                 <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                   <path strokeLinecap="round" strokeLinejoin="round" d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z" />
                 </svg>
-                {newNotificationsCount > 0 && (
+                {unreadFeedbackCount > 0 && (
                   <span className="absolute top-0 right-0 block h-5 w-5 rounded-full bg-red-500 text-white text-xs font-medium flex items-center justify-center transform -translate-y-1/4 translate-x-1/4 mb-6 mt-2">
-                    {newNotificationsCount}
+                    {unreadFeedbackCount}
                   </span>
                 )}
               </button>
 
-              {/* Notification Dropdown - Simplified */}
+              {/* Feedback Dropdown - FeedSnacks */}
               {notificationsOpen && (
                 <div 
                   className="dropdown-content absolute right-0 mt-1 w-72 rounded-md shadow-md bg-white z-50 border border-gray-200"
@@ -473,62 +504,56 @@ const Navbar = ({ toggleSidebar, sidebarOpen }) => {
                 >
                   <div className="bg-white">
                     <div className="flex items-center justify-between px-3 py-2 border-b border-gray-200">
-                      <h3 className="text-sm font-medium text-gray-900">Feedback & Notifications</h3>
-                      {newNotificationsCount > 0 && (
+                      <h3 className="text-sm font-medium text-gray-900">FeedSnacks</h3>
+                      {unreadFeedbackCount > 0 && (
                         <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
-                          {newNotificationsCount} new
+                          {unreadFeedbackCount} new
                         </span>
                       )}
                     </div>
-                    
                     <div className="max-h-72 overflow-y-auto">
-                      {notifications.length === 0 ? (
+                      {feedbacks.length === 0 ? (
                         <div className="py-6 px-3 text-center">
                           <svg xmlns="http://www.w3.org/2000/svg" className="mx-auto h-8 w-8 text-gray-300" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z" />
                           </svg>
-                          <p className="mt-1 text-sm text-gray-500">No notifications yet</p>
+                          <p className="mt-1 text-sm text-gray-500">No feedback yet</p>
                         </div>
                       ) : (
                         <ul role="list" className="divide-y divide-gray-100">
-                          {notifications.map((notification) => {
-                            const colorClasses = getColorClasses(notification.color);
-                            return (
-                              <li key={notification.id} className="relative">
-                                {notification.isNew && (
-                                  <div className="absolute left-0 top-0 bottom-0 w-1 bg-emerald-500" aria-hidden="true"></div>
-                                )}
-                                <a 
-                                  href="#" 
-                                  className={`block px-3 py-2 hover:bg-gray-50 ${notification.isNew ? 'pl-4' : ''}`}
-                                >
-                                  <div className="flex items-start">
-                                    <div className={`${colorClasses.bg} p-1.5 rounded-full ${colorClasses.icon}`}>
-                                      {notification.icon}
-                                    </div>
-                                    <div className="ml-3 flex-1">
-                                      <div className="flex justify-between">
-                                        <p className="text-sm font-medium text-gray-900">{notification.title}</p>
-                                        <p className="text-xs text-gray-500">{notification.time}</p>
-                                      </div>
-                                      <p className="text-xs text-gray-500 mt-0.5">{notification.description}</p>
-                                    </div>
+                          {feedbacks.slice(0, 5).map((fb) => (
+                            <li key={fb.id || fb._id} className="relative">
+                              <a 
+                                href="#" 
+                                className="block px-3 py-2 hover:bg-gray-50"
+                              >
+                                <div className="flex items-start">
+                                  <div className="bg-emerald-50 p-1.5 rounded-full text-emerald-500">
+                                    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z" />
+                                    </svg>
                                   </div>
-                                </a>
-                              </li>
-                            );
-                          })}
+                                  <div className="ml-3 flex-1">
+                                    <div className="flex justify-between">
+                                      <p className="text-sm font-medium text-gray-900 truncate">{fb.message || fb.content || fb.feedback || 'Feedback'}</p>
+                                      <p className="text-xs text-gray-500">{fb.createdAt ? new Date(fb.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : ''}</p>
+                                    </div>
+                                    {fb.email && <p className="text-xs text-gray-500 mt-0.5">{fb.email}</p>}
+                                  </div>
+                                </div>
+                              </a>
+                            </li>
+                          ))}
                         </ul>
                       )}
                     </div>
-                    
                     <div className="border-t border-gray-200 px-3 py-2 text-center">
-                      <a href="#" className="inline-flex items-center text-xs font-medium text-emerald-600 hover:text-emerald-800">
+                      <Link to="/app/feedback" className="inline-flex items-center text-xs font-medium text-emerald-600 hover:text-emerald-800">
                         View all
                         <svg xmlns="http://www.w3.org/2000/svg" className="ml-1 h-3 w-3" viewBox="0 0 20 20" fill="currentColor">
                           <path fillRule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clipRule="evenodd" />
                         </svg>
-                      </a>
+                      </Link>
                     </div>
                   </div>
                 </div>

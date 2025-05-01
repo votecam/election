@@ -11,7 +11,10 @@ const Sidebar = ({ isOpen, toggleSidebar }) => {
     voters: false,
     reports: false,
     settings: false,
-    notifications: false
+    notifications: false,
+    centres: false,
+    candidates: false,
+    guides: false,
   });
 
   const toggleMenu = (menu) => {
@@ -84,33 +87,31 @@ const Sidebar = ({ isOpen, toggleSidebar }) => {
       return false;
     }
     // Otherwise, highlight parent if we're on a path that matches the prefix
-    return location.pathname.includes(pathPrefix);
+    return location.pathname.startsWith(pathPrefix);
   };
   
   // Check if any child item of a dropdown is active
   const isChildItemActive = (parentPath) => {
-    // Check for specific child paths based on parent
     if (parentPath === '/app/centres') {
       return isActive('/app/centres/register') || 
              isActive('/app/centres/upload') || 
              isActive('/app/centres/manage-polling');
     }
-    
+    if (parentPath === '/app/settings') {
+      return isActive('/app/settings') || isActive('/app/settings/manage');
+    }
     if (parentPath === '/app/candidates') {
       return isActive('/app/candidates/register') || 
              isActive('/app/candidates/manage');
     }
-    
     if (parentPath === '/app/guides') {
       return isActive('/app/guides/upload') ||
              isActive('/app/guides/manage');
     }
-    
     if (parentPath === '/app/notifications') {
       return isActive('/app/notifications/create') ||
              isActive('/app/notifications/all');
     }
-    
     return false;
   };
   
@@ -291,7 +292,7 @@ const Sidebar = ({ isOpen, toggleSidebar }) => {
           `}</style>
 
           {/* Sidebar Menu - Updated with professional styling */}
-          <nav className="flex-1 px-5 py-4 overflow-y-auto elegant-scrollbar" aria-label="Sidebar navigation">
+          <nav className="flex-1 px-5 py-4 overflow-y-auto elegant-scrollbar pb-20" aria-label="Sidebar navigation">
             <ul className="space-y-3">
               {/* Dashboard - Updated with new home icon */}
               <li>
@@ -889,35 +890,110 @@ const Sidebar = ({ isOpen, toggleSidebar }) => {
               
               {/* Settings */}
               <li>
-                <Link 
-                  to="/app/settings"
-                  onClick={handleMenuItemClick}
-                  className={`flex items-center px-3 py-3 transition-all duration-200 group focus-visible-only ${
-                    isActive('/settings') 
-                      ? 'bg-white/80 text-gray-800 font-medium shadow-sm' 
-                      : 'text-white hover:bg-white/10'
-                  } rounded-lg focus:outline-none`}
-                  aria-current={isActive('/settings') ? 'page' : undefined}
-                >
-                  <div className={`flex items-center justify-center w-9 h-9 ${isActive('/settings') ? 'text-gray-800' : 'text-white group-hover:text-white'}`}>
+                <div className="space-y-1">
+                  <button
+                    onClick={() => toggleMenu('settings')}
+                    className={`w-full flex items-center justify-between px-3 py-3 transition-all duration-200 group focus-visible-only text-white hover:bg-white/10 rounded-lg focus:outline-none`}
+                    aria-expanded={expandedMenus.settings}
+                    aria-controls="settings-menu"
+                  >
+                    <div className="flex items-center">
+                      <div className={`flex items-center justify-center w-9 h-9 ${isMenuActive('/app/settings') ? 'text-gray-800' : 'text-white group-hover:text-white'}`}>
+                        <svg 
+                          xmlns="http://www.w3.org/2000/svg" 
+                          width="24" 
+                          height="24" 
+                          viewBox="0 0 24 24" 
+                          fill="none"
+                          stroke="currentColor"
+                          strokeWidth="2"
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          className="w-7 h-7"
+                        >
+                          <path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"></path>
+                          <circle cx="12" cy="12" r="3"></circle>
+                        </svg>
+                      </div>
+                      <span className="ml-3 font-medium text-xl whitespace-nowrap">Settings</span>
+                    </div>
                     <svg 
                       xmlns="http://www.w3.org/2000/svg" 
-                      width="24" 
-                      height="24" 
+                      className={`h-5 w-5 transition-transform duration-200 ${
+                        expandedMenus.settings ? 'transform rotate-180' : ''
+                      }`} 
+                      fill="none" 
                       viewBox="0 0 24 24" 
-                      fill="none"
                       stroke="currentColor"
-                      strokeWidth="2"
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      className="w-7 h-7"
+                      aria-hidden="true"
                     >
-                      <path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"></path>
-                      <circle cx="12" cy="12" r="3"></circle>
+                      <path 
+                        strokeLinecap="round" 
+                        strokeLinejoin="round" 
+                        strokeWidth={2} 
+                        d="M19 9l-7 7-7-7" 
+                      />
                     </svg>
-                  </div>
-                  <span className="ml-3 font-medium text-xl whitespace-nowrap">Settings</span>
-                </Link>
+                  </button>
+                  
+                  {expandedMenus.settings && (
+                    <ul id="settings-menu" className="mt-1 pl-10 space-y-1">
+                      <li>
+                        <Link 
+                          to="/app/settings"
+                          onClick={handleMenuItemClick}
+                          className={`flex items-center px-3 py-2.5 focus-visible-only ${
+                            isActive('/app/settings') && location.pathname === '/app/settings'
+                              ? 'bg-white/80 text-gray-800 font-medium'
+                              : 'text-white hover:bg-white/10'
+                          } transition-colors duration-200 rounded-lg focus:outline-none`}
+                          aria-current={isActive('/app/settings') && location.pathname === '/app/settings' ? 'page' : undefined}
+                        >
+                          <svg 
+                            className="h-5 w-5 mr-2"
+                            viewBox="0 0 24 24"
+                            fill="none"
+                            stroke="currentColor"
+                            strokeWidth="2"
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                          >
+                            <rect width="18" height="18" x="3" y="3" rx="2" />
+                            <path d="M12 8v8" />
+                            <path d="M8 12h8" />
+                          </svg>
+                          <span className="text-lg">Add Settings</span>
+                        </Link>
+                      </li>
+                      <li>
+                        <Link 
+                          to="/app/settings/manage"
+                          onClick={handleMenuItemClick}
+                          className={`flex items-center px-3 py-2.5 focus-visible-only ${
+                            isActive('/app/settings/manage')
+                              ? 'bg-white/80 text-gray-800 font-medium'
+                              : 'text-white hover:bg-white/10'
+                          } transition-colors duration-200 rounded-lg focus:outline-none`}
+                          aria-current={isActive('/app/settings/manage') ? 'page' : undefined}
+                        >
+                          <svg 
+                            className="h-5 w-5 mr-2"
+                            viewBox="0 0 24 24"
+                            fill="none"
+                            stroke="currentColor"
+                            strokeWidth="2"
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                          >
+                            <path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z" />
+                            <path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z" />
+                          </svg>
+                          <span className="text-lg">Manage Settings</span>
+                        </Link>
+                      </li>
+                    </ul>
+                  )}
+                </div>
               </li>
          
             </ul>

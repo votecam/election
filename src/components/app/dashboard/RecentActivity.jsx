@@ -6,15 +6,36 @@ const RecentActivity = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
+  // Helper to calculate time ago
+  const getTimeAgo = (date) => {
+    if (!date) return '';
+    const now = new Date();
+    const seconds = Math.floor((now - date) / 1000);
+    if (seconds < 60) return 'Just now';
+    const minutes = Math.floor(seconds / 60);
+    if (minutes < 60) return `${minutes} minute${minutes === 1 ? '' : 's'} ago`;
+    const hours = Math.floor(minutes / 60);
+    if (hours < 24) return `${hours} hour${hours === 1 ? '' : 's'} ago`;
+    const days = Math.floor(hours / 24);
+    return `${days} day${days === 1 ? '' : 's'} ago`;
+  };
+
   const fetchActivities = async () => {
     try {
       const response = await apiService.activities.getAll();
       // Sort activities by timestamp in descending order (newest first)
       const sortedActivities = response.data
-        .map(activity => ({
-          ...activity,
-          timestamp: new Date(activity.timestamp)
-        }))
+        .map(activity => {
+          const timestamp = activity.timestamp ? new Date(activity.timestamp) : null;
+          const timeAgo = activity.timeAgo || (timestamp ? getTimeAgo(timestamp) : '');
+          return {
+            ...activity,
+            timestamp,
+            timeAgo
+          };
+        })
+        // Filter out activities with invalid timestamp or timeAgo
+        .filter(a => a.timestamp && !isNaN(a.timestamp) && a.timeAgo)
         .sort((a, b) => b.timestamp - a.timestamp)
         .slice(0, 5); // Take only the 5 most recent
 
