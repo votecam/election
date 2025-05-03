@@ -342,6 +342,7 @@ const ManageSettings = () => {
         onClose={() => setIsViewModalOpen(false)}
         settingId={selectedSetting?.id}
         onSettingDeleted={handleDelete}
+        setting={selectedSetting}
       />
 
       <EditSettingsModal

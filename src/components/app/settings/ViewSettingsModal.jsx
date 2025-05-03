@@ -7,9 +7,9 @@ const ViewSettingsModal = ({ isOpen, onClose, settingId, onSettingDeleted }) => 
   const [showDeleteConfirmation, setShowDeleteConfirmation] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
   const [deleteError, setDeleteError] = useState(null);
-  const [setting, setSetting] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState(null);
+  const [setting, setSetting] = useState(null);
   const [timeLeft, setTimeLeft] = useState({
     days: 0,
     hours: 0,
@@ -18,29 +18,35 @@ const ViewSettingsModal = ({ isOpen, onClose, settingId, onSettingDeleted }) => 
     isPast: false
   });
 
-  useEffect(() => {
-    if (isOpen && settingId) {
-      setIsVisible(true);
-      setDeleteError(null);
-      fetchSetting();
-    } else {
-      setIsVisible(false);
-      setSetting(null);
-    }
-  }, [isOpen, settingId]);
-
+  // Function to fetch setting details
   const fetchSetting = async () => {
     try {
       setIsLoading(true);
       setError(null);
       const response = await apiService.settings.getSettingById(settingId);
-      setSetting(response.data);
+      if (response.status === 'success' && response.data) {
+        setSetting(response.data);
+      } else {
+        throw new Error('Failed to fetch setting details');
+      }
     } catch (err) {
-      setError(err.message || 'Failed to fetch setting details');
+      console.error('Error fetching setting:', err);
+      setError(err.message || 'Failed to load setting details');
     } finally {
       setIsLoading(false);
     }
   };
+
+  useEffect(() => {
+    if (isOpen) {
+      setIsVisible(true);
+      setDeleteError(null);
+      // Fetch setting details when modal opens
+      fetchSetting();
+    } else {
+      setIsVisible(false);
+    }
+  }, [isOpen, settingId]);
 
   useEffect(() => {
     if (setting?.date) {
@@ -149,55 +155,70 @@ const ViewSettingsModal = ({ isOpen, onClose, settingId, onSettingDeleted }) => 
             </div>
           ) : setting ? (
             <>
-              {/* Countdown Timer */}
+              {/* Countdown Timer with Background */}
               {setting.date && (
-                <div className={`mb-8 p-6 rounded-lg ${
-                  timeLeft.isPast 
-                    ? 'bg-gradient-to-r from-red-50 to-red-100' 
-                    : 'bg-gradient-to-r from-emerald-50 to-emerald-100'
-                }`}>
-                  {timeLeft.isPast ? (
-                    <div className="text-center">
-                      <h3 className="text-2xl font-bold text-red-600 mb-2">Election Closed</h3>
-                      <p className="text-gray-600">
-                        This election concluded on {new Date(setting.date).toLocaleDateString('en-GB', {
-                          day: '2-digit',
-                          month: 'long',
-                          year: 'numeric'
-                        })}
-                      </p>
-                    </div>
-                  ) : (
-                    <>
-                      <h3 className="text-lg font-semibold text-gray-800 mb-4">Time Until Election</h3>
-                      <div className="grid grid-cols-4 gap-4">
-                        <div className="text-center">
-                          <div className="text-3xl font-bold text-emerald-600">
-                            {timeLeft.days}
-                          </div>
-                          <div className="text-sm text-gray-600">Days</div>
-                        </div>
-                        <div className="text-center">
-                          <div className="text-3xl font-bold text-emerald-600">
-                            {timeLeft.hours}
-                          </div>
-                          <div className="text-sm text-gray-600">Hours</div>
-                        </div>
-                        <div className="text-center">
-                          <div className="text-3xl font-bold text-emerald-600">
-                            {timeLeft.minutes}
-                          </div>
-                          <div className="text-sm text-gray-600">Minutes</div>
-                        </div>
-                        <div className="text-center">
-                          <div className="text-3xl font-bold text-emerald-600">
-                            {timeLeft.seconds}
-                          </div>
-                          <div className="text-sm text-gray-600">Seconds</div>
-                        </div>
+                <div 
+                  className={`relative mb-8 rounded-lg overflow-hidden ${
+                    timeLeft.isPast 
+                      ? 'bg-gradient-to-r from-red-50/90 to-red-100/90' 
+                      : 'bg-gradient-to-r from-emerald-50/90 to-emerald-100/90'
+                  }`}
+                  style={{
+                    backgroundImage: setting.background_picture ? `url(${process.env.REACT_APP_API_URL}${setting.background_picture})` : 'none',
+                    backgroundSize: 'cover',
+                    backgroundPosition: 'center',
+                    backgroundBlendMode: 'overlay',
+                    minHeight: '200px'
+                  }}
+                >
+                  {/* Overlay for better text readability */}
+                  <div className="absolute inset-0 bg-black/30 backdrop-blur-[1px]"></div>
+                  
+                  {/* Content */}
+                  <div className="relative z-10 p-8">
+                    {timeLeft.isPast ? (
+                      <div className="text-center">
+                        <h3 className="text-2xl font-bold text-white mb-2 drop-shadow-lg">Election Closed</h3>
+                        <p className="text-white/90 drop-shadow-md">
+                          This election concluded on {new Date(setting.date).toLocaleDateString('en-GB', {
+                            day: '2-digit',
+                            month: 'long',
+                            year: 'numeric'
+                          })}
+                        </p>
                       </div>
-                    </>
-                  )}
+                    ) : (
+                      <>
+                        <h3 className="text-xl font-semibold text-white mb-6 drop-shadow-lg">Time Until Election</h3>
+                        <div className="grid grid-cols-4 gap-4">
+                          <div className="text-center bg-white/10 backdrop-blur-sm rounded-lg p-4">
+                            <div className="text-4xl font-bold text-white drop-shadow-lg">
+                              {timeLeft.days}
+                            </div>
+                            <div className="text-sm text-white/90 mt-1">Days</div>
+                          </div>
+                          <div className="text-center bg-white/10 backdrop-blur-sm rounded-lg p-4">
+                            <div className="text-4xl font-bold text-white drop-shadow-lg">
+                              {timeLeft.hours}
+                            </div>
+                            <div className="text-sm text-white/90 mt-1">Hours</div>
+                          </div>
+                          <div className="text-center bg-white/10 backdrop-blur-sm rounded-lg p-4">
+                            <div className="text-4xl font-bold text-white drop-shadow-lg">
+                              {timeLeft.minutes}
+                            </div>
+                            <div className="text-sm text-white/90 mt-1">Minutes</div>
+                          </div>
+                          <div className="text-center bg-white/10 backdrop-blur-sm rounded-lg p-4">
+                            <div className="text-4xl font-bold text-white drop-shadow-lg">
+                              {timeLeft.seconds}
+                            </div>
+                            <div className="text-sm text-white/90 mt-1">Seconds</div>
+                          </div>
+                        </div>
+                      </>
+                    )}
+                  </div>
                 </div>
               )}
 

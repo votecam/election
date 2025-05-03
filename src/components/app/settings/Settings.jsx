@@ -9,6 +9,7 @@ const Settings = () => {
     displayYear: '',
     countdownEnabled: false,
     electionCategory: '',
+    background_picture: null,
     notifications: {
       email: true,
       browser: true,
@@ -85,33 +86,54 @@ const Settings = () => {
     }
   };
 
-  // Function to add settings
+  // Add file change handler
+  const handleFileChange = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      setSettings(prev => ({
+        ...prev,
+        background_picture: file
+      }));
+    }
+  };
+
+  // Modify addSettings function to include file
   const addSettings = async () => {
     try {
       setLoading(true);
       setError(null);
       
-      // First check if settings already exist
-      const existingSettings = await apiService.settings.getAllSettings();
-      
-      // Check if there's already a setting with the same year and category
-      const settingExists = existingSettings.data.settings.some(setting => 
-        setting.year === parseInt(settings.displayYear) && 
-        setting.election_category.toLowerCase() === settings.electionCategory.toLowerCase()
-      );
+      // Validate required fields
+      if (!settings.background_picture) {
+        setError('Please upload an election logo/banner image');
+        setLoading(false);
+        return;
+      }
 
-      if (settingExists) {
-        setError(`Settings for ${settings.displayYear} ${settings.electionCategory} election already exist.`);
+      if (!settings.displayYear || !settings.electionCategory || !settings.electionDate) {
+        setError('Please fill in all required fields');
+        setLoading(false);
         return;
       }
       
-      const settingData = {
+      // Format the data according to API expectations
+      const data = {
         year: parseInt(settings.displayYear),
-        election_category: settings.electionCategory.charAt(0).toUpperCase() + settings.electionCategory.slice(1),
-        date: new Date(settings.electionDate).toISOString()
+        election_category: settings.electionCategory.charAt(0).toUpperCase() + 
+                         settings.electionCategory.slice(1).toLowerCase(),
+        date: settings.electionDate,
+        background_picture: settings.background_picture
       };
       
-      const response = await apiService.settings.addSetting(settingData);
+      // Log the data being sent for debugging
+      console.log('Sending settings data:', {
+        year: data.year,
+        election_category: data.election_category,
+        date: data.date,
+        background_picture: data.background_picture.name
+      });
+      
+      const response = await apiService.settings.addSetting(data);
       
       if (response.status === 'success') {
         setSuccessMessage('Settings added successfully!');
@@ -122,12 +144,8 @@ const Settings = () => {
         setError(response.message || 'Failed to add settings');
       }
     } catch (err) {
-      if (err.response?.data?.message) {
-        setError(err.response.data.message);
-      } else {
-        setError('Failed to add settings. Please try again later.');
-      }
       console.error('Error adding settings:', err);
+      setError(err.message || 'Failed to add settings. Please try again later.');
     } finally {
       setLoading(false);
     }
@@ -583,6 +601,42 @@ const Settings = () => {
                 )}
               </div>
               <p className="mt-1 text-sm text-gray-500">Select the year to display in the application.</p>
+            </div>
+
+            {/* File Upload */}
+            <div className="mb-10">
+              <label htmlFor="file_upload" className="block text-base font-semibold text-gray-700 mb-1">
+                Upload Logo <span className="text-red-500">*</span>
+              </label>
+              <div className="relative">
+                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="h-6 w-6 text-gray-600">
+                    <path d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                  </svg>
+                </div>
+                
+                {/* Vertical separator line */}
+                <div className="absolute inset-y-2 left-12 w-px bg-gray-300"></div>
+                
+                <input
+                  type="file"
+                  id="file_upload"
+                  name="file_upload"
+                  accept="image/*"
+                  onChange={handleFileChange}
+                  required
+                  className={`pl-16 w-full px-4 py-3 border ${error && !settings.background_picture ? 'border-red-500' : 'border-gray-300'} rounded-none text-base font-medium bg-white focus:outline-none focus:ring-1 focus:ring-emerald-500 focus:border-emerald-500 transition-all duration-200 ease-in-out file:mr-4 file:py-2 file:px-4 file:rounded-none file:border-0 file:text-sm file:font-semibold file:bg-emerald-50 file:text-emerald-700 hover:file:bg-emerald-100`}
+                />
+              </div>
+              <p className="mt-1 text-sm text-gray-500">Upload the election logo or banner image. This field is required.</p>
+              {error && !settings.background_picture && (
+                <p className="mt-1 text-sm text-red-600 font-medium flex items-center">
+                  <svg className="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
+                    <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+                  </svg>
+                  {error}
+                </p>
+              )}
             </div>
           
           </div>

@@ -877,7 +877,30 @@ const apiService = {
   settings: {
     addSetting: async (settingData) => {
       try {
-        const response = await api.post('/setting/add-setting', settingData);
+        // Create FormData object to handle file upload
+        const formData = new FormData();
+        
+        // Add fields in the exact format the API expects
+        formData.append('year', settingData.year.toString());
+        formData.append('election_category', settingData.election_category);
+        formData.append('date', settingData.date.split('T')[0]); // Format as YYYY-MM-DD
+        formData.append('background_picture', settingData.background_picture);
+
+        // Log the FormData contents for debugging
+        console.log('Settings form data being sent:');
+        for (let pair of formData.entries()) {
+          if (pair[0] === 'background_picture') {
+            console.log('background_picture:', pair[1].name, pair[1].type, pair[1].size);
+          } else {
+            console.log(pair[0], pair[1]);
+          }
+        }
+
+        const response = await api.post('/setting/add-setting', formData, {
+          headers: {
+            'Content-Type': 'multipart/form-data'
+          }
+        });
         
         if (response.data && response.data.status === 'success') {
           return response.data;
@@ -886,7 +909,7 @@ const apiService = {
         }
       } catch (error) {
         console.error('Add setting error:', error);
-        if (error.response && error.response.data) {
+        if (error.response?.data) {
           throw new Error(error.response.data.message || 'Failed to add setting. Please try again.');
         }
         throw new Error(error.message || 'Failed to add setting. Please try again.');
