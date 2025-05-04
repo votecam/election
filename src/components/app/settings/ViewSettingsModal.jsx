@@ -24,7 +24,9 @@ const ViewSettingsModal = ({ isOpen, onClose, settingId, onSettingDeleted }) => 
       setIsLoading(true);
       setError(null);
       const response = await apiService.settings.getSettingById(settingId);
+      console.log('Setting response:', response); // Debug log
       if (response.status === 'success' && response.data) {
+        console.log('Setting background picture:', response.data.background_picture); // Debug log
         setSetting(response.data);
       } else {
         throw new Error('Failed to fetch setting details');
@@ -164,13 +166,30 @@ const ViewSettingsModal = ({ isOpen, onClose, settingId, onSettingDeleted }) => 
                       : 'bg-gradient-to-r from-emerald-50/90 to-emerald-100/90'
                   }`}
                   style={{
-                    backgroundImage: setting.background_picture ? `url(${process.env.REACT_APP_API_URL}${setting.background_picture})` : 'none',
+                    backgroundImage: setting.background_picture ? `url(${import.meta.env.VITE_API_URL}${setting.background_picture.startsWith('/') ? '' : '/'}${setting.background_picture})` : 'none',
                     backgroundSize: 'cover',
                     backgroundPosition: 'center',
                     backgroundBlendMode: 'overlay',
                     minHeight: '200px'
                   }}
                 >
+                  {/* Debug: Show image directly if available */}
+                  {setting.background_picture && (
+                    <img 
+                      src={`${import.meta.env.VITE_API_URL}${setting.background_picture.startsWith('/') ? '' : '/'}${setting.background_picture}`}
+                      alt="Election background"
+                      style={{
+                        position: 'absolute',
+                        top: 0,
+                        left: 0,
+                        width: '100%',
+                        height: '100%',
+                        objectFit: 'cover',
+                        zIndex: 0,
+                        opacity: 0.3 // semi-transparent for debug
+                      }}
+                    />
+                  )}
                   {/* Overlay for better text readability */}
                   <div className="absolute inset-0 bg-black/30 backdrop-blur-[1px]"></div>
                   
