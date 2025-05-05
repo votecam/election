@@ -216,6 +216,7 @@ const ViewSettingsModal = ({ isOpen, onClose, settingId, onSettingDeleted }) => 
                     minHeight: '200px'
                   }}
                 >
+                
                   {/* Show image preview only, no URL field */}
                   {setting.background_picture && (
                     <img 
