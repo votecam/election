@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { XMarkIcon, CalendarIcon, DocumentTextIcon } from '@heroicons/react/24/outline';
+import { XMarkIcon, CalendarIcon, DocumentTextIcon, PhotoIcon } from '@heroicons/react/24/outline';
 import apiService from '../../../services/apiService';
 
 const ViewSettingsModal = ({ isOpen, onClose, settingId, onSettingDeleted }) => {
@@ -10,6 +10,8 @@ const ViewSettingsModal = ({ isOpen, onClose, settingId, onSettingDeleted }) => 
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState(null);
   const [setting, setSetting] = useState(null);
+  const [isUploading, setIsUploading] = useState(false);
+  const [uploadError, setUploadError] = useState(null);
   const [timeLeft, setTimeLeft] = useState({
     days: 0,
     hours: 0,
@@ -36,6 +38,47 @@ const ViewSettingsModal = ({ isOpen, onClose, settingId, onSettingDeleted }) => 
       setError(err.message || 'Failed to load setting details');
     } finally {
       setIsLoading(false);
+    }
+  };
+
+  const handleFileUpload = async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    // Validate file type
+    if (!file.type.startsWith('image/')) {
+      setUploadError('Please upload an image file');
+      return;
+    }
+
+    // Validate file size (max 5MB)
+    if (file.size > 5 * 1024 * 1024) {
+      setUploadError('File size should be less than 5MB');
+      return;
+    }
+
+    try {
+      setIsUploading(true);
+      setUploadError(null);
+
+      const formData = new FormData();
+      formData.append('background_picture', file);
+
+      const response = await apiService.settings.updateSetting(settingId, formData);
+      
+      if (response.status === 'success') {
+        // Update the local state with the new background picture
+        setSetting(prev => ({
+          ...prev,
+          background_picture: response.data.background_picture
+        }));
+      } else {
+        throw new Error('Failed to update background picture');
+      }
+    } catch (err) {
+      setUploadError(err.message || 'Failed to upload image');
+    } finally {
+      setIsUploading(false);
     }
   };
 
@@ -166,17 +209,17 @@ const ViewSettingsModal = ({ isOpen, onClose, settingId, onSettingDeleted }) => 
                       : 'bg-gradient-to-r from-emerald-50/90 to-emerald-100/90'
                   }`}
                   style={{
-                    backgroundImage: setting.background_picture ? `url(${import.meta.env.VITE_API_URL}${setting.background_picture.startsWith('/') ? '' : '/'}${setting.background_picture})` : 'none',
+                    backgroundImage: setting.background_picture ? `url(${setting.background_picture})` : 'none',
                     backgroundSize: 'cover',
                     backgroundPosition: 'center',
                     backgroundBlendMode: 'overlay',
                     minHeight: '200px'
                   }}
                 >
-                  {/* Debug: Show image directly if available */}
+                  {/* Show image preview only, no URL field */}
                   {setting.background_picture && (
                     <img 
-                      src={`${import.meta.env.VITE_API_URL}${setting.background_picture.startsWith('/') ? '' : '/'}${setting.background_picture}`}
+                      src={setting.background_picture}
                       alt="Election background"
                       style={{
                         position: 'absolute',

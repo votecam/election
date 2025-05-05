@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { XMarkIcon, CalendarIcon, DocumentTextIcon } from '@heroicons/react/24/outline';
+import { XMarkIcon, CalendarIcon, DocumentTextIcon, PhotoIcon } from '@heroicons/react/24/outline';
 import apiService from '../../../services/apiService';
 
 const EditSettingsModal = ({ isOpen, onClose, settingId, onSave }) => {
@@ -9,7 +9,9 @@ const EditSettingsModal = ({ isOpen, onClose, settingId, onSave }) => {
   const [error, setError] = useState(null);
   const [formData, setFormData] = useState({
     election_category: '',
-    date: ''
+    date: '',
+    year: new Date().getFullYear(),
+    background_picture: ''
   });
 
   const electionCategories = [
@@ -28,7 +30,9 @@ const EditSettingsModal = ({ isOpen, onClose, settingId, onSave }) => {
       setSetting(null);
       setFormData({
         election_category: '',
-        date: ''
+        date: '',
+        year: new Date().getFullYear(),
+        background_picture: ''
       });
     }
   }, [isOpen, settingId]);
@@ -41,7 +45,9 @@ const EditSettingsModal = ({ isOpen, onClose, settingId, onSave }) => {
       setSetting(response.data);
       setFormData({
         election_category: response.data.election_category,
-        date: response.data.date.split('T')[0]
+        date: response.data.date.split('T')[0],
+        year: response.data.year,
+        background_picture: response.data.background_picture
       });
     } catch (err) {
       setError(err.message || 'Failed to fetch setting details');
@@ -155,6 +161,29 @@ const EditSettingsModal = ({ isOpen, onClose, settingId, onSave }) => {
                 </div>
               </div>
 
+              {/* Year */}
+              <div className="space-y-2">
+                <label htmlFor="year" className="block text-sm font-medium text-gray-700">
+                  Election Year
+                </label>
+                <div className="relative">
+                  <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                    <CalendarIcon className="h-5 w-5 text-gray-400" />
+                  </div>
+                  <input
+                    type="number"
+                    id="year"
+                    name="year"
+                    value={formData.year}
+                    onChange={handleChange}
+                    min={new Date().getFullYear()}
+                    max={new Date().getFullYear() + 10}
+                    className="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-emerald-500 focus:border-emerald-500 sm:text-sm"
+                    required
+                  />
+                </div>
+              </div>
+
               {/* Election Date */}
               <div className="space-y-2">
                 <label htmlFor="date" className="block text-sm font-medium text-gray-700">
@@ -175,6 +204,63 @@ const EditSettingsModal = ({ isOpen, onClose, settingId, onSave }) => {
                   />
                 </div>
               </div>
+
+              {/* Background Image preview and upload */}
+              {setting && (
+                <div className="space-y-2">
+                  {/* Only show preview, no URL field */}
+                  {setting.background_picture && (
+                    <div className="mt-2">
+                      <img
+                        src={setting.background_picture}
+                        alt="Background preview"
+                        className="w-full h-32 object-cover rounded-lg"
+                      />
+                    </div>
+                  )}
+                  <div>
+                    <label
+                      htmlFor="background-upload"
+                      className="flex items-center gap-2 px-4 py-2 bg-white border border-gray-300 rounded-lg cursor-pointer hover:bg-gray-50 transition-colors w-fit mt-2"
+                    >
+                      <PhotoIcon className="h-5 w-5 text-gray-600" />
+                      <span className="text-sm font-medium text-gray-700">
+                        Change Background
+                      </span>
+                    </label>
+                    <input
+                      id="background-upload"
+                      type="file"
+                      accept="image/*"
+                      onChange={async (e) => {
+                        const file = e.target.files[0];
+                        if (!file) return;
+                        if (!file.type.startsWith('image/')) {
+                          alert('Please upload an image file');
+                          return;
+                        }
+                        if (file.size > 5 * 1024 * 1024) {
+                          alert('File size should be less than 5MB');
+                          return;
+                        }
+                        const formData = new FormData();
+                        formData.append('background_picture', file);
+                        try {
+                          const response = await apiService.settings.updateSetting(settingId, formData);
+                          if (response.status === 'success') {
+                            setSetting(prev => ({ ...prev, background_picture: response.data.background_picture }));
+                          } else {
+                            alert('Failed to update background picture');
+                          }
+                        } catch (err) {
+                          alert(err.message || 'Failed to upload image');
+                        }
+                      }}
+                      className="hidden"
+                    />
+                  </div>
+                </div>
+              )}
 
               {/* Error Message */}
               {error && (
