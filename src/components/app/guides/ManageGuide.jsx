@@ -125,12 +125,10 @@ const ManageGuide = () => {
     e.preventDefault();
     e.stopPropagation();
     
-    // Create a blob URL and open it in a new window
     if (guide.file_path) {
-      // Instead of directly navigating, we'll create a preview dialog in a future implementation
-      // For now, we'll just log the action
-      console.log('View guide:', guide.title);
-      alert(`Preview functionality for "${guide.title}" will be implemented in a future update.`);
+      // Open the file in a new window using the correct API URL
+      const viewUrl = `https://api.votecam.org/uploads/guides/${guide.file_path.split('/').pop()}`;
+      window.open(viewUrl, '_blank');
     }
     setActiveMenu(null);
   };
@@ -439,7 +437,12 @@ const ManageGuide = () => {
                               onClick={async () => {
                                 if (guide.file_path) {
                                   try {
-                                    const response = await fetch(guide.file_path, { method: 'GET' });
+                                    const response = await fetch(`https://api.votecam.org/uploads/guides/${guide.file_path.split('/').pop()}`, { 
+                                      method: 'GET',
+                                      headers: {
+                                        'Authorization': `Bearer ${localStorage.getItem('token')}`
+                                      }
+                                    });
                                     if (!response.ok) throw new Error('Failed to download file');
                                     const blob = await response.blob();
                                     let filename = guide.file_path.split('/').pop() || guide.title || 'guide';
@@ -453,6 +456,7 @@ const ManageGuide = () => {
                                     window.URL.revokeObjectURL(url);
                                     document.body.removeChild(a);
                                   } catch (err) {
+                                    console.error('Download error:', err);
                                     alert('Failed to download file.');
                                   }
                                 }
