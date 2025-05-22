@@ -2,6 +2,12 @@ import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import apiService from '../../../services/apiService';
 
+// Move formatDate function outside of components
+const formatDate = (dateString) => {
+  const options = { year: 'numeric', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' };
+  return new Date(dateString).toLocaleDateString(undefined, options);
+};
+
 // Skeleton loader component for notification cards
 const SkeletonNotificationCard = () => {
   return (
@@ -142,11 +148,6 @@ const AllNotifications = () => {
         setDeleteError(null);
       }, 3000);
     }
-  };
-  
-  const formatDate = (dateString) => {
-    const options = { year: 'numeric', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' };
-    return new Date(dateString).toLocaleDateString(undefined, options);
   };
   
   // Update time formatting function to handle API response time format
