@@ -45,7 +45,10 @@ const AdvancedStatsCard = () => {
   const [stats, setStats] = useState({
     candidates: 0,
     centers: 0,
-    feedback: 0
+    feedback: 0,
+    users: 0,
+    reports: 0,
+    admins: 0
   });
   
   const [loading, setLoading] = useState(true);
@@ -89,6 +92,34 @@ const AdvancedStatsCard = () => {
         } catch (feedbackError) {
           console.error('Error fetching feedback data:', feedbackError);
         }
+        
+        // Fetch users count
+        try {
+          const usersResponse = await apiService.users.getAll(1, 100);
+          if (usersResponse && usersResponse.users) {
+            setStats(prev => ({ ...prev, users: usersResponse.users.length }));
+          } else if (usersResponse && usersResponse.pagination && usersResponse.pagination.total) {
+            setStats(prev => ({ ...prev, users: usersResponse.pagination.total }));
+          }
+        } catch (usersError) {
+          console.error('Error fetching users data:', usersError);
+        }
+        
+        // Fetch reports count (mock data for now since we don't have a reports API yet)
+        try {
+          // For now, we'll use mock data since reports API might not be implemented yet
+          setStats(prev => ({ ...prev, reports: 6 })); // Mock count based on our AllReports mock data
+        } catch (reportsError) {
+          console.error('Error fetching reports data:', reportsError);
+        }
+        
+        // Fetch admins count (mock data for now since we don't have an admins API yet)
+        try {
+          // For now, we'll use mock data since admins API might not be implemented yet
+          setStats(prev => ({ ...prev, admins: 3 })); // Mock count for admin users
+        } catch (adminsError) {
+          console.error('Error fetching admins data:', adminsError);
+        }
       } catch (error) {
         console.error('Error fetching stats:', error);
       } finally {
@@ -101,8 +132,8 @@ const AdvancedStatsCard = () => {
   
   return (
     <div className="space-y-6">
-      {/* Main stats grid with increased spacing */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+      {/* First row - Original 3 stats cards */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {/* Total Candidates Card */}
         <StatCard 
           title="Total Candidates" 
@@ -141,6 +172,51 @@ const AdvancedStatsCard = () => {
           icon={
             <svg xmlns="http://www.w3.org/2000/svg" className="h-7 w-7 text-amber-700" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z" />
+            </svg>
+          }
+        />
+      </div>
+      
+      {/* Second row - New 3 stats cards */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        {/* Total Users Card */}
+        <StatCard 
+          title="Total Users" 
+          value={stats.users.toString()} 
+          iconBg="bg-purple-100"
+          iconColor="text-purple-700"
+          loading={loading}
+          icon={
+            <svg xmlns="http://www.w3.org/2000/svg" className="h-7 w-7 text-purple-700" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197m13.5-9a2.5 2.5 0 11-5 0 2.5 2.5 0 015 0z" />
+            </svg>
+          }
+        />
+        
+        {/* Total Reports Card */}
+        <StatCard 
+          title="Total Reports" 
+          value={stats.reports.toString()} 
+          iconBg="bg-red-100"
+          iconColor="text-red-700"
+          loading={loading}
+          icon={
+            <svg xmlns="http://www.w3.org/2000/svg" className="h-7 w-7 text-red-700" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+            </svg>
+          }
+        />
+        
+        {/* Total Admins Card */}
+        <StatCard 
+          title="Total Admins" 
+          value={stats.admins.toString()} 
+          iconBg="bg-indigo-100"
+          iconColor="text-indigo-700"
+          loading={loading}
+          icon={
+            <svg xmlns="http://www.w3.org/2000/svg" className="h-7 w-7 text-indigo-700" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
             </svg>
           }
         />

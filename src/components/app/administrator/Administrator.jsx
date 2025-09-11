@@ -225,7 +225,7 @@ const Administrator = () => {
   };
 
   return (
-    <div className="w-full max-w-5xl mx-auto">
+    <div className="w-full max-w-7xl mx-auto">
       <header className="mb-6">
         <h1 className="text-3xl font-bold text-gray-800">Administrator Management</h1>
         <div className="w-32 h-0.5 bg-emerald-600 rounded-sm mt-2"></div>

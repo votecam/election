@@ -20,8 +20,12 @@ import UploadGuide from './components/app/guides/UploadGuide'
 import ManageGuide from './components/app/guides/ManageGuide'
 import Settings from './components/app/settings/Settings'
 import Administrator from './components/app/administrator/Administrator'
+import ManageAdmins from './components/app/administrator/ManageAdmins'
 import CreateNotification from './components/app/notifications/CreateNotification'
 import AllNotifications from './components/app/notifications/AllNotifications'
+import Users from './components/app/users/Users'
+import ManageReports from './components/app/reports/ManageReports'
+import AllReports from './components/app/reports/AllReports'
 import { AuthProvider } from './context/AuthContext'
 import ManageSettings from './components/app/settings/ManageSettings'
 
@@ -57,8 +61,11 @@ function App() {
                 <Route path="manage" element={<ManageSettings />} />
               </Route>
               
-              {/* Administrator Route */}
+              {/* Administrator Routes */}
               <Route path="administrator" element={<Administrator />} />
+              <Route path="administrators">
+                <Route path="all" element={<ManageAdmins />} />
+              </Route>
               
               {/* Centres Routes */}
               <Route path="centres">
@@ -74,6 +81,9 @@ function App() {
                 <Route path="register" element={<RegisterCandidate />} />
                 <Route path="manage" element={<ManageCandidate />} />
               </Route>
+              
+              {/* Users Route */}
+              <Route path="users" element={<Users />} />
               
               {/* Guides Routes */}
               <Route path="guides">
@@ -91,6 +101,13 @@ function App() {
               
               {/* Feedback Route */}
               <Route path="feedback" element={<Feedback />} />
+              
+              {/* Reports Routes */}
+              <Route path="reports">
+                <Route index element={<Navigate to="/app/reports/all" replace />} />
+                <Route path="all" element={<AllReports />} />
+                <Route path="manage" element={<ManageReports />} />
+              </Route>
               
               <Route path="*" element={<Navigate to="/app" replace />} />
             </Route>

@@ -15,6 +15,7 @@ const Sidebar = ({ isOpen, toggleSidebar }) => {
     centres: false,
     candidates: false,
     guides: false,
+    administrators: false,
   });
 
   const toggleMenu = (menu) => {
@@ -112,6 +113,14 @@ const Sidebar = ({ isOpen, toggleSidebar }) => {
       return isActive('/app/notifications/create') ||
              isActive('/app/notifications/all');
     }
+    if (parentPath === '/app/reports') {
+      return isActive('/app/reports/all') ||
+             isActive('/app/reports/manage');
+    }
+    if (parentPath === '/app/administrators') {
+      return isActive('/app/administrator') ||
+             isActive('/app/administrators/all');
+    }
     return false;
   };
   
@@ -135,6 +144,16 @@ const Sidebar = ({ isOpen, toggleSidebar }) => {
     // Check if we're on a notifications route
     if (location.pathname.includes('/app/notifications/')) {
       setExpandedMenus(prev => ({ ...prev, notifications: true }));
+    }
+
+    // Check if we're on a reports route
+    if (location.pathname.includes('/app/reports/')) {
+      setExpandedMenus(prev => ({ ...prev, reports: true }));
+    }
+
+    // Check if we're on an administrators route
+    if (location.pathname.includes('/app/administrators/') || location.pathname === '/app/administrator') {
+      setExpandedMenus(prev => ({ ...prev, administrators: true }));
     }
   }, [location.pathname]);
   
@@ -578,6 +597,39 @@ const Sidebar = ({ isOpen, toggleSidebar }) => {
                 </div>
               </li>
 
+              {/* Users */}
+              <li>
+                <Link 
+                  to="/app/users"
+                  onClick={handleMenuItemClick}
+                  className={`flex items-center px-3 py-3 transition-all duration-200 group focus-visible-only ${
+                    isActive('/users') 
+                      ? 'bg-white/80 text-gray-800 font-medium shadow-sm' 
+                      : 'text-white hover:bg-white/10'
+                  } rounded-lg focus:outline-none`}
+                  aria-current={isActive('/users') ? 'page' : undefined}
+                >
+                  <div className={`flex items-center justify-center w-9 h-9 ${isActive('/users') ? 'text-gray-800' : 'text-white group-hover:text-white'}`}>
+                    <svg 
+                      xmlns="http://www.w3.org/2000/svg" 
+                      className="h-7 w-7" 
+                      fill="none" 
+                      viewBox="0 0 24 24" 
+                      stroke="currentColor"
+                      aria-hidden="true"
+                    >
+                      <path 
+                        strokeLinecap="round" 
+                        strokeLinejoin="round" 
+                        strokeWidth={2} 
+                        d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197m13.5-9a2.5 2.5 0 11-5 0 2.5 2.5 0 015 0z" 
+                      />
+                    </svg>
+                  </div>
+                  <span className="ml-3 font-medium text-xl whitespace-nowrap">Users</span>
+                </Link>
+              </li>
+
      
               {/* Guide Management */}
               <li>
@@ -717,37 +769,116 @@ const Sidebar = ({ isOpen, toggleSidebar }) => {
                 </Link>
               </li>
               
-              {/* Administrator */}
+              {/* Administrators - Dropdown Menu */}
               <li>
-                <Link 
-                  to="/app/administrator"
-                  onClick={handleMenuItemClick}
-                  className={`flex items-center px-3 py-3 transition-all duration-200 group focus-visible-only ${
-                    isActive('/administrator') 
-                      ? 'bg-white/80 text-gray-800 font-medium shadow-sm' 
-                      : 'text-white hover:bg-white/10'
-                  } rounded-lg focus:outline-none`}
-                  aria-current={isActive('/administrator') ? 'page' : undefined}
-                >
-                  <div className={`flex items-center justify-center w-9 h-9 ${isActive('/administrator') ? 'text-gray-800' : 'text-white group-hover:text-white'}`}>
+                <div className="space-y-1">
+                  <button
+                    onClick={() => toggleMenu('administrators')}
+                    className={`w-full flex items-center justify-between px-3 py-3 transition-all duration-200 group focus-visible-only ${
+                      isMenuActive('/app/administrators') 
+                        ? 'bg-white text-gray-800 font-medium shadow-sm' 
+                        : 'text-white hover:bg-white/10'
+                    } rounded-lg focus:outline-none`}
+                    aria-expanded={expandedMenus.administrators}
+                    aria-controls="administrators-menu"
+                  >
+                    <div className="flex items-center">
+                      <div className={`flex items-center justify-center w-9 h-9 ${isMenuActive('/app/administrators') ? 'text-gray-800' : 'text-white group-hover:text-white'}`}>
+                        <svg 
+                          xmlns="http://www.w3.org/2000/svg" 
+                          viewBox="0 0 24 24" 
+                          fill="none"
+                          stroke="currentColor"
+                          strokeWidth="2"
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          className="w-7 h-7"
+                        >
+                          <path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+                          <circle cx="8.5" cy="7" r="4"></circle>
+                          <path d="M20 8v6"></path>
+                          <path d="M23 11h-6"></path>
+                        </svg>
+                      </div>
+                      <span className="ml-3 font-medium text-xl whitespace-nowrap">Administrators</span>
+                    </div>
                     <svg 
                       xmlns="http://www.w3.org/2000/svg" 
+                      className={`h-5 w-5 transition-transform duration-200 ${
+                        expandedMenus.administrators ? 'transform rotate-180' : ''
+                      }`} 
+                      fill="none" 
                       viewBox="0 0 24 24" 
-                      fill="none"
                       stroke="currentColor"
-                      strokeWidth="2"
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      className="w-7 h-7"
+                      aria-hidden="true"
                     >
-                      <path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
-                      <circle cx="8.5" cy="7" r="4"></circle>
-                      <path d="M20 8v6"></path>
-                      <path d="M23 11h-6"></path>
+                      <path 
+                        strokeLinecap="round" 
+                        strokeLinejoin="round" 
+                        strokeWidth={2} 
+                        d="M19 9l-7 7-7-7" 
+                      />
                     </svg>
-                  </div>
-                  <span className="ml-3 font-medium text-xl whitespace-nowrap">Administrator</span>
-                </Link>
+                  </button>
+                  
+                  {expandedMenus.administrators && (
+                    <ul id="administrators-menu" className="mt-1 pl-10 space-y-1">
+                      <li>
+                        <Link 
+                          to="/app/administrator"
+                          onClick={handleMenuItemClick}
+                          className={`flex items-center px-3 py-2.5 focus-visible-only ${
+                            isActive('/app/administrator') 
+                              ? 'bg-white/80 text-gray-800 font-medium' 
+                              : 'text-white hover:bg-white/10'
+                          } transition-colors duration-200 rounded-lg focus:outline-none`}
+                          aria-current={isActive('/app/administrator') ? 'page' : undefined}
+                        >
+                          <svg 
+                            className="h-5 w-5 mr-2"
+                            viewBox="0 0 24 24"
+                            fill="none"
+                            stroke="currentColor"
+                            strokeWidth="2"
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                          >
+                            <rect width="18" height="18" x="3" y="3" rx="2" />
+                            <path d="M12 8v8" />
+                            <path d="M8 12h8" />
+                          </svg>
+                          <span className="text-lg">Add/Create Admin</span>
+                        </Link>
+                      </li>
+                      <li>
+                        <Link 
+                          to="/app/administrators/all"
+                          onClick={handleMenuItemClick}
+                          className={`flex items-center px-3 py-2.5 focus-visible-only ${
+                            isActive('/app/administrators/all') 
+                              ? 'bg-white/80 text-gray-800 font-medium' 
+                              : 'text-white hover:bg-white/10'
+                          } transition-colors duration-200 rounded-lg focus:outline-none`}
+                          aria-current={isActive('/app/administrators/all') ? 'page' : undefined}
+                        >
+                          <svg 
+                            className="h-5 w-5 mr-2"
+                            viewBox="0 0 24 24"
+                            fill="none"
+                            stroke="currentColor"
+                            strokeWidth="2"
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                          >
+                            <path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z" />
+                            <path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z" />
+                          </svg>
+                          <span className="text-lg">View All Admins</span>
+                        </Link>
+                      </li>
+                    </ul>
+                  )}
+                </div>
               </li>
               
               {/* Feedback */}
@@ -776,6 +907,115 @@ const Sidebar = ({ isOpen, toggleSidebar }) => {
                   </div>
                   <span className="ml-3 font-medium text-xl whitespace-nowrap">Feedback</span>
                 </Link>
+              </li>
+              
+              {/* Reports - Dropdown Menu */}
+              <li>
+                <div className="space-y-1">
+                  <button
+                    onClick={() => toggleMenu('reports')}
+                    className={`w-full flex items-center justify-between px-3 py-3 transition-all duration-200 group focus-visible-only ${
+                      isMenuActive('/app/reports') 
+                        ? 'bg-white text-gray-800 font-medium shadow-sm' 
+                        : 'text-white hover:bg-white/10'
+                    } rounded-lg focus:outline-none`}
+                    aria-expanded={expandedMenus.reports}
+                    aria-controls="reports-menu"
+                  >
+                    <div className="flex items-center">
+                      <div className={`flex items-center justify-center w-9 h-9 ${isMenuActive('/app/reports') ? 'text-gray-800' : 'text-white group-hover:text-white'}`}>
+                        <svg 
+                          xmlns="http://www.w3.org/2000/svg" 
+                          width="24" 
+                          height="24" 
+                          viewBox="0 0 24 24" 
+                          className="fill-current"
+                          aria-hidden="true"
+                        >
+                          <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+                          <polyline points="14,2 14,8 20,8"/>
+                          <line x1="16" y1="13" x2="8" y2="13"/>
+                          <line x1="16" y1="17" x2="8" y2="17"/>
+                          <polyline points="10,9 9,9 8,9"/>
+                        </svg>
+                      </div>
+                      <span className="ml-3 font-medium text-xl whitespace-nowrap">Reports</span>
+                    </div>
+                    <svg 
+                      xmlns="http://www.w3.org/2000/svg" 
+                      className={`h-5 w-5 transition-transform duration-200 ${
+                        expandedMenus.reports ? 'transform rotate-180' : ''
+                      }`} 
+                      fill="none" 
+                      viewBox="0 0 24 24" 
+                      stroke="currentColor"
+                      aria-hidden="true"
+                    >
+                      <path 
+                        strokeLinecap="round" 
+                        strokeLinejoin="round" 
+                        strokeWidth={2} 
+                        d="M19 9l-7 7-7-7" 
+                      />
+                    </svg>
+                  </button>
+                  
+                  {expandedMenus.reports && (
+                    <ul id="reports-menu" className="mt-1 pl-10 space-y-1">
+                      <li>
+                        <Link 
+                          to="/app/reports/all"
+                          onClick={handleMenuItemClick}
+                          className={`flex items-center px-3 py-2.5 focus-visible-only ${
+                            isActive('/app/reports/all') 
+                              ? 'bg-white/80 text-gray-800 font-medium' 
+                              : 'text-white hover:bg-white/10'
+                          } transition-colors duration-200 rounded-lg focus:outline-none`}
+                          aria-current={isActive('/app/reports/all') ? 'page' : undefined}
+                        >
+                          <svg 
+                            className="h-5 w-5 mr-2"
+                            viewBox="0 0 24 24"
+                            fill="none"
+                            stroke="currentColor"
+                            strokeWidth="2"
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                          >
+                            <path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z" />
+                            <path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z" />
+                          </svg>
+                          <span className="text-lg">All Reports</span>
+                        </Link>
+                      </li>
+                      <li>
+                        <Link 
+                          to="/app/reports/manage"
+                          onClick={handleMenuItemClick}
+                          className={`flex items-center px-3 py-2.5 focus-visible-only ${
+                            isActive('/app/reports/manage') 
+                              ? 'bg-white/80 text-gray-800 font-medium' 
+                              : 'text-white hover:bg-white/10'
+                          } transition-colors duration-200 rounded-lg focus:outline-none`}
+                          aria-current={isActive('/app/reports/manage') ? 'page' : undefined}
+                        >
+                          <svg 
+                            className="h-5 w-5 mr-2"
+                            viewBox="0 0 24 24"
+                            fill="none"
+                            stroke="currentColor"
+                            strokeWidth="2"
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                          >
+                            <path d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 100 4m0-4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 100 4m0-4v2m0-6V4" />
+                          </svg>
+                          <span className="text-lg">Manage Reports</span>
+                        </Link>
+                      </li>
+                    </ul>
+                  )}
+                </div>
               </li>
               
               {/* Notifications - New Item */}
