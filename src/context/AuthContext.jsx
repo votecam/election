@@ -62,6 +62,18 @@ export const AuthProvider = ({ children }) => {
       if (response.user) {
         localStorage.setItem('user', JSON.stringify(response.user));
         setUser(response.user);
+        
+        // Role-based redirect logic
+        if (response.user.role === 'admin') {
+          // Admin users are redirected to dashboard
+          navigate('/app/dashboard', { replace: true });
+        } else if (response.user.role === 'super_admin') {
+          // Super admin users can access all areas
+          navigate('/app/dashboard', { replace: true });
+        } else {
+          // Default redirect for other roles
+          navigate('/app/dashboard', { replace: true });
+        }
       }
       
       return response.user;
@@ -140,6 +152,33 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
+  // Helper function to check if user has permission for a specific feature
+  const hasPermission = (feature) => {
+    if (!user || !user.role) return false;
+    
+    // Super admin has access to everything
+    if (user.role === 'super_admin') return true;
+    
+    // Admin role permissions
+    if (user.role === 'admin') {
+      // Admin can only access Incident Reports
+      return feature === 'incident_reports';
+    }
+    
+    // Default: no access
+    return false;
+  };
+
+  // Helper function to check if user is admin
+  const isAdmin = () => {
+    return user && (user.role === 'admin' || user.role === 'Admin');
+  };
+
+  // Helper function to check if user is super admin
+  const isSuperAdmin = () => {
+    return user && (user.role === 'super_admin' || user.role === 'Super Admin' || user.role === 'superadmin');
+  };
+
   // Context value
   const value = {
     user,
@@ -148,7 +187,10 @@ export const AuthProvider = ({ children }) => {
     login,
     logout,
     updateProfile,
-    isAuthenticated: !!user
+    isAuthenticated: !!user,
+    hasPermission,
+    isAdmin,
+    isSuperAdmin
   };
 
   return (

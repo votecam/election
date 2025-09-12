@@ -9,7 +9,8 @@ const Administrator = () => {
     name: '',
     email: '',
     password: '',
-    confirmPassword: ''
+    confirmPassword: '',
+    role: ''
   });
   const [alert, setAlert] = useState({ show: false, type: '', message: '' });
   const [errors, setErrors] = useState({});
@@ -134,6 +135,10 @@ const Administrator = () => {
       newErrors.confirmPassword = 'Passwords do not match';
     }
     
+    if (!formData.role) {
+      newErrors.role = 'Please select a role';
+    }
+    
     return newErrors;
   };
 
@@ -177,7 +182,8 @@ const Administrator = () => {
         name: '',
         email: '',
         password: '',
-        confirmPassword: ''
+        confirmPassword: '',
+        role: ''
       });
       
       // Clear errors
@@ -266,8 +272,8 @@ const Administrator = () => {
         
         <div className="p-6">
           <form onSubmit={handleSubmit} className="space-y-8">
-            {/* Two columns per row layout */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            {/* Three columns per row layout */}
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
               {/* Name Field */}
               <div>
                 <label htmlFor="name" className="block text-base font-semibold text-gray-700 mb-2">
@@ -332,6 +338,47 @@ const Administrator = () => {
                 </div>
                 {errors.email && <p className="mt-1 text-sm text-red-600">{errors.email}</p>}
                 <p className="mt-1 text-xs text-gray-500">Enter a valid email address for the administrator</p>
+              </div>
+
+              {/* Role Field */}
+              <div>
+                <label htmlFor="role" className="block text-base font-semibold text-gray-700 mb-2">
+                  Role <span className="text-red-600">*</span>
+                </label>
+                <div className="relative">
+                  <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="h-6 w-6 text-gray-600">
+                      <path d="M12 14V16C8.68629 16 6 18.6863 6 22H4C4 17.5817 7.58172 14 12 14ZM12 13C8.685 13 6 10.315 6 7C6 3.685 8.685 1 12 1C15.315 1 18 3.685 18 7C18 10.315 15.315 13 12 13ZM12 11C14.21 11 16 9.21 16 7C16 4.79 14.21 3 12 3C9.79 3 8 4.79 8 7C8 9.21 9.79 11 12 11ZM21 17H22V22H14V17H15V16C15 14.3431 16.3431 13 18 13C19.6569 13 21 14.3431 21 16V17ZM19 17V16C19 15.4477 18.5523 15 18 15C17.4477 15 17 15.4477 17 16V17H19Z"></path>
+                    </svg>
+                  </div>
+                  {/* Vertical separator line */}
+                  <div className="absolute inset-y-2 left-12 w-px bg-gray-300"></div>
+                  <select
+                    id="role"
+                    name="role"
+                    required
+                    value={formData.role}
+                    onChange={handleChange}
+                    className="pl-16 w-full px-4 py-3 border border-gray-300 rounded-none focus:outline-none focus:ring-1 focus:border-emerald-600 transition-shadow duration-300 text-base font-medium bg-white appearance-none"
+                    style={{ 
+                      "--tw-ring-color": "#00694B",
+                      "--tw-border-opacity": 1,
+                      "--tw-border-color": "rgba(0, 105, 75, var(--tw-border-opacity))"
+                    }}
+                  >
+                    <option value="">Select a role</option>
+                    <option value="admin">Admin</option>
+                    <option value="super_admin">Super Admin</option>
+                  </select>
+                  {/* Custom dropdown arrow */}
+                  <div className="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="h-6 w-6 text-gray-600">
+                      <path d="M7 10l5 5 5-5z" />
+                    </svg>
+                  </div>
+                </div>
+                {errors.role && <p className="mt-1 text-sm text-red-600">{errors.role}</p>}
+                <p className="mt-1 text-xs text-gray-500">Select the administrator's role</p>
               </div>
             </div>
 

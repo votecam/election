@@ -313,7 +313,8 @@ const apiService = {
         const response = await api.post('/user/register', {
           name: userData.name,
           email: userData.email,
-          password: userData.password
+          password: userData.password,
+          role: userData.role
         });
         
         // Check if response contains the expected data format

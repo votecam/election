@@ -4,7 +4,16 @@ import { useAuth } from '../../../../context/AuthContext';
 
 const Sidebar = ({ isOpen, toggleSidebar }) => {
   const location = useLocation();
-  const { user } = useAuth();
+  const { user, hasPermission, isAdmin, isSuperAdmin } = useAuth();
+  
+  // Debug: Let's see what roles we're actually getting
+  console.log('=== SIDEBAR DEBUG ===');
+  console.log('User object:', user);
+  console.log('User role:', user?.role);
+  console.log('isAdmin():', isAdmin());
+  console.log('isSuperAdmin():', isSuperAdmin());
+  console.log('====================');
+  
   const [expandedMenus, setExpandedMenus] = useState({
     dashboard: true,
     elections: false,
@@ -314,175 +323,181 @@ const Sidebar = ({ isOpen, toggleSidebar }) => {
           <nav className="flex-1 px-5 py-4 overflow-y-auto elegant-scrollbar pb-20" aria-label="Sidebar navigation">
             <ul className="space-y-3">
               {/* Dashboard - Updated with new home icon */}
-              <li>
-                <Link 
-                  to="/app/dashboard"
-                  onClick={handleMenuItemClick}
-                  className={`flex items-center px-3 py-3 transition-all duration-200 group focus-visible-only ${
-                    isActive('/dashboard') 
-                      ? 'bg-white/80 text-gray-800 font-medium shadow-sm' 
-                      : 'text-white hover:bg-white/10'
-                  } rounded-lg focus:outline-none`}
-                  aria-current={isActive('/dashboard') ? 'page' : undefined}
-                >
-                  <div className={`flex items-center justify-center w-9 h-9 ${isActive('/dashboard') ? 'text-gray-800' : 'text-white group-hover:text-white'}`}>
-                    <svg 
-                      xmlns="http://www.w3.org/2000/svg" 
-                      width="24" 
-                      height="24" 
-                      viewBox="0 0 24 24" 
-                      className="fill-current"
-                      aria-hidden="true"
-                    >
-                      <path d="M5 22h14a2 2 0 0 0 2-2v-9a1 1 0 0 0-.29-.71l-8-8a1 1 0 0 0-1.41 0l-8 8A1 1 0 0 0 3 11v9a2 2 0 0 0 2 2zm5-2v-5h4v5zm-5-8.59 7-7 7 7V20h-3v-5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v5H5z"></path>
-                    </svg>
-                  </div>
-                  <span className="ml-3 font-medium text-xl whitespace-nowrap">Dashboard</span>
-                </Link>
-              </li>
-             
-              
-              {/* Centre Management */}
-              <li>
-                <div className="space-y-1">
-                  <button
-                    onClick={() => toggleMenu('centres')}
-                    className={`w-full flex items-center justify-between px-3 py-3 transition-all duration-200 group focus-visible-only ${
-                      isMenuActive('/app/centres') 
-                        ? 'bg-white text-gray-800 font-medium shadow-sm' 
+              {/* Dashboard - Show only for Limited Admin */}
+              {isAdmin() && (
+                <li>
+                  <Link 
+                    to="/app/dashboard"
+                    onClick={handleMenuItemClick}
+                    className={`flex items-center px-3 py-3 transition-all duration-200 group focus-visible-only ${
+                      isActive('/dashboard') 
+                        ? 'bg-white/80 text-gray-800 font-medium shadow-sm' 
                         : 'text-white hover:bg-white/10'
                     } rounded-lg focus:outline-none`}
-                    aria-expanded={expandedMenus.centres}
-                    aria-controls="centres-menu"
+                    aria-current={isActive('/dashboard') ? 'page' : undefined}
                   >
-                    <div className="flex items-center">
-                      <div className={`flex items-center justify-center w-9 h-9 ${isMenuActive('/app/centres') ? 'text-gray-800' : 'text-white group-hover:text-white'}`}>
-                        <svg 
-                          xmlns="http://www.w3.org/2000/svg" 
-                          className="h-7 w-7" 
-                          fill="none" 
-                          viewBox="0 0 24 24" 
-                          stroke="currentColor"
-                          aria-hidden="true"
-                        >
-                          <path 
-                            strokeLinecap="round" 
-                            strokeLinejoin="round" 
-                            strokeWidth={2} 
-                            d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" 
-                          />
-                        </svg>
-                      </div>
-                      <span className="ml-3 font-medium text-xl whitespace-nowrap">Centre Management</span>
+                    <div className={`flex items-center justify-center w-9 h-9 ${isActive('/dashboard') ? 'text-gray-800' : 'text-white group-hover:text-white'}`}>
+                      <svg 
+                        xmlns="http://www.w3.org/2000/svg" 
+                        width="24" 
+                        height="24" 
+                        viewBox="0 0 24 24" 
+                        className="fill-current"
+                        aria-hidden="true"
+                      >
+                        <path d="M5 22h14a2 2 0 0 0 2-2v-9a1 1 0 0 0-.29-.71l-8-8a1 1 0 0 0-1.41 0l-8 8A1 1 0 0 0 3 11v9a2 2 0 0 0 2 2zm5-2v-5h4v5zm-5-8.59 7-7 7 7V20h-3v-5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v5H5z"></path>
+                      </svg>
                     </div>
-                    <svg 
-                      xmlns="http://www.w3.org/2000/svg" 
-                      className={`h-5 w-5 transition-transform duration-200 ${
-                        expandedMenus.centres ? 'transform rotate-180' : ''
-                      }`} 
-                      fill="none" 
-                      viewBox="0 0 24 24" 
-                      stroke="currentColor"
-                      aria-hidden="true"
+                    <span className="ml-3 font-medium text-xl whitespace-nowrap">Dashboard</span>
+                  </Link>
+                </li>
+              )}
+             
+              
+              {/* Centre Management - Show only for Limited Admin */}
+              {isAdmin() && (
+                <li>
+                  <div className="space-y-1">
+                    <button
+                      onClick={() => toggleMenu('centres')}
+                      className={`w-full flex items-center justify-between px-3 py-3 transition-all duration-200 group focus-visible-only ${
+                        isMenuActive('/app/centres') 
+                          ? 'bg-white text-gray-800 font-medium shadow-sm' 
+                          : 'text-white hover:bg-white/10'
+                      } rounded-lg focus:outline-none`}
+                      aria-expanded={expandedMenus.centres}
+                      aria-controls="centres-menu"
                     >
-                      <path 
-                        strokeLinecap="round" 
-                        strokeLinejoin="round" 
-                        strokeWidth={2} 
-                        d="M19 9l-7 7-7-7" 
-                      />
-                    </svg>
-                  </button>
-                  
-                  {expandedMenus.centres && (
-                    <ul id="centres-menu" className="mt-1 pl-10 space-y-1">
-                      <li>
-                        <Link 
-                          to="/app/centres/register"
-                          onClick={handleMenuItemClick}
-                          className={`flex items-center px-3 py-2.5 focus-visible-only ${
-                            isActive('/app/centres/register') 
-                              ? 'bg-white/80 text-gray-800 font-medium' 
-                              : 'text-white hover:bg-white/10'
-                          } transition-colors duration-200 rounded-lg focus:outline-none`}
-                          aria-current={isActive('/app/centres/register') ? 'page' : undefined}
-                        >
+                      <div className="flex items-center">
+                        <div className={`flex items-center justify-center w-9 h-9 ${isMenuActive('/app/centres') ? 'text-gray-800' : 'text-white group-hover:text-white'}`}>
                           <svg 
-                            className="h-5 w-5 mr-2"
-                            viewBox="0 0 24 24"
-                            fill="none"
+                            xmlns="http://www.w3.org/2000/svg" 
+                            className="h-7 w-7" 
+                            fill="none" 
+                            viewBox="0 0 24 24" 
                             stroke="currentColor"
-                            strokeWidth="2"
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
+                            aria-hidden="true"
                           >
-                            <rect width="18" height="18" x="3" y="3" rx="2" />
-                            <path d="M12 8v8" />
-                            <path d="M8 12h8" />
+                            <path 
+                              strokeLinecap="round" 
+                              strokeLinejoin="round" 
+                              strokeWidth={2} 
+                              d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" 
+                            />
                           </svg>
-                          <span className="text-lg">Register Centre</span>
-                        </Link>
-                      </li>
-                      <li>
-                        <Link 
-                          to="/app/centres/upload"
-                          onClick={handleMenuItemClick}
-                          className={`flex items-center px-3 py-2.5 focus-visible-only ${
-                            isActive('/app/centres/upload') 
-                              ? 'bg-white/80 text-gray-800 font-medium' 
-                              : 'text-white hover:bg-white/10'
-                          } transition-colors duration-200 rounded-lg focus:outline-none`}
-                          aria-current={isActive('/app/centres/upload') ? 'page' : undefined}
-                        >
-                          <svg 
-                            className="h-5 w-5 mr-2"
-                            viewBox="0 0 24 24"
-                            fill="none"
-                            stroke="currentColor"
-                            strokeWidth="2"
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
+                        </div>
+                        <span className="ml-3 font-medium text-xl whitespace-nowrap">Centre Management</span>
+                      </div>
+                      <svg 
+                        xmlns="http://www.w3.org/2000/svg" 
+                        className={`h-5 w-5 transition-transform duration-200 ${
+                          expandedMenus.centres ? 'transform rotate-180' : ''
+                        }`} 
+                        fill="none" 
+                        viewBox="0 0 24 24" 
+                        stroke="currentColor"
+                        aria-hidden="true"
+                      >
+                        <path 
+                          strokeLinecap="round" 
+                          strokeLinejoin="round" 
+                          strokeWidth={2} 
+                          d="M19 9l-7 7-7-7" 
+                        />
+                      </svg>
+                    </button>
+                    
+                    {expandedMenus.centres && (
+                      <ul id="centres-menu" className="mt-1 pl-10 space-y-1">
+                        <li>
+                          <Link 
+                            to="/app/centres/register"
+                            onClick={handleMenuItemClick}
+                            className={`flex items-center px-3 py-2.5 focus-visible-only ${
+                              isActive('/app/centres/register') 
+                                ? 'bg-white/80 text-gray-800 font-medium' 
+                                : 'text-white hover:bg-white/10'
+                            } transition-colors duration-200 rounded-lg focus:outline-none`}
+                            aria-current={isActive('/app/centres/register') ? 'page' : undefined}
                           >
-                            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
-                            <polyline points="17 8 12 3 7 8" />
-                            <line x1="12" x2="12" y1="3" y2="15" />
-                          </svg>
-                          <span className="text-lg">Upload Centre</span>
-                        </Link>
-                      </li>
-                      <li>
-                        <Link 
-                          to="/app/centres/manage-polling"
-                          onClick={handleMenuItemClick}
-                          className={`flex items-center px-3 py-2.5 focus-visible-only ${
-                            isActive('/app/centres/manage-polling') 
-                              ? 'bg-white/80 text-gray-800 font-medium' 
-                              : 'text-white hover:bg-white/10'
-                          } transition-colors duration-200 rounded-lg focus:outline-none`}
-                          aria-current={isActive('/app/centres/manage-polling') ? 'page' : undefined}
-                        >
-                          <svg 
-                            className="h-5 w-5 mr-2"
-                            viewBox="0 0 24 24"
-                            fill="none"
-                            stroke="currentColor"
-                            strokeWidth="2"
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
+                            <svg 
+                              className="h-5 w-5 mr-2"
+                              viewBox="0 0 24 24"
+                              fill="none"
+                              stroke="currentColor"
+                              strokeWidth="2"
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                            >
+                              <rect width="18" height="18" x="3" y="3" rx="2" />
+                              <path d="M12 8v8" />
+                              <path d="M8 12h8" />
+                            </svg>
+                            <span className="text-lg">Register Centre</span>
+                          </Link>
+                        </li>
+                        <li>
+                          <Link 
+                            to="/app/centres/upload"
+                            onClick={handleMenuItemClick}
+                            className={`flex items-center px-3 py-2.5 focus-visible-only ${
+                              isActive('/app/centres/upload') 
+                                ? 'bg-white/80 text-gray-800 font-medium' 
+                                : 'text-white hover:bg-white/10'
+                            } transition-colors duration-200 rounded-lg focus:outline-none`}
+                            aria-current={isActive('/app/centres/upload') ? 'page' : undefined}
                           >
-                            <path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z" />
-                            <path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z" />
-                          </svg>
-                          <span className="text-lg">Manage Centre</span>
-                        </Link>
-                      </li>
-                    </ul>
+                            <svg 
+                              className="h-5 w-5 mr-2"
+                              viewBox="0 0 24 24"
+                              fill="none"
+                              stroke="currentColor"
+                              strokeWidth="2"
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                            >
+                              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+                              <polyline points="17 8 12 3 7 8" />
+                              <line x1="12" x2="12" y1="3" y2="15" />
+                            </svg>
+                            <span className="text-lg">Upload Centre</span>
+                          </Link>
+                        </li>
+                        <li>
+                          <Link 
+                            to="/app/centres/manage-polling"
+                            onClick={handleMenuItemClick}
+                            className={`flex items-center px-3 py-2.5 focus-visible-only ${
+                              isActive('/app/centres/manage-polling') 
+                                ? 'bg-white/80 text-gray-800 font-medium' 
+                                : 'text-white hover:bg-white/10'
+                            } transition-colors duration-200 rounded-lg focus:outline-none`}
+                            aria-current={isActive('/app/centres/manage-polling') ? 'page' : undefined}
+                          >
+                            <svg 
+                              className="h-5 w-5 mr-2"
+                              viewBox="0 0 24 24"
+                              fill="none"
+                              stroke="currentColor"
+                              strokeWidth="2"
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                            >
+                              <path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z" />
+                              <path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z" />
+                            </svg>
+                            <span className="text-lg">Manage Centre</span>
+                          </Link>
+                        </li>
+                      </ul>
                   )}
                 </div>
               </li>
+              )}
               
-              {/* Candidate Management */}
-              <li>
+              {/* Candidate Management - Show only for Limited Admin */}
+              {isAdmin() && (
+                <li>
                 <div className="space-y-1">
                   <button
                     onClick={() => toggleMenu('candidates')}
@@ -596,9 +611,11 @@ const Sidebar = ({ isOpen, toggleSidebar }) => {
                   )}
                 </div>
               </li>
+              )}
 
-              {/* Users */}
-              <li>
+              {/* Users - Show only for Limited Admin */}
+              {isAdmin() && (
+                <li>
                 <Link 
                   to="/app/users"
                   onClick={handleMenuItemClick}
@@ -629,10 +646,12 @@ const Sidebar = ({ isOpen, toggleSidebar }) => {
                   <span className="ml-3 font-medium text-xl whitespace-nowrap">Users</span>
                 </Link>
               </li>
+              )}
 
      
-              {/* Guide Management */}
-              <li>
+              {/* Guide Management - Show only for Limited Admin */}
+              {isAdmin() && (
+                <li>
                 <div className="space-y-1">
                   <button
                     onClick={() => toggleMenu('guides')}
@@ -742,9 +761,11 @@ const Sidebar = ({ isOpen, toggleSidebar }) => {
                   )}
                 </div>
               </li>
+              )}
                
-              {/* Analytics */}
-              <li>
+              {/* Analytics - Show only for Limited Admin */}
+              {isAdmin() && (
+                <li>
                 <Link 
                   to="/app/analytics"
                   onClick={handleMenuItemClick}
@@ -768,9 +789,11 @@ const Sidebar = ({ isOpen, toggleSidebar }) => {
                   <span className="ml-3 font-medium text-xl whitespace-nowrap">Analytics</span>
                 </Link>
               </li>
+              )}
               
-              {/* Administrators - Dropdown Menu */}
-              <li>
+              {/* Administrators - Dropdown Menu - Show only for Limited Admin */}
+              {isAdmin() && (
+                <li>
                 <div className="space-y-1">
                   <button
                     onClick={() => toggleMenu('administrators')}
@@ -880,9 +903,11 @@ const Sidebar = ({ isOpen, toggleSidebar }) => {
                   )}
                 </div>
               </li>
+              )}
               
-              {/* Feedback */}
-              <li>
+              {/* Feedback - Show only for Limited Admin */}
+              {isAdmin() && (
+                <li>
                 <Link 
                   to="/app/feedback"
                   onClick={handleMenuItemClick}
@@ -908,8 +933,9 @@ const Sidebar = ({ isOpen, toggleSidebar }) => {
                   <span className="ml-3 font-medium text-xl whitespace-nowrap">Feedback</span>
                 </Link>
               </li>
+              )}
               
-              {/* Reports - Dropdown Menu */}
+              {/* Reports - Dropdown Menu - Available for everyone */}
               <li>
                 <div className="space-y-1">
                   <button
@@ -939,7 +965,7 @@ const Sidebar = ({ isOpen, toggleSidebar }) => {
                           <polyline points="10,9 9,9 8,9"/>
                         </svg>
                       </div>
-                      <span className="ml-3 font-medium text-xl whitespace-nowrap">Reports</span>
+                      <span className="ml-3 font-medium text-xl whitespace-nowrap">Incident Reports</span>
                     </div>
                     <svg 
                       xmlns="http://www.w3.org/2000/svg" 
@@ -1018,8 +1044,9 @@ const Sidebar = ({ isOpen, toggleSidebar }) => {
                 </div>
               </li>
               
-              {/* Notifications - New Item */}
-              <li>
+              {/* Notifications - Show only for Limited Admin */}
+              {isAdmin() && (
+                <li>
                 <div className="space-y-1">
                   <button
                     onClick={() => toggleMenu('notifications')}
@@ -1127,9 +1154,11 @@ const Sidebar = ({ isOpen, toggleSidebar }) => {
                   )}
                 </div>
               </li>
+              )}
               
-              {/* Settings */}
-              <li>
+              {/* Settings - Show only for Limited Admin */}
+              {isAdmin() && (
+                <li>
                 <div className="space-y-1">
                   <button
                     onClick={() => toggleMenu('settings')}
@@ -1235,6 +1264,7 @@ const Sidebar = ({ isOpen, toggleSidebar }) => {
                   )}
                 </div>
               </li>
+              )}
          
             </ul>
           </nav>
