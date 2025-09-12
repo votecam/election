@@ -28,6 +28,7 @@ import ManageReports from './components/app/reports/ManageReports'
 import AllReports from './components/app/reports/AllReports'
 import { AuthProvider } from './context/AuthContext'
 import ManageSettings from './components/app/settings/ManageSettings'
+import HomeRedirect from './components/common/HomeRedirect'
 
 function App() {
   return (
@@ -48,7 +49,7 @@ function App() {
 
             {/* Dashboard Routes - Nested under Layout */}
             <Route path="/app" element={<Layout />}>
-              <Route index element={<Dashboard />} />
+              <Route index element={<HomeRedirect />} />
               <Route path="dashboard" element={<Dashboard />} />
               <Route path="analytics" element={<Analytics />} />
               

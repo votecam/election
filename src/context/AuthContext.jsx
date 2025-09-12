@@ -63,17 +63,8 @@ export const AuthProvider = ({ children }) => {
         localStorage.setItem('user', JSON.stringify(response.user));
         setUser(response.user);
         
-        // Role-based redirect logic
-        if (response.user.role === 'admin') {
-          // Admin users are redirected to dashboard
-          navigate('/app/dashboard', { replace: true });
-        } else if (response.user.role === 'super_admin') {
-          // Super admin users can access all areas
-          navigate('/app/dashboard', { replace: true });
-        } else {
-          // Default redirect for other roles
-          navigate('/app/dashboard', { replace: true });
-        }
+        // All users are redirected to main /app route, which will redirect based on role
+        navigate('/app', { replace: true });
       }
       
       return response.user;

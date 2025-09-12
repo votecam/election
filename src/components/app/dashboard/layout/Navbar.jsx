@@ -12,7 +12,7 @@ const Navbar = ({ toggleSidebar, sidebarOpen }) => {
   const location = useLocation();
   const [currentPath, setCurrentPath] = useState(location.pathname);
   const navigate = useNavigate();
-  const { logout, user } = useAuth();
+  const { logout, user, isAdmin } = useAuth();
   const [feedbacks, setFeedbacks] = useState([]);
   const [unreadFeedbackCount, setUnreadFeedbackCount] = useState(0);
   const [lastFeedbackViewTime, setLastFeedbackViewTime] = useState(
@@ -76,8 +76,13 @@ const Navbar = ({ toggleSidebar, sidebarOpen }) => {
     const path = currentPath;
     const parts = path.split('/').filter(part => part);
     
-    // Default breadcrumbs setup
-    const breadcrumbs = [{ name: 'Dashboard', path: '/app/dashboard', current: parts.length === 2 && parts[1] === 'dashboard' }];
+    // Default breadcrumbs setup - only show Dashboard if user is a limited admin
+    const breadcrumbs = [];
+    
+    // Only add Dashboard breadcrumb for limited admins
+    if (isAdmin()) {
+      breadcrumbs.push({ name: 'Dashboard', path: '/app/dashboard', current: parts.length === 2 && parts[1] === 'dashboard' });
+    }
     
     if (parts.length > 1) {
       // Skip 'app' in the path
