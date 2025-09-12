@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import apiService from '../../../services/apiService';
+import FeedbackExportModal from './FeedbackExportModal';
 
 // Skeleton feedback item component
 const SkeletonFeedbackItem = () => {
@@ -63,6 +64,7 @@ const Feedback = () => {
   const [feedbacks, setFeedbacks] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [showExportModal, setShowExportModal] = useState(false);
   const [pagination, setPagination] = useState({
     total: 0,
     page: 1,
@@ -178,11 +180,9 @@ const Feedback = () => {
           
           {/* Export Button */}
           <button
-            onClick={() => {
-              // TODO: Implement export functionality
-              console.log('Export feedback data');
-            }}
-            className="inline-flex items-center px-6 py-3 border border-transparent text-base font-semibold rounded-lg text-white bg-emerald-600 hover:bg-emerald-700 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:ring-offset-2 transition-colors duration-200"
+            onClick={() => setShowExportModal(true)}
+            disabled={feedbacks.length === 0}
+            className="inline-flex items-center px-6 py-3 border border-transparent text-base font-semibold rounded-lg text-white bg-emerald-600 hover:bg-emerald-700 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:ring-offset-2 transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
           >
             <svg className="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
@@ -418,6 +418,14 @@ const Feedback = () => {
           </div>
         )}
       </div>
+
+      {/* Export Modal */}
+      <FeedbackExportModal
+        isOpen={showExportModal}
+        onClose={() => setShowExportModal(false)}
+        feedbacks={filteredFeedback}
+        pagination={pagination}
+      />
     </div>
   );
 };
