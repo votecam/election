@@ -57,49 +57,65 @@ const AdvancedStatsCard = () => {
     const fetchStats = async () => {
       setLoading(true);
       try {
-        // Fetch candidates count using the candidates API
+        // Fetch candidates count using the candidates API - get total count from pagination
         try {
-          const candidatesResponse = await apiService.candidates.getAll(1, 100);
-          if (candidatesResponse && candidatesResponse.candidates) {
-            setStats(prev => ({ ...prev, candidates: candidatesResponse.candidates.length }));
-          } else if (candidatesResponse && candidatesResponse.pagination && candidatesResponse.pagination.total) {
+          const candidatesResponse = await apiService.candidates.getAll(1, 1); // Just get 1 item to get pagination info
+          if (candidatesResponse && candidatesResponse.pagination && candidatesResponse.pagination.total) {
             setStats(prev => ({ ...prev, candidates: candidatesResponse.pagination.total }));
+          } else if (candidatesResponse && candidatesResponse.candidates) {
+            // Fallback: if no pagination, try to get a larger sample
+            const largeResponse = await apiService.candidates.getAll(1, 1000);
+            if (largeResponse && largeResponse.candidates) {
+              setStats(prev => ({ ...prev, candidates: largeResponse.candidates.length }));
+            }
           }
         } catch (candidatesError) {
           console.error('Error fetching candidates data:', candidatesError);
         }
         
-        // Fetch centers count
+        // Fetch centers count - get total count from pagination
         try {
-          const centersResponse = await apiService.centres.getAllCentres(1, 100);
-          if (centersResponse && centersResponse.centres) {
-            setStats(prev => ({ ...prev, centers: centersResponse.centres.length }));
-          } else if (centersResponse && centersResponse.pagination && centersResponse.pagination.total) {
+          const centersResponse = await apiService.centres.getAllCentres(1, 1); // Just get 1 item to get pagination info
+          if (centersResponse && centersResponse.pagination && centersResponse.pagination.total) {
             setStats(prev => ({ ...prev, centers: centersResponse.pagination.total }));
+          } else if (centersResponse && centersResponse.centres) {
+            // Fallback: if no pagination, try to get a larger sample
+            const largeResponse = await apiService.centres.getAllCentres(1, 1000);
+            if (largeResponse && largeResponse.centres) {
+              setStats(prev => ({ ...prev, centers: largeResponse.centres.length }));
+            }
           }
         } catch (centersError) {
           console.error('Error fetching centers data:', centersError);
         }
         
-        // Fetch feedback count
+        // Fetch feedback count - get total count from pagination
         try {
-          const feedbackResponse = await apiService.feedback.getAllFeedback(1, 100);
-          if (feedbackResponse && feedbackResponse.data && feedbackResponse.data.feedbacks) {
-            setStats(prev => ({ ...prev, feedback: feedbackResponse.data.feedbacks.length }));
-          } else if (feedbackResponse && feedbackResponse.data && feedbackResponse.data.pagination && feedbackResponse.data.pagination.total) {
+          const feedbackResponse = await apiService.feedback.getAllFeedback(1, 1); // Just get 1 item to get pagination info
+          if (feedbackResponse && feedbackResponse.data && feedbackResponse.data.pagination && feedbackResponse.data.pagination.total) {
             setStats(prev => ({ ...prev, feedback: feedbackResponse.data.pagination.total }));
+          } else if (feedbackResponse && feedbackResponse.data && feedbackResponse.data.feedbacks) {
+            // Fallback: if no pagination, try to get a larger sample
+            const largeResponse = await apiService.feedback.getAllFeedback(1, 1000);
+            if (largeResponse && largeResponse.data && largeResponse.data.feedbacks) {
+              setStats(prev => ({ ...prev, feedback: largeResponse.data.feedbacks.length }));
+            }
           }
         } catch (feedbackError) {
           console.error('Error fetching feedback data:', feedbackError);
         }
         
-        // Fetch users count
+        // Fetch users count - get total count from pagination
         try {
-          const usersResponse = await apiService.users.getAll(1, 100);
-          if (usersResponse && usersResponse.users) {
-            setStats(prev => ({ ...prev, users: usersResponse.users.length }));
-          } else if (usersResponse && usersResponse.pagination && usersResponse.pagination.total) {
+          const usersResponse = await apiService.users.getAll(1, 1); // Just get 1 item to get pagination info
+          if (usersResponse && usersResponse.pagination && usersResponse.pagination.total) {
             setStats(prev => ({ ...prev, users: usersResponse.pagination.total }));
+          } else if (usersResponse && usersResponse.users) {
+            // Fallback: if no pagination, try to get a larger sample
+            const largeResponse = await apiService.users.getAll(1, 1000);
+            if (largeResponse && largeResponse.users) {
+              setStats(prev => ({ ...prev, users: largeResponse.users.length }));
+            }
           }
         } catch (usersError) {
           console.error('Error fetching users data:', usersError);
