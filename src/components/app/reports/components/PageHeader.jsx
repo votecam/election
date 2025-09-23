@@ -7,7 +7,7 @@ const PageHeader = () => {
         <div>
           <h1 className="text-4xl font-bold text-gray-800">All Reports</h1>
           <div className="w-40 h-0.5 bg-emerald-600 mt-2 mb-3"></div>
-          <p className="text-base text-gray-600">Overview of all user-submitted reports</p>
+          <p className="text-lg text-gray-600">Overview of all user-submitted reports</p>
         </div>
         
         {/* Export Button */}

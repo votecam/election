@@ -105,26 +105,38 @@ const AdvancedStatsCard = () => {
           console.error('Error fetching feedback data:', feedbackError);
         }
         
-        // Fetch users count - get total count from pagination
+        // Fetch citizens count - get total count from pagination
         try {
-          const usersResponse = await apiService.users.getAll(1, 1); // Just get 1 item to get pagination info
-          if (usersResponse && usersResponse.pagination && usersResponse.pagination.total) {
-            setStats(prev => ({ ...prev, users: usersResponse.pagination.total }));
-          } else if (usersResponse && usersResponse.users) {
+          const citizensResponse = await apiService.users.getAllCitizens(1, 1); // Just get 1 item to get pagination info
+          console.log('Citizens API Response:', citizensResponse); // Debug log
+          
+          if (citizensResponse && citizensResponse.data && citizensResponse.data.pagination && citizensResponse.data.pagination.total) {
+            setStats(prev => ({ ...prev, users: citizensResponse.data.pagination.total }));
+          } else if (citizensResponse && citizensResponse.data && citizensResponse.data.users) {
             // Fallback: if no pagination, try to get a larger sample
-            const largeResponse = await apiService.users.getAll(1, 1000);
-            if (largeResponse && largeResponse.users) {
-              setStats(prev => ({ ...prev, users: largeResponse.users.length }));
+            const largeResponse = await apiService.users.getAllCitizens(1, 1000);
+            if (largeResponse && largeResponse.data && largeResponse.data.users) {
+              setStats(prev => ({ ...prev, users: largeResponse.data.users.length }));
             }
           }
-        } catch (usersError) {
-          console.error('Error fetching users data:', usersError);
+        } catch (citizensError) {
+          console.error('Error fetching citizens data:', citizensError);
         }
         
-        // Fetch reports count (mock data for now since we don't have a reports API yet)
+        // Fetch reports count - get total count from pagination
         try {
-          // For now, we'll use mock data since reports API might not be implemented yet
-          setStats(prev => ({ ...prev, reports: 6 })); // Mock count based on our AllReports mock data
+          const reportsResponse = await apiService.incidents.getAll(1, 1); // Just get 1 item to get pagination info
+          console.log('Reports API Response:', reportsResponse); // Debug log
+          
+          if (reportsResponse && reportsResponse.data && reportsResponse.data.pagination && reportsResponse.data.pagination.total) {
+            setStats(prev => ({ ...prev, reports: reportsResponse.data.pagination.total }));
+          } else if (reportsResponse && reportsResponse.data && reportsResponse.data.incidents) {
+            // Fallback: if no pagination, try to get a larger sample
+            const largeResponse = await apiService.incidents.getAll(1, 1000);
+            if (largeResponse && largeResponse.data && largeResponse.data.incidents) {
+              setStats(prev => ({ ...prev, reports: largeResponse.data.incidents.length }));
+            }
+          }
         } catch (reportsError) {
           console.error('Error fetching reports data:', reportsError);
         }
@@ -195,9 +207,9 @@ const AdvancedStatsCard = () => {
       
       {/* Second row - New 3 stats cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {/* Total Users Card */}
+        {/* Total Citizens Card */}
         <StatCard 
-          title="Total Users" 
+          title="Total Citizens" 
           value={stats.users.toString()} 
           iconBg="bg-purple-100"
           iconColor="text-purple-700"

@@ -3,9 +3,39 @@ import axios from 'axios';
 // Log the API URL for debugging
 console.log('API URL:', import.meta.env.VITE_API_URL);
 
+// Utility function to check token validity
+const checkTokenValidity = () => {
+  const token = localStorage.getItem('token');
+  if (!token) {
+    console.log('No token found in localStorage');
+    return false;
+  }
+  
+  try {
+    // Decode JWT token to check expiration
+    const payload = JSON.parse(atob(token.split('.')[1]));
+    const now = Math.floor(Date.now() / 1000);
+    
+    if (payload.exp && payload.exp < now) {
+      console.log('Token has expired');
+      localStorage.removeItem('token');
+      localStorage.removeItem('user');
+      return false;
+    }
+    
+    console.log('Token is valid, expires at:', new Date(payload.exp * 1000));
+    return true;
+  } catch (error) {
+    console.log('Invalid token format:', error);
+    localStorage.removeItem('token');
+    localStorage.removeItem('user');
+    return false;
+  }
+};
+
 // Create an axios instance with default config
 const api = axios.create({
-  baseURL: import.meta.env.VITE_API_URL || 'https://api.votecam.org', // Ensure base URL is correct
+  baseURL: import.meta.env.VITE_API_URL || 'https://api.votecam.org/api', // Ensure base URL is correct
   headers: {
     'Content-Type': 'application/json',
   },
@@ -14,10 +44,15 @@ const api = axios.create({
 // Add request interceptor to include auth token in requests
 api.interceptors.request.use(
   (config) => {
-    const token = localStorage.getItem('token');
-    if (token) {
+    // Check token validity before making request
+    if (checkTokenValidity()) {
+      const token = localStorage.getItem('token');
       config.headers.Authorization = `Bearer ${token}`;
+      console.log('Token found and added to request:', token.substring(0, 20) + '...');
+    } else {
+      console.log('No valid token found - request will be made without authentication');
     }
+    console.log('Making request to:', config.url);
     return config;
   },
   (error) => Promise.reject(error)
@@ -27,8 +62,11 @@ api.interceptors.request.use(
 api.interceptors.response.use(
   (response) => response,
   (error) => {
+    console.log('API Response Error:', error.response?.status, error.response?.data);
+    
     // Handle common errors here (e.g., 401 unauthorized, etc.)
     if (error.response && error.response.status === 401) {
+      console.log('401 Unauthorized - clearing localStorage');
       // Clear localStorage on authentication failure
       localStorage.removeItem('token');
       localStorage.removeItem('user');
@@ -41,6 +79,11 @@ api.interceptors.response.use(
 );
 
 const apiService = {
+  // Utility function to check authentication status
+  checkAuth: () => {
+    return checkTokenValidity();
+  },
+  
   // Authentication endpoints
   auth: {
     login: async (email, password) => {
@@ -304,6 +347,47 @@ const apiService = {
         throw new Error(
           error.response?.data?.message || 
           'Failed to fetch user profile.'
+        );
+      }
+    },
+
+    // Get all citizen users (admin only)
+    getAllCitizens: async (page = 1, limit = 50, isVerified = null, isActive = null, authProvider = null) => {
+      try {
+        // Build query parameters
+        const params = new URLSearchParams();
+        params.append('page', page);
+        params.append('limit', limit);
+        
+        // Add optional parameters only if they have values
+        if (isVerified !== null) params.append('isVerified', isVerified);
+        if (isActive !== null) params.append('isActive', isActive);
+        if (authProvider) params.append('authProvider', authProvider);
+        
+        const response = await api.get(`/auth/admin/citizens?${params.toString()}`);
+        
+        if (response.data && response.data.success === true) {
+          return response.data;
+        } else {
+          throw new Error('Failed to fetch citizens');
+        }
+      } catch (error) {
+        console.error('Error fetching citizens:', error);
+        
+        // Handle specific HTTP status codes
+        if (error.response?.status === 401) {
+          throw new Error('Authentication required. Please log in again.');
+        } else if (error.response?.status === 403) {
+          throw new Error('You do not have permission to access citizen data. Admin privileges required.');
+        } else if (error.response?.status === 500) {
+          throw new Error('Server error: The citizens service is temporarily unavailable. Please try again later.');
+        } else if (error.code === 'NETWORK_ERROR' || !error.response) {
+          throw new Error('Network error: Unable to connect to the server. Please check your internet connection.');
+        }
+        
+        throw new Error(
+          error.response?.data?.message || 
+          'Failed to load citizens. Please try again later.'
         );
       }
     },
@@ -1002,6 +1086,126 @@ const apiService = {
         throw new Error(
           error.response?.data?.message || 
           'Failed to load activities. Please try again later.'
+        );
+      }
+    }
+  },
+
+  // Incidents/Reports endpoints
+  incidents: {
+    getAll: async (page = 1, limit = 50, status = 'all', type = 'all', priority = 'all', sortBy = 'createdAt', sortOrder = 'desc', search = '', location = '', reporterId = '', dateFrom = '', dateTo = '') => {
+      try {
+        // Build query parameters
+        const params = new URLSearchParams();
+        params.append('page', page);
+        params.append('limit', limit);
+        params.append('status', status);
+        params.append('type', type);
+        params.append('priority', priority);
+        params.append('sortBy', sortBy);
+        params.append('sortOrder', sortOrder);
+        
+        // Add optional parameters only if they have values
+        if (search) params.append('search', search);
+        if (location) params.append('location', location);
+        if (reporterId) params.append('reporterId', reporterId);
+        if (dateFrom) params.append('dateFrom', dateFrom);
+        if (dateTo) params.append('dateTo', dateTo);
+        
+        const response = await api.get(`/incidents/admin/all?${params.toString()}`);
+        
+        if (response.data && response.data.status === 'success') {
+          return response.data;
+        } else {
+          throw new Error('Failed to fetch incidents');
+        }
+      } catch (error) {
+        console.error('Error fetching incidents:', error);
+        
+        // Handle specific HTTP status codes
+        if (error.response?.status === 403) {
+          throw new Error('You do not have permission to access incident reports. Please contact your administrator.');
+        } else if (error.response?.status === 500) {
+          throw new Error('Server error: The incident reports service is temporarily unavailable. Please try again later or contact support.');
+        } else if (error.response?.status === 404) {
+          throw new Error('Incident reports endpoint not found. Please contact support.');
+        } else if (error.response?.status === 401) {
+          throw new Error('Authentication required. Please log in again.');
+        } else if (error.code === 'NETWORK_ERROR' || !error.response) {
+          throw new Error('Network error: Unable to connect to the server. Please check your internet connection.');
+        }
+        
+        throw new Error(
+          error.response?.data?.message || 
+          'Failed to load incidents. Please try again later.'
+        );
+      }
+    },
+
+    getById: async (id) => {
+      try {
+        const response = await api.get(`/incidents/${id}`);
+        
+        if (response.data && response.data.status === 'success') {
+          return response.data;
+        } else {
+          throw new Error('Failed to fetch incident details');
+        }
+      } catch (error) {
+        console.error('Error fetching incident:', error);
+        throw new Error(
+          error.response?.data?.message || 
+          'Failed to load incident details. Please try again later.'
+        );
+      }
+    },
+
+    updateStatus: async (id, status, notes) => {
+      try {
+        const response = await api.put(`/incidents/${id}/status`, { status, notes });
+        
+        if (response.data && response.data.status === 'success') {
+          return response.data;
+        } else {
+          throw new Error('Failed to update incident status');
+        }
+      } catch (error) {
+        console.error('Error updating incident status:', error);
+        throw new Error(
+          error.response?.data?.message || 
+          'Failed to update incident status. Please try again later.'
+        );
+      }
+    },
+
+    update: async (id, updateData) => {
+      try {
+        const response = await api.put(`/incidents/${id}`, updateData);
+        
+        if (response.data && response.data.status === 'success') {
+          return response.data;
+        } else {
+          throw new Error('Failed to update incident');
+        }
+      } catch (error) {
+        console.error('Error updating incident:', error);
+        
+        // Handle specific HTTP status codes
+        if (error.response?.status === 403) {
+          throw new Error('You do not have permission to update this incident. Please contact your administrator.');
+        } else if (error.response?.status === 404) {
+          throw new Error('Incident not found. It may have been deleted.');
+        } else if (error.response?.status === 400) {
+          throw new Error('Invalid update data. Please check your input and try again.');
+        } else if (error.response?.status === 401) {
+          throw new Error('Authentication required. Please log in again.');
+        } else if (error.code === 'NETWORK_ERROR' || !error.response) {
+          throw new Error('Network error: Unable to connect to the server. Please check your internet connection.');
+        }
+        
+        throw new Error(
+          error.response?.data?.message || 
+          'Failed to update incident. Please try again later.'
         );
       }
     }

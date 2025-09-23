@@ -31,88 +31,90 @@ const SkeletonLoader = () => {
 const Reports = () => {
   const [loading, setLoading] = useState(true);
   const [reports, setReports] = useState([]);
-  const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
 
   useEffect(() => {
-    // Simulate loading user-submitted reports
-    const timer = setTimeout(() => {
-      setLoading(false);
-      // Mock data for user-submitted reports
-      setReports([
-        {
-          id: 1,
-          title: 'Polling Station Issue Report',
-          description: 'Long lines at polling station #123 due to technical difficulties with voting machines.',
-          type: 'Incident Report',
-          submittedBy: 'John Doe',
-          submittedDate: '2024-01-15',
-          status: 'Pending',
-          priority: 'High',
-          attachments: ['incident_photo.jpg', 'machine_error_log.txt']
-        },
-        {
-          id: 2,
-          title: 'Voter Registration Problem',
-          description: 'Several voters unable to find their names on the registration list.',
-          type: 'Registration Issue',
-          submittedBy: 'Sarah Wilson',
-          submittedDate: '2024-01-14',
-          status: 'Approved',
-          priority: 'Medium',
-          attachments: ['registration_list.pdf']
-        },
-        {
-          id: 3,
-          title: 'Security Concern',
-          description: 'Suspicious activity observed near polling station entrance.',
-          type: 'Security Report',
-          submittedBy: 'Mike Johnson',
-          submittedDate: '2024-01-13',
-          status: 'Rejected',
-          priority: 'High',
-          attachments: ['security_footage.mp4']
-        },
-        {
-          id: 4,
-          title: 'Accessibility Issue',
-          description: 'Wheelchair ramp not accessible at polling location.',
-          type: 'Accessibility Report',
-          submittedBy: 'Emma Davis',
-          submittedDate: '2024-01-12',
-          status: 'Disabled',
-          priority: 'Medium',
-          attachments: ['accessibility_photo.jpg']
+    const fetchIncidents = async () => {
+      try {
+        setLoading(true);
+        const response = await apiService.incidents.getAll(
+          1, // page
+          10, // limit
+          'all', // status
+          'all', // type
+          'all', // priority
+          'createdAt', // sortBy
+          'desc' // sortOrder
+        );
+        
+        if (response && response.data) {
+          setReports(response.data.incidents || []);
         }
-      ]);
-    }, 1000);
+        } catch (error) {
+          console.error('Error fetching incidents:', error);
+          
+          // Handle authentication errors specifically
+          if (error.message?.includes('Authentication required') || error.message?.includes('Please log in again')) {
+            setError('You need to be logged in to view incident reports. Please log in and try again.');
+            // Optionally redirect to login after a delay
+            setTimeout(() => {
+              window.location.href = '/login';
+            }, 3000);
+          } else {
+            setError(error.message || 'Failed to load incidents. Please try again later.');
+          }
+          setReports([]);
+        } finally {
+      setLoading(false);
+        }
+    };
 
-    return () => clearTimeout(timer);
+    fetchIncidents();
   }, []);
 
   // Filter reports based on search and status
   const filteredReports = reports.filter(report => {
-    const matchesSearch = report.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         report.description.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         report.submittedBy.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesStatus = statusFilter === 'all' || report.status.toLowerCase() === statusFilter.toLowerCase();
-    return matchesSearch && matchesStatus;
+    const matchesStatus = statusFilter === 'all' || report.status?.toLowerCase() === statusFilter.toLowerCase();
+    return matchesStatus;
   });
 
   // Handle report actions
-  const handleReportAction = (reportId, action) => {
+  const handleReportAction = async (reportId, action) => {
+    try {
+      // Find the report to get its current data
+      const currentReport = reports.find(report => 
+        (report.id === reportId || report._id === reportId)
+      );
+      
+      if (!currentReport) {
+        throw new Error('Report not found');
+      }
+      
+      // Use the specific status update endpoint
+      const description = `Status updated to ${action}`;
+      await apiService.incidents.updateStatus(reportId, action, description);
+      
+      // Update local state
     setReports(prevReports => 
       prevReports.map(report => 
-        report.id === reportId 
+          (report.id === reportId || report._id === reportId)
           ? { ...report, status: action }
           : report
       )
     );
+    } catch (error) {
+      console.error('Error updating incident:', error);
+      // You might want to show an error message to the user here
+    }
   };
 
   // Get status badge styling
   const getStatusBadge = (status) => {
     const styles = {
+      'pending': 'bg-yellow-100 text-yellow-800',
+      'investigating': 'bg-blue-100 text-blue-800',
+      'resolved': 'bg-green-100 text-green-800',
+      'dismissed': 'bg-red-100 text-red-800',
       'Pending': 'bg-yellow-100 text-yellow-800',
       'Approved': 'bg-green-100 text-green-800',
       'Rejected': 'bg-red-100 text-red-800',
@@ -124,6 +126,10 @@ const Reports = () => {
   // Get priority badge styling
   const getPriorityBadge = (priority) => {
     const styles = {
+      'critical': 'bg-red-100 text-red-800',
+      'high': 'bg-orange-100 text-orange-800',
+      'medium': 'bg-yellow-100 text-yellow-800',
+      'low': 'bg-green-100 text-green-800',
       'High': 'bg-red-100 text-red-800',
       'Medium': 'bg-yellow-100 text-yellow-800',
       'Low': 'bg-green-100 text-green-800'
@@ -163,36 +169,9 @@ const Reports = () => {
       </header>
 
       {/* Search and Filters */}
-      <div className="bg-white rounded-xl border border-gray-200 p-6 mb-6">
-        <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between space-y-4 lg:space-y-0">
-          <div className="flex-1 max-w-lg">
-            <div className="relative">
-              <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
-                <svg className="h-6 w-6 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-                </svg>
-              </div>
-              <input
-                type="text"
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className="block w-full pl-12 pr-4 py-3.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent text-base placeholder-gray-500"
-                placeholder="Search reports by title, description, or submitter..."
-              />
-              {searchTerm && (
-                <button
-                  onClick={() => setSearchTerm('')}
-                  className="absolute inset-y-0 right-0 pr-4 flex items-center"
-                >
-                  <svg className="h-5 w-5 text-gray-400 hover:text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                  </svg>
-                </button>
-              )}
-            </div>
-          </div>
-          
-          <div className="flex items-center space-x-4">
+        <div className="bg-white rounded-xl border border-gray-200 p-6 mb-6">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center space-x-4">
             <select
               value={statusFilter}
               onChange={(e) => setStatusFilter(e.target.value)}
@@ -236,10 +215,10 @@ const Reports = () => {
                   </div>
                   <div className="flex flex-col items-end space-y-2 ml-4">
                     <span className={`inline-flex items-center px-3 py-1.5 rounded-full text-sm font-semibold ${getStatusBadge(report.status)}`}>
-                      {report.status}
+                      {report.status?.charAt(0).toUpperCase() + report.status?.slice(1)}
                     </span>
                     <span className={`inline-flex items-center px-3 py-1.5 rounded-full text-sm font-semibold ${getPriorityBadge(report.priority)}`}>
-                      {report.priority}
+                      {report.priority?.charAt(0).toUpperCase() + report.priority?.slice(1)}
                     </span>
                   </div>
                 </div>
@@ -248,67 +227,97 @@ const Reports = () => {
                 <div className="grid grid-cols-2 gap-4 mb-4">
                   <div>
                     <label className="text-sm font-medium text-gray-500">Submitted By</label>
-                    <p className="text-base text-gray-900 font-medium">{report.submittedBy}</p>
+                    <p className="text-base text-gray-900 font-medium">{report.reporter?.name || 'Anonymous'}</p>
                   </div>
                   <div>
                     <label className="text-sm font-medium text-gray-500">Type</label>
-                    <p className="text-base text-gray-900">{report.type}</p>
+                    <p className="text-base text-gray-900">
+                      {report.type?.split('_').map(word => 
+                        word.charAt(0).toUpperCase() + word.slice(1)
+                      ).join(' ')}
+                    </p>
                   </div>
                   <div>
                     <label className="text-sm font-medium text-gray-500">Date</label>
-                    <p className="text-base text-gray-900">{report.submittedDate}</p>
+                    <p className="text-base text-gray-900">{new Date(report.createdAt).toLocaleDateString()}</p>
                   </div>
                   <div>
-                    <label className="text-sm font-medium text-gray-500">Attachments</label>
+                    <label className="text-sm font-medium text-gray-500">Media Files</label>
                     <p className="text-base text-gray-900">
-                      {report.attachments && report.attachments.length > 0 ? (
+                      {report.media && report.media.length > 0 ? (
                         <span className="flex items-center">
                           <svg className="w-4 h-4 mr-1 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13" />
                           </svg>
-                          {report.attachments.length} file(s)
+                          {report.media.length} file(s)
                         </span>
                       ) : (
                         'None'
                       )}
                     </p>
                   </div>
+                  {report.referenceNumber && (
+                    <div className="col-span-2">
+                      <label className="text-sm font-medium text-gray-500">Reference Number</label>
+                      <p className="text-base text-gray-900 font-mono">{report.referenceNumber}</p>
+                    </div>
+                  )}
                 </div>
 
                 {/* Action Buttons */}
                 <div className="flex flex-wrap gap-3 pt-4 border-t border-gray-100">
-                  {report.status === 'Pending' && (
+                  {report.status === 'pending' && (
                     <>
                       <button
-                        onClick={() => handleReportAction(report.id, 'Approved')}
+                        onClick={() => handleReportAction(report.id || report._id, 'investigating')}
+                        className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-lg text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-colors"
+                      >
+                        <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                        </svg>
+                        Investigate
+                      </button>
+                      <button
+                        onClick={() => handleReportAction(report.id || report._id, 'resolved')}
                         className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-lg text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 transition-colors"
                       >
                         <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                         </svg>
-                        Approve
+                        Resolve
                       </button>
                       <button
-                        onClick={() => handleReportAction(report.id, 'Rejected')}
+                        onClick={() => handleReportAction(report.id || report._id, 'dismissed')}
                         className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-lg text-white bg-red-600 hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2 transition-colors"
                       >
                         <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
                         </svg>
-                        Reject
+                        Dismiss
                       </button>
                     </>
                   )}
-                  {report.status !== 'Disabled' && (
+                  {report.status === 'investigating' && (
+                    <>
+                      <button
+                        onClick={() => handleReportAction(report.id || report._id, 'resolved')}
+                        className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-lg text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 transition-colors"
+                      >
+                        <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                        </svg>
+                        Resolve
+                      </button>
                     <button
-                      onClick={() => handleReportAction(report.id, 'Disabled')}
-                      className="inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-lg text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:ring-offset-2 transition-colors"
+                        onClick={() => handleReportAction(report.id || report._id, 'dismissed')}
+                        className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-lg text-white bg-red-600 hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2 transition-colors"
                     >
                       <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728L5.636 5.636m12.728 12.728L18.364 5.636M5.636 18.364l12.728-12.728" />
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
                       </svg>
-                      Disable
+                        Dismiss
                     </button>
+                    </>
                   )}
                   <button
                     onClick={() => {
