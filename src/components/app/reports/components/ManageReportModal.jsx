@@ -105,8 +105,8 @@ const ManageReportModal = ({ isOpen, onClose, report, onReportUpdated }) => {
         {/* Header */}
         <div className="flex items-center justify-between p-6 border-b border-gray-200 bg-emerald-50">
           <div className="text-center flex-1">
-            <h2 className="text-2xl font-bold text-gray-800">Manage Report</h2>
-            <p className="text-base text-gray-600 mt-1">Update status and add timeline notes</p>
+            <h2 className="text-3xl font-bold text-gray-800">Manage Report</h2>
+            <p className="text-lg text-gray-600 mt-2">Update status and add timeline notes</p>
           </div>
           <button 
             onClick={onClose}
@@ -121,11 +121,11 @@ const ManageReportModal = ({ isOpen, onClose, report, onReportUpdated }) => {
           {report ? (
             <>
               {/* Report Summary */}
-              <div className="bg-gray-50 rounded-lg p-3 mb-4">
-                <div className="flex items-start justify-between mb-2">
-                  <h3 className="text-lg font-bold text-gray-800">{report.title}</h3>
+              <div className="bg-gray-50 rounded-lg p-4 mb-6">
+                <div className="flex items-start justify-between mb-3">
+                  <h3 className="text-xl font-bold text-gray-800">{report.title}</h3>
                   <div className="flex space-x-3">
-                    <span className={`text-sm font-bold ${
+                    <span className={`text-base font-bold ${
                       report.status?.toLowerCase() === 'pending' ? 'text-yellow-600' :
                       report.status?.toLowerCase() === 'investigating' ? 'text-blue-600' :
                       report.status?.toLowerCase() === 'resolved' ? 'text-green-600' :
@@ -134,7 +134,7 @@ const ManageReportModal = ({ isOpen, onClose, report, onReportUpdated }) => {
                     }`}>
                       {report.status}
                     </span>
-                    <span className={`text-sm font-bold ${
+                    <span className={`text-base font-bold ${
                       report.priority?.toLowerCase() === 'high' ? 'text-red-600' :
                       report.priority?.toLowerCase() === 'medium' ? 'text-yellow-600' :
                       report.priority?.toLowerCase() === 'low' ? 'text-green-600' :
@@ -144,8 +144,8 @@ const ManageReportModal = ({ isOpen, onClose, report, onReportUpdated }) => {
                     </span>
                   </div>
                 </div>
-                <p className="text-sm text-gray-700 mb-2 leading-relaxed">{report.description}</p>
-                <div className="text-xs text-gray-600">
+                <p className="text-base text-gray-700 mb-3 leading-relaxed">{report.description}</p>
+                <div className="text-sm text-gray-600">
                   <span className="font-semibold">Reference:</span> {report.referenceNumber || 'N/A'}
                   <span className="mx-2">•</span>
                   <span className="font-semibold">Location:</span> {report.location || 'N/A'}
@@ -155,8 +155,8 @@ const ManageReportModal = ({ isOpen, onClose, report, onReportUpdated }) => {
               {/* Quick Actions */}
               {!showStatusForm && (
                 <div className="mb-6">
-                  <h4 className="text-xl font-bold text-gray-800 mb-4">Quick Actions</h4>
-                  <div className="grid grid-cols-1 gap-3">
+                  <h4 className="text-2xl font-bold text-gray-800 mb-5">Quick Actions</h4>
+                  <div className="grid grid-cols-1 gap-4">
                     {report.status?.toLowerCase() === 'pending' && (
                       <button
                         onClick={() => handleQuickAction('investigating', 'Escalated to investigation after initial review')}
@@ -165,8 +165,8 @@ const ManageReportModal = ({ isOpen, onClose, report, onReportUpdated }) => {
                         <div className="flex items-center">
                           <ExclamationTriangleIcon className="h-5 w-5 text-blue-600 mr-3" />
                           <div className="text-left">
-                            <div className="text-lg font-bold text-blue-800">Investigate</div>
-                            <div className="text-sm text-blue-600">Escalate for detailed investigation</div>
+                        <div className="text-xl font-bold text-blue-800">Investigate</div>
+                            <div className="text-base text-blue-600">Escalate for detailed investigation</div>
                           </div>
                         </div>
                         <div className="text-xl text-blue-600">→</div>
@@ -180,8 +180,8 @@ const ManageReportModal = ({ isOpen, onClose, report, onReportUpdated }) => {
                       <div className="flex items-center">
                         <CheckCircleIcon className="h-5 w-5 text-green-600 mr-3" />
                         <div className="text-left">
-                            <div className="text-lg font-bold text-green-800">Resolve</div>
-                            <div className="text-sm text-green-600">Mark incident as resolved</div>
+                        <div className="text-xl font-bold text-green-800">Resolve</div>
+                            <div className="text-base text-green-600">Mark incident as resolved</div>
                         </div>
                       </div>
                         <div className="text-xl text-green-600">→</div>
@@ -194,8 +194,8 @@ const ManageReportModal = ({ isOpen, onClose, report, onReportUpdated }) => {
                       <div className="flex items-center">
                         <XIcon className="h-5 w-5 text-red-600 mr-3" />
                         <div className="text-left">
-                            <div className="text-lg font-bold text-red-800">Dismiss</div>
-                            <div className="text-sm text-red-600">Dismiss incident as invalid</div>
+                        <div className="text-xl font-bold text-red-800">Dismiss</div>
+                            <div className="text-base text-red-600">Dismiss incident as invalid</div>
                         </div>
                       </div>
                         <div className="text-xl text-red-600">→</div>
@@ -207,8 +207,8 @@ const ManageReportModal = ({ isOpen, onClose, report, onReportUpdated }) => {
               {/* Status Update Form */}
               {showStatusForm && (
                 <div className="mb-6">
-                  <div className="flex items-center justify-between mb-4">
-                    <h4 className="text-xl font-bold text-gray-800">Update Status</h4>
+                  <div className="flex items-center justify-between mb-5">
+                    <h4 className="text-2xl font-bold text-gray-800">Update Status</h4>
                     <button
                       onClick={() => {
                         setShowStatusForm(false);
@@ -216,21 +216,21 @@ const ManageReportModal = ({ isOpen, onClose, report, onReportUpdated }) => {
                         setStatusDescription('');
                         setUpdateError(null);
                       }}
-                      className="text-base text-gray-500 hover:text-gray-700 font-medium"
+                      className="text-lg text-gray-500 hover:text-gray-700 font-medium"
                     >
                       Cancel
                     </button>
                   </div>
                   
-                  <div className="space-y-4">
+                  <div className="space-y-5">
                     <div>
-                      <label className="block text-base font-semibold text-gray-700 mb-2">
+                      <label className="block text-lg font-semibold text-gray-700 mb-3">
                         New Status
                       </label>
                       <select
                         value={selectedStatus}
                         onChange={(e) => setSelectedStatus(e.target.value)}
-                        className="w-full px-3 py-2 text-base border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
+                        className="w-full px-4 py-3 text-lg border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
                       >
                         <option value="">Select status...</option>
                         <option value="investigating">Investigating</option>
@@ -240,17 +240,17 @@ const ManageReportModal = ({ isOpen, onClose, report, onReportUpdated }) => {
                     </div>
                     
                     <div>
-                      <label className="block text-base font-semibold text-gray-700 mb-2">
+                      <label className="block text-lg font-semibold text-gray-700 mb-3">
                         Timeline Description
                       </label>
                       <textarea
                         value={statusDescription}
                         onChange={(e) => setStatusDescription(e.target.value)}
                         placeholder="Add a description for the timeline..."
-                        rows={4}
-                        className="w-full px-3 py-2 text-base border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
+                        rows={5}
+                        className="w-full px-4 py-3 text-lg border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
                       />
-                      <p className="text-sm text-gray-500 mt-1">
+                      <p className="text-base text-gray-500 mt-2">
                         This description will be added to the incident timeline
                       </p>
                     </div>
@@ -267,11 +267,11 @@ const ManageReportModal = ({ isOpen, onClose, report, onReportUpdated }) => {
               {/* Additional Management Options */}
               {!showStatusForm && (
                 <div className="mb-6">
-                  <h4 className="text-xl font-bold text-gray-800 mb-4">Additional Actions</h4>
-                  <div className="space-y-3">
-                    <button className="w-full text-left p-4 bg-gray-50 border border-gray-200 rounded-lg hover:bg-gray-100 transition-colors">
-                      <div className="text-lg font-bold text-gray-800">Export Report</div>
-                      <div className="text-sm text-gray-600 mt-1">Generate PDF report for this incident</div>
+                  <h4 className="text-2xl font-bold text-gray-800 mb-5">Additional Actions</h4>
+                  <div className="space-y-4">
+                    <button className="w-full text-left p-5 bg-gray-50 border border-gray-200 rounded-lg hover:bg-gray-100 transition-colors">
+                      <div className="text-xl font-bold text-gray-800">Export Report</div>
+                      <div className="text-base text-gray-600 mt-1">Generate PDF report for this incident</div>
                     </button>
                   </div>
                 </div>
@@ -299,7 +299,7 @@ const ManageReportModal = ({ isOpen, onClose, report, onReportUpdated }) => {
                   setStatusDescription('');
                   setUpdateError(null);
                 }}
-                className="px-4 py-2 text-base font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                className="px-6 py-3 text-lg font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-emerald-500"
                 disabled={isUpdating}
               >
                 Cancel
@@ -307,13 +307,13 @@ const ManageReportModal = ({ isOpen, onClose, report, onReportUpdated }) => {
               <button
                 onClick={handleStatusUpdate}
                 disabled={isUpdating || !selectedStatus}
-                className={`px-6 py-2 text-base font-bold text-white bg-emerald-600 border border-transparent rounded-lg hover:bg-emerald-700 focus:outline-none focus:ring-2 focus:ring-emerald-500 ${
+                className={`px-8 py-3 text-lg font-bold text-white bg-emerald-600 border border-transparent rounded-lg hover:bg-emerald-700 focus:outline-none focus:ring-2 focus:ring-emerald-500 ${
                   isUpdating || !selectedStatus ? 'opacity-50 cursor-not-allowed' : ''
                 }`}
               >
                 {isUpdating ? (
                   <div className="flex items-center">
-                    <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                    <svg className="animate-spin -ml-1 mr-2 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
                       <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
                       <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                     </svg>
